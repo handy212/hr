@@ -1,0 +1,51 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% block content %}
+<div class="terminal-page">
+    <section class="oh-wrapper oh-main__topbar">
+        <div class="oh-main__titlebar oh-main__titlebar--left">
+            <h1 class="oh-main__titlebar-title fw-bold">
+                <ion-icon name="hardware-chip-outline" class="me-2"></ion-icon>
+                {% if device %}
+                    {% trans "Edit Terminal Device" %} — {{ device.name|default:device.sn }}
+                {% else %}
+                    {% trans "Add Terminal Device" %}
+                {% endif %}
+            </h1>
+        </div>
+        <div class="oh-main__titlebar oh-main__titlebar--right">
+            <div class="oh-main__titlebar-button-container">
+                <a href="{% url 'terminal-device-list' %}" class="oh-btn oh-btn--small">
+                    <ion-icon name="arrow-back-outline" class="me-1"></ion-icon>{% trans "Back to devices" %}
+                </a>
+            </div>
+        </div>
+    </section>
+    {% include 'device_gateway/_ui.html' with active='devices' %}
+
+    <div class="oh-wrapper">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-10 col-xl-8">
+                <div class="oh-card p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <h2 class="oh-card__title--lg mb-0">{% trans "Device Information" %}</h2>
+                    </div>
+                    <p class="oh-text--light oh-text--sm mb-4">
+                        {% trans "Register the terminal by its serial number. The remaining details are filled in automatically once the device heartbeats in." %}
+                    </p>
+                    <form method="post">
+                        {% csrf_token %}
+                        {% include 'normal_form.html' %}
+                        <div class="oh-modal__dialog-footer p-0 pt-3 d-flex justify-content-end">
+                            <a href="{% url 'terminal-device-list' %}" class="oh-btn">{% trans "Cancel" %}</a>
+                            <button type="submit" class="oh-btn oh-btn--secondary oh-btn--shadow ms-2">
+                                <ion-icon name="save-outline" class="me-1"></ion-icon>{% trans "Save" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

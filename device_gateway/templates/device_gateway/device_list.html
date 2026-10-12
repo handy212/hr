@@ -1,0 +1,151 @@
+{% extends 'index.html' %}
+{% load i18n static %}
+{% block content %}
+<div class="terminal-page">
+    <section class="oh-wrapper oh-main__topbar">
+        <div class="oh-main__titlebar oh-main__titlebar--left">
+            <h1 class="oh-main__titlebar-title fw-bold">
+                <ion-icon name="hardware-chip-outline" class="me-2"></ion-icon>{% trans "Terminal Devices" %}
+            </h1>
+        </div>
+        <div class="oh-main__titlebar oh-main__titlebar--right">
+            <div class="oh-main__titlebar-button-container">
+                {% if perms.device_gateway.add_terminaldevice %}
+                    <a href="{% url 'terminal-device-add' %}" class="oh-btn oh-btn--secondary oh-btn--shadow">
+                        <ion-icon name="add-outline" class="me-1"></ion-icon>{% trans "Add Device" %}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+    {% include 'device_gateway/_ui.html' with active='devices' %}
+
+    <div class="oh-wrapper">
+        <div class="row mb-3">
+            <div class="col-12 col-sm-6 col-md-4 mb-2 mb-md-0">
+                <div class="oh-card-dashboard oh-card-dashboard--neutral">
+                    <div class="oh-card-dashboard__header">
+                        <span class="oh-card-dashboard__title">{% trans "Total Devices" %}</span>
+                    </div>
+                    <div class="oh-card-dashboard__body">
+                        <div class="oh-card-dashboard__counts">
+                            <span class="oh-card-dashboard__sign"><ion-icon name="hardware-chip-outline"></ion-icon></span>
+                            <span class="oh-card-dashboard__count">{{ total_devices }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 mb-2 mb-md-0">
+                <div class="oh-card-dashboard oh-card-dashboard--success">
+                    <div class="oh-card-dashboard__header">
+                        <span class="oh-card-dashboard__title">{% trans "Online" %}</span>
+                    </div>
+                    <div class="oh-card-dashboard__body">
+                        <div class="oh-card-dashboard__counts">
+                            <span class="oh-card-dashboard__sign"><ion-icon name="wifi-outline"></ion-icon></span>
+                            <span class="oh-card-dashboard__count">{{ online_devices }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4">
+                <div class="oh-card-dashboard oh-card-dashboard--danger">
+                    <div class="oh-card-dashboard__header">
+                        <span class="oh-card-dashboard__title">{% trans "Offline / Inactive" %}</span>
+                    </div>
+                    <div class="oh-card-dashboard__body">
+                        <div class="oh-card-dashboard__counts">
+                            <span class="oh-card-dashboard__sign"><ion-icon name="cloud-offline-outline"></ion-icon></span>
+                            <span class="oh-card-dashboard__count">{{ offline_devices }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if devices %}
+            <div class="oh-sticky-table oh-sticky-table--no-overflow">
+                <div class="oh-sticky-table__table">
+                    <div class="oh-sticky-table__thead">
+                        <div class="oh-sticky-table__tr">
+                            <div class="oh-sticky-table__th">{% trans "Name" %}</div>
+                            <div class="oh-sticky-table__th">{% trans "Device SN" %}</div>
+                            <div class="oh-sticky-table__th">{% trans "Connection" %}</div>
+                            <div class="oh-sticky-table__th">{% trans "Last Seen" %}</div>
+                            <div class="oh-sticky-table__th">{% trans "Firmware" %}</div>
+                            <div class="oh-sticky-table__th">{% trans "Direction" %}</div>
+                            <div class="oh-sticky-table__th">{% trans "Actions" %}</div>
+                        </div>
+                    </div>
+                    <div class="oh-sticky-table__tbody">
+                        {% for device in devices %}
+                            <div class="oh-sticky-table__tr">
+                                <div class="oh-sticky-table__td">
+                                    <a class="oh-link--secondary fw-bold" href="{% url 'terminal-device-detail' device.pk %}">{{ device.name|default:device.sn }}</a>
+                                    {% if not device.is_active %}
+                                        <span class="oh-badge oh-badge--small oh-badge--round oh-badge--danger ms-2">{% trans "Inactive" %}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="oh-sticky-table__td">{{ device.sn }}</div>
+                                <div class="oh-sticky-table__td">
+                                    {% if device.is_online %}
+                                        <span class="oh-badge oh-badge--small oh-badge--round oh-badge--secondary">
+                                            <span class="oh-dot oh-dot--small oh-dot--success me-1"></span>{% trans "Online" %}
+                                        </span>
+                                    {% else %}
+                                        <span class="oh-badge oh-badge--small oh-badge--round oh-badge--danger">
+                                            <span class="oh-dot oh-dot--small oh-dot--danger me-1"></span>{% trans "Offline" %}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <div class="oh-sticky-table__td">{{ device.last_seen|date:"DATETIME_FORMAT"|default:"-" }}</div>
+                                <div class="oh-sticky-table__td">{{ device.firmware_version|default:"-" }}</div>
+                                <div class="oh-sticky-table__td" title="{{ device.get_direction_display }}">
+                                    {% if device.direction == 'system' %}{% trans "System" %}{% else %}{{ device.get_direction_display }}{% endif %}
+                                </div>
+                                <div class="oh-sticky-table__td">
+                                    <a href="{% url 'terminal-device-detail' device.pk %}" class="oh-btn oh-btn--sq-sm oh-btn--light-bkg" title="{% trans 'View device' %}">
+                                        <ion-icon name="eye-outline"></ion-icon>
+                                    </a>
+                                    {% if perms.device_gateway.change_terminaldevice %}
+                                        <a href="{% url 'terminal-device-edit' device.pk %}" class="oh-btn oh-btn--sq-sm oh-btn--light-bkg ms-1" title="{% trans 'Edit device' %}">
+                                            <ion-icon name="create-outline"></ion-icon>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="oh-empty">
+                <img src="{% static 'images/ui/search.svg' %}" class="oh-404__image" alt="{% trans 'No devices' %}">
+                <h2 class="oh-empty__title">{% trans "No terminal devices registered yet." %}</h2>
+                <p class="oh-text--light mb-3">{% trans "Register a terminal by its serial number before it heartbeats in." %}</p>
+                {% if perms.device_gateway.add_terminaldevice %}
+                    <a href="{% url 'terminal-device-add' %}" class="oh-btn oh-btn--secondary oh-btn--shadow">
+                        <ion-icon name="add-outline" class="me-1"></ion-icon>{% trans "Add Device" %}
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if devices.paginator.num_pages > 1 %}
+            <div class="oh-pagination">
+                <nav class="oh-pagination__nav">
+                    {% if devices.has_previous %}
+                        <a href="?page={{ devices.previous_page_number }}" class="oh-pagination__item oh-pagination__item--wide">{% trans "Previous" %}</a>
+                    {% endif %}
+                    <span class="oh-pagination__label mx-3">
+                        {% blocktrans with num=devices.number total=devices.paginator.num_pages %}Page {{ num }} of {{ total }}{% endblocktrans %}
+                    </span>
+                    {% if devices.has_next %}
+                        <a href="?page={{ devices.next_page_number }}" class="oh-pagination__item oh-pagination__item--wide">{% trans "Next" %}</a>
+                    {% endif %}
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

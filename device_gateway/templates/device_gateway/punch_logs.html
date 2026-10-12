@@ -1,0 +1,122 @@
+{% extends 'index.html' %}
+{% load i18n static %}
+{% block content %}
+<div class="terminal-page">
+    <section class="oh-wrapper oh-main__topbar">
+        <div class="oh-main__titlebar oh-main__titlebar--left">
+            <h1 class="oh-main__titlebar-title fw-bold">
+                <ion-icon name="finger-print-outline" class="me-2"></ion-icon>{% trans "Terminal Punch Logs" %}
+            </h1>
+        </div>
+        <div class="oh-main__titlebar oh-main__titlebar--right">
+            <div class="oh-main__titlebar-button-container">
+                {% if selected_device %}
+                    <a href="{% url 'terminal-punch-logs' %}" class="oh-btn oh-btn--small">
+                        <ion-icon name="close-outline" class="me-1"></ion-icon>{% trans "Clear filter" %}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+    {% include 'device_gateway/_ui.html' with active='punches' %}
+
+    <div class="oh-wrapper mb-3">
+        <div class="oh-card p-3">
+            <form method="get" class="row align-items-end">
+                <div class="col-12 col-md-4 col-lg-3 mb-2 mb-md-0">
+                    <div class="oh-input-group">
+                        <label class="oh-label" for="device-filter">{% trans "Device" %}</label>
+                        <select id="device-filter" name="device" class="oh-select w-100">
+                            <option value="">{% trans "All devices" %}</option>
+                            {% for device in devices %}
+                                <option value="{{ device.pk }}" {% if selected_device == device.pk|stringformat:"i" %}selected{% endif %}>
+                                    {{ device.name|default:device.sn }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-12 col-md-auto mb-2 mb-md-0">
+                    <button type="submit" class="oh-btn oh-btn--secondary oh-btn--shadow">
+                        <ion-icon name="filter-outline" class="me-1"></ion-icon>{% trans "Filter" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="oh-wrapper">
+        {% if logs %}
+            <div class="oh-sticky-table oh-sticky-table--no-overflow">
+                <div class="oh-sticky-table__table">
+                    <div class="oh-sticky-table__thead">
+                        <div class="oh-sticky-table__tr">
+                            <div class="oh-sticky-table__th">{% trans "Device" %}</div>
+                            <div class="oh-sticky-table__th">{% trans "Record" %}</div>
+                            <div class="oh-sticky-table__th">{% trans "Type" %}</div>
+                            <div class="oh-sticky-table__th">{% trans "Employee" %}</div>
+                            <div class="oh-sticky-table__th">{% trans "Date" %}</div>
+                            <div class="oh-sticky-table__th">{% trans "Photo" %}</div>
+                            <div class="oh-sticky-table__th">{% trans "Attendance" %}</div>
+                        </div>
+                    </div>
+                    <div class="oh-sticky-table__tbody">
+                        {% for log in logs %}
+                            <div class="oh-sticky-table__tr">
+                                <div class="oh-sticky-table__td">
+                                    <a class="oh-link--secondary" href="{% url 'terminal-device-detail' log.device_id %}">{{ log.device.name|default:log.device.sn }}</a>
+                                </div>
+                                <div class="oh-sticky-table__td">{{ log.record_id }}</div>
+                                <div class="oh-sticky-table__td">{{ log.record_type }}</div>
+                                <div class="oh-sticky-table__td">{{ log.employee|default:log.user_id }}</div>
+                                <div class="oh-sticky-table__td">{{ log.record_date }}</div>
+                                <div class="oh-sticky-table__td">
+                                    {% if log.photo %}
+                                        <a href="{{ log.photo.url }}" target="_blank" rel="noopener noreferrer" class="oh-btn oh-btn--sq-sm oh-btn--light-bkg" title="{% trans 'View photo' %}">
+                                            <ion-icon name="image-outline"></ion-icon>
+                                        </a>
+                                    {% else %}
+                                        <span class="oh-text--light">-</span>
+                                    {% endif %}
+                                </div>
+                                <div class="oh-sticky-table__td">
+                                    {% if log.attendance_created %}
+                                        <span class="oh-badge oh-badge--small oh-badge--round oh-badge--secondary">{% trans "Created" %}</span>
+                                    {% else %}
+                                        <span class="oh-badge oh-badge--small oh-badge--round oh-badge--info">{% trans "Not created" %}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="oh-empty">
+                <img src="{% static 'images/ui/search.svg' %}" class="oh-404__image" alt="{% trans 'No punch logs' %}">
+                <h2 class="oh-empty__title">{% trans "No punch logs found." %}</h2>
+                {% if selected_device %}
+                    <p class="oh-text--light mb-3">{% trans "Try clearing the device filter to see all records." %}</p>
+                    <a href="{% url 'terminal-punch-logs' %}" class="oh-btn oh-btn--small">{% trans "Clear filter" %}</a>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if logs.paginator.num_pages > 1 %}
+            <div class="oh-pagination">
+                <nav class="oh-pagination__nav">
+                    {% if logs.has_previous %}
+                        <a href="?page={{ logs.previous_page_number }}{% if selected_device %}&device={{ selected_device }}{% endif %}" class="oh-pagination__item oh-pagination__item--wide">{% trans "Previous" %}</a>
+                    {% endif %}
+                    <span class="oh-pagination__label mx-3">
+                        {% blocktrans with num=logs.number total=logs.paginator.num_pages %}Page {{ num }} of {{ total }}{% endblocktrans %}
+                    </span>
+                    {% if logs.has_next %}
+                        <a href="?page={{ logs.next_page_number }}{% if selected_device %}&device={{ selected_device }}{% endif %}" class="oh-pagination__item oh-pagination__item--wide">{% trans "Next" %}</a>
+                    {% endif %}
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

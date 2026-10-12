@@ -141,7 +141,7 @@ def get_facedetection(request):
 
 
 @login_required
-@permission_required("geofencing.add_localbackup")
+@permission_required("facedetection.add_facedetection")
 @hx_request_required
 def face_detection_config(request):
     try:

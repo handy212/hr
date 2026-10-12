@@ -1,0 +1,253 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% block content %}
+<div class="terminal-page">
+    <section class="oh-wrapper oh-main__topbar">
+        <div class="oh-main__titlebar oh-main__titlebar--left">
+            <h1 class="oh-main__titlebar-title fw-bold">
+                <ion-icon name="hardware-chip-outline" class="me-2"></ion-icon>{{ device.name|default:device.sn }}
+                {% if device.is_online %}
+                    <span class="oh-badge oh-badge--small oh-badge--round oh-badge--secondary ms-2">
+                        <span class="oh-dot oh-dot--small oh-dot--success me-1"></span>{% trans "Online" %}
+                    </span>
+                {% else %}
+                    <span class="oh-badge oh-badge--small oh-badge--round oh-badge--danger ms-2">
+                        <span class="oh-dot oh-dot--small oh-dot--danger me-1"></span>{% trans "Offline" %}
+                    </span>
+                {% endif %}
+                {% if not device.is_active %}
+                    <span class="oh-badge oh-badge--small oh-badge--round oh-badge--danger ms-1">{% trans "Inactive" %}</span>
+                {% endif %}
+            </h1>
+        </div>
+        <div class="oh-main__titlebar oh-main__titlebar--right">
+            <div class="oh-main__titlebar-button-container">
+                <a href="{% url 'terminal-device-list' %}" class="oh-btn oh-btn--small">
+                    <ion-icon name="arrow-back-outline" class="me-1"></ion-icon>{% trans "Back to devices" %}
+                </a>
+                {% if perms.device_gateway.change_terminaldevice %}
+                    <a href="{% url 'terminal-device-edit' device.pk %}" class="oh-btn oh-btn--secondary oh-btn--small oh-btn--shadow">
+                        <ion-icon name="create-outline" class="me-1"></ion-icon>{% trans "Edit" %}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+    {% include 'device_gateway/_ui.html' with active='devices' %}
+
+    <div class="oh-wrapper">
+        <div class="row mb-3">
+            <div class="col-12 col-sm-6 col-md-4 mb-2 mb-md-0">
+                <div class="oh-card-dashboard oh-card-dashboard--warning">
+                    <div class="oh-card-dashboard__header">
+                        <span class="oh-card-dashboard__title">{% trans "Pending Sync Tasks" %}</span>
+                    </div>
+                    <div class="oh-card-dashboard__body">
+                        <div class="oh-card-dashboard__counts">
+                            <span class="oh-card-dashboard__sign"><ion-icon name="sync-outline"></ion-icon></span>
+                            <span class="oh-card-dashboard__count">{{ pending_tasks }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 mb-2 mb-md-0">
+                <div class="oh-card-dashboard oh-card-dashboard--neutral">
+                    <div class="oh-card-dashboard__header">
+                        <span class="oh-card-dashboard__title">{% trans "Pending Commands" %}</span>
+                    </div>
+                    <div class="oh-card-dashboard__body">
+                        <div class="oh-card-dashboard__counts">
+                            <span class="oh-card-dashboard__sign"><ion-icon name="terminal-outline"></ion-icon></span>
+                            <span class="oh-card-dashboard__count">{{ pending_commands }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4">
+                <div class="oh-card-dashboard oh-card-dashboard--success">
+                    <div class="oh-card-dashboard__header">
+                        <span class="oh-card-dashboard__title">{% trans "Total Punches" %}</span>
+                    </div>
+                    <div class="oh-card-dashboard__body">
+                        <div class="oh-card-dashboard__counts">
+                            <span class="oh-card-dashboard__sign"><ion-icon name="finger-print-outline"></ion-icon></span>
+                            <span class="oh-card-dashboard__count">{{ total_punches }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="oh-card p-4 mb-3" aria-labelledby="device-information-title">
+            <div class="d-flex align-items-center justify-content-between flex-wrap mb-3">
+                <h2 class="oh-card__title--lg mb-0" id="device-information-title">{% trans "Device Information" %}</h2>
+                {% if device.last_seen %}
+                    <span class="oh-text--light oh-text--sm">
+                        {% blocktrans with seen=device.last_seen|date:"DATETIME_FORMAT" %}Last seen {{ seen }}{% endblocktrans %}
+                    </span>
+                {% endif %}
+            </div>
+            <div class="row">
+                <div class="col-12 col-sm-6 col-lg-4 mb-3">
+                    <span class="terminal-field-label">{% trans "Device SN" %}</span>
+                    <span class="terminal-field-value fw-bold">{{ device.sn }}</span>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4 mb-3">
+                    <span class="terminal-field-label">{% trans "Company" %}</span>
+                    <span class="terminal-field-value">{{ device.company_id|default:"-" }}</span>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4 mb-3">
+                    <span class="terminal-field-label">{% trans "Status" %}</span>
+                    <span class="terminal-field-value">
+                        {% if device.is_active %}
+                            <span class="oh-badge oh-badge--small oh-badge--round oh-badge--secondary">{% trans "Active" %}</span>
+                        {% else %}
+                            <span class="oh-badge oh-badge--small oh-badge--round oh-badge--danger">{% trans "Inactive" %}</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4 mb-3">
+                    <span class="terminal-field-label">{% trans "Direction" %}</span>
+                    <span class="terminal-field-value">{{ device.get_direction_display }}</span>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4 mb-3">
+                    <span class="terminal-field-label">{% trans "Last Seen" %}</span>
+                    <span class="terminal-field-value">{{ device.last_seen|date:"DATETIME_FORMAT"|default:"-" }}</span>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4 mb-3">
+                    <span class="terminal-field-label">{% trans "Firmware" %}</span>
+                    <span class="terminal-field-value">{{ device.firmware_version|default:"-" }}</span>
+                </div>
+            </div>
+            {% if perms.device_gateway.change_terminaldevice %}
+                <div class="d-flex flex-wrap align-items-center pt-3 border-top" style="gap: .5rem">
+                    <form method="post" action="{% url 'terminal-device-action' device.pk 'sync-all' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="oh-btn oh-btn--secondary oh-btn--small oh-btn--shadow">
+                            <ion-icon name="people-outline" class="me-1"></ion-icon>{% trans "Sync Employees" %}
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'terminal-device-action' device.pk 'open-door' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="oh-btn oh-btn--small">
+                            <ion-icon name="lock-open-outline" class="me-1"></ion-icon>{% trans "Open Door" %}
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'terminal-device-action' device.pk 'reboot' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="oh-btn oh-btn--small">
+                            <ion-icon name="refresh-outline" class="me-1"></ion-icon>{% trans "Reboot" %}
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'terminal-device-action' device.pk 'snapshot' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="oh-btn oh-btn--small">
+                            <ion-icon name="camera-outline" class="me-1"></ion-icon>{% trans "Take Snapshot" %}
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'terminal-device-action' device.pk 'delete-all' %}" onsubmit="return confirm('{% trans "Delete all personnel from this device?"|escapejs %}')">
+                        {% csrf_token %}
+                        <button type="submit" class="oh-btn oh-btn--small oh-btn--danger">
+                            <ion-icon name="trash-outline" class="me-1"></ion-icon>{% trans "Delete All Personnel" %}
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="oh-card p-4 mb-3" aria-labelledby="terminal-mappings-title">
+            <h2 class="oh-card__title--lg mb-2" id="terminal-mappings-title">{% trans "Terminal UserID mappings" %}</h2>
+            <p class="oh-text--light mb-3">{% trans "Map each UserID already stored on the terminal to its Horilla employee. Unmapped punches are saved but do not create attendance." %}</p>
+            {% if unmapped_punches %}<p class="mb-3">{% blocktrans count count=unmapped_punches %}{{ count }} unmapped punch needs review.{% plural %}{{ count }} unmapped punches need review.{% endblocktrans %}</p>{% endif %}
+            {% if employee_mappings %}
+                <ul class="mb-3">
+                    {% for mapping in employee_mappings %}
+                        <li>UserID {{ mapping.device_user_id }} → {{ mapping.employee }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            {% if perms.device_gateway.change_terminaldevice %}
+                <form method="post" action="{% url 'terminal-employee-map' device.pk %}">
+                    {% csrf_token %}
+                    {{ mapping_form.as_p }}
+                    <button type="submit" class="oh-btn oh-btn--secondary oh-btn--small">{% trans "Add mapping" %}</button>
+                </form>
+            {% endif %}
+        </section>
+
+        <div class="row">
+            <div class="col-12 mb-3">
+                <section class="oh-card p-4 h-100 terminal-recent" aria-labelledby="recent-punches-title">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+                        <h2 class="oh-card__title--lg mb-0" id="recent-punches-title">{% trans "Recent Punches" %}</h2>
+                        {% if perms.device_gateway.view_terminalpunchlog %}
+                            <a href="{% url 'terminal-punch-logs' %}?device={{ device.pk }}" class="oh-btn oh-btn--small">
+                                {% trans "View all" %}<ion-icon name="arrow-forward-outline" class="ms-1"></ion-icon>
+                            </a>
+                        {% endif %}
+                    </div>
+                    {% if recent_punches %}
+                        <div class="oh-sticky-table oh-sticky-table--no-overflow">
+                            <div class="oh-sticky-table__table">
+                                <div class="oh-sticky-table__thead">
+                                    <div class="oh-sticky-table__tr">
+                                        <div class="oh-sticky-table__th">{% trans "Record" %}</div>
+                                        <div class="oh-sticky-table__th">{% trans "Employee" %}</div>
+                                        <div class="oh-sticky-table__th">{% trans "Date" %}</div>
+                                        <div class="oh-sticky-table__th">{% trans "Attendance" %}</div>
+                                    </div>
+                                </div>
+                                <div class="oh-sticky-table__tbody">
+                                    {% for punch in recent_punches %}
+                                        <div class="oh-sticky-table__tr">
+                                            <div class="oh-sticky-table__td">{{ punch.record_id }}</div>
+                                            <div class="oh-sticky-table__td">{{ punch.employee|default:punch.user_id }}</div>
+                                            <div class="oh-sticky-table__td">{{ punch.record_date }}</div>
+                                            <div class="oh-sticky-table__td">
+                                                {% if punch.attendance_created %}
+                                                    <span class="oh-badge oh-badge--small oh-badge--round oh-badge--secondary">{% trans "Created" %}</span>
+                                                {% elif punch.can_retry_attendance %}
+                                                    <span class="oh-badge oh-badge--small oh-badge--round oh-badge--info">{% trans "Pending" %}</span>
+                                                    {% if perms.device_gateway.change_terminaldevice %}
+                                                        <form method="post" action="{% url 'terminal-punch-retry' device.pk punch.pk %}" class="d-inline ms-2">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="oh-btn oh-btn--small">{% trans "Retry" %}</button>
+                                                        </form>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="oh-badge oh-badge--small oh-badge--round oh-badge--info">{% trans "Ignored" %}</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p class="oh-text--light mb-0">{% trans "No punches recorded yet." %}</p>
+                    {% endif %}
+                </section>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 col-md-6 mb-3">
+                <details class="oh-card p-4 h-100">
+                    <summary class="oh-card__title--sm" style="cursor: pointer">
+                        <ion-icon name="pulse-outline" class="me-1"></ion-icon>{% trans "Device Status" %}
+                    </summary>
+                    <pre class="oh-input p-3 overflow-auto mt-3 mb-0 oh-text--sm">{{ device_status_json }}</pre>
+                </details>
+            </div>
+            <div class="col-12 col-md-6 mb-3">
+                <details class="oh-card p-4 h-100">
+                    <summary class="oh-card__title--sm" style="cursor: pointer">
+                        <ion-icon name="settings-outline" class="me-1"></ion-icon>{% trans "Working Parameters" %}
+                    </summary>
+                    <pre class="oh-input p-3 overflow-auto mt-3 mb-0 oh-text--sm">{{ work_parameters_json }}</pre>
+                </details>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -27,7 +27,7 @@ class GeoFencingSetupGetPostAPIView(APIView):
     )
     def get(self, request):
         company = request.user.employee_get.get_company()
-        location = get_object_or_404(GeoFencing, pk=company.id)
+        location = get_object_or_404(GeoFencing, company_id=company)
         serializer = GeoFencingSetupSerializer(location)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -43,7 +43,7 @@ class GeoFencingSetupGetPostAPIView(APIView):
             company = request.user.employee_get.get_company()
             if company:
                 data["company_id"] = company.id
-        serializer = GeoFencingSetupSerializer(data=request.data)
+        serializer = GeoFencingSetupSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -168,7 +168,7 @@ def get_company_location(request):
 
 
 @login_required
-@permission_required("geofencing.add_localbackup")
+@permission_required("geofencing.add_geofencing")
 def geo_location_config(request):
     try:
         form = GeoFencingSetupForm(instance=get_company_location(request))

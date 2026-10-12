@@ -1,0 +1,43 @@
+{% load i18n %}
+<style>
+    /* Full-width content area like other data-heavy Horilla pages. */
+    .terminal-page .oh-wrapper { width: calc(100% - 3rem); max-width: none; margin-left: auto; margin-right: auto; }
+    .terminal-page .terminal-nav { margin-bottom: 1.5rem; }
+    .terminal-page .terminal-nav .oh-general__tab { flex: 0 0 auto; margin-right: 1.5rem; }
+    /* Detail-page info grid */
+    .terminal-page .terminal-field-label { display: block; color: #757575; font-size: .8rem; line-height: 1.4; margin-bottom: .25rem; }
+    .terminal-page .terminal-field-value { display: block; font-size: .9rem; line-height: 1.4; overflow-wrap: anywhere; }
+    /* Tables are wide; keep columns readable on smaller screens. */
+    .terminal-page .oh-sticky-table__th,
+    .terminal-page .oh-sticky-table__td { font-size: .875rem; line-height: 1.4; }
+    .terminal-page .oh-sticky-table__table { min-width: 920px; }
+    .terminal-page .terminal-recent .oh-sticky-table__table { min-width: 600px; }
+    @media (max-width: 767px) {
+        .terminal-page .oh-wrapper { width: calc(100% - 2rem); }
+    }
+</style>
+<nav class="oh-wrapper terminal-nav" aria-label="{% trans 'Terminal navigation' %}">
+    <ul class="oh-general__tabs oh-general__tabs--no-grow">
+        {% if perms.device_gateway.view_terminaldevice %}
+            <li class="oh-general__tab">
+                <a href="{% url 'terminal-device-list' %}" class="oh-general__tab-link{% if active == 'devices' %} oh-general__tab-link--active{% endif %}">
+                    <ion-icon name="hardware-chip-outline" class="me-1"></ion-icon>{% trans "Devices" %}
+                </a>
+            </li>
+        {% endif %}
+        {% if perms.device_gateway.view_terminalpunchlog %}
+            <li class="oh-general__tab">
+                <a href="{% url 'terminal-punch-logs' %}" class="oh-general__tab-link{% if active == 'punches' %} oh-general__tab-link--active{% endif %}">
+                    <ion-icon name="finger-print-outline" class="me-1"></ion-icon>{% trans "Punch Logs" %}
+                </a>
+            </li>
+        {% endif %}
+        {% if perms.device_gateway.view_terminalsynctask %}
+            <li class="oh-general__tab">
+                <a href="{% url 'terminal-sync-tasks' %}" class="oh-general__tab-link{% if active == 'tasks' %} oh-general__tab-link--active{% endif %}">
+                    <ion-icon name="sync-outline" class="me-1"></ion-icon>{% trans "Sync Tasks" %}
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>

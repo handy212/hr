@@ -90,6 +90,7 @@ INSTALLED_APPS = [
     "horilla_automations",
     "horilla_api",
     "biometric",
+    "device_gateway",
     "helpdesk",
     "offboarding",
     "horilla_backup",

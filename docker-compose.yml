@@ -20,8 +20,8 @@ services:
       # nginx is the single proxy hop; lets django-axes read the real client IP
       - AXES_PROXY_COUNT=1
       - SECRET_KEY=dev-secret-key-change-in-production
-      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
-      - CSRF_TRUSTED_ORIGINS=http://localhost:8000
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,192.168.100.17
+      - CSRF_TRUSTED_ORIGINS=http://localhost:8000,http://192.168.100.17:8000,http://192.168.100.17:8001
       - DATABASE_URL=postgres://horilla_user:horilla_pass@db:5432/horilla_db
       - DB_INIT_PASSWORD=dev-init-password-change-in-production
       - REDIS_URL=redis://:horilla_pass@redis:6379/0
@@ -52,7 +52,7 @@ services:
       # nginx is the single proxy hop; lets django-axes read the real client IP
       - AXES_PROXY_COUNT=1
       - SECRET_KEY=dev-secret-key-change-in-production
-      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,192.168.100.17
       - DATABASE_URL=postgres://horilla_user:horilla_pass@db:5432/horilla_db
       - DB_INIT_PASSWORD=dev-init-password-change-in-production
       - REDIS_URL=redis://:horilla_pass@redis:6379/0
