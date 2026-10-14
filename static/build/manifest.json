@@ -1,15 +1,15 @@
 {
-    "name": "Horilla",
-    "short_name": "Horilla",
-    "description": "Free and Open Source HR Software",
+    "name": "HRDeck",
+    "short_name": "HRDeck",
+    "description": "HRDeck human resources workspace",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "orangered",
-    "theme_color": "orangered",
+    "background_color": "#F4F6FA",
+    "theme_color": "#0F2D5B",
     "icons": [
       {
-        "src": "/static/favicons/apple-touch-icon.png",
-        "sizes": "192x192",
+        "src": "/static/horilla_theme/assets/img/icon.png",
+        "sizes": "1254x1254",
         "type": "image/png"
       }
     ]

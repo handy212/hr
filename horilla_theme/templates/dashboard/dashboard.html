@@ -6,12 +6,19 @@
         .oh-info {
             top: 2px !important;
         }
+        .hrdeck-dashboard-card {
+            border: 1px solid #E2E9F2;
+            border-radius: 12px;
+            box-shadow: 0 3px 14px rgba(15, 45, 91, .04);
+        }
+        .hrdeck-dashboard-card p.text-sm { color: #536987; font-size: .8rem; }
+        .hrdeck-dashboard-card p.text-xl { color: #0F2D5B; font-size: 1.5rem; }
     </style>
 
     <div class="grid grid-cols-1 xl:grid-cols-5 md:grid-cols-2 gap-4 mb-4">
-        <div class="bg-white p-6 rounded-md shadow-card relative">
+        <div class="hrdeck-dashboard-card bg-white p-6 relative">
             <div class="flex items-center gap-4">
-                <div class="bg-[#1cba5121] p-3 rounded-md">
+                <div class="bg-[#EAF3FF] p-3 rounded-md">
                     <img
                         src="{% static 'horilla_theme/assets/img/icons/total-vacancy.svg' %}"
                         width="20"
@@ -34,12 +41,12 @@
         </div>
 
         <div
-            class="bg-white p-6 rounded-md shadow-card relative"
+            class="hrdeck-dashboard-card bg-white p-6 relative"
             style="cursor: pointer"
             onclick="window.location.href = `/recruitment/recruitment-view`"
         >
             <div class="flex items-center gap-4">
-                <div class="bg-[#b71db01f] p-3 rounded-md">
+                <div class="bg-[#F0FCFA] p-3 rounded-md">
                     <img
                         src="{% static 'horilla_theme/assets/img/icons/ongoing-rec.svg' %}"
                         width="20"
@@ -61,12 +68,12 @@
         </div>
 
         <div
-            class="bg-white p-6 rounded-md shadow-card relative"
+            class="hrdeck-dashboard-card bg-white p-6 relative"
             style="cursor: pointer"
             onclick="window.location.href = `/recruitment/candidate-view?hired=true`"
         >
             <div class="flex items-center gap-4">
-                <div class="bg-[#ea7f2f2e] p-3 rounded-md">
+                <div class="bg-[#FFF0ED] p-3 rounded-md">
                     <img
                         src="{% static 'horilla_theme/assets/img/icons/hired-candidates.svg' %}"
                         width="20"
@@ -87,9 +94,9 @@
       </button> -->
         </div>
 
-        <div class="bg-white p-6 rounded-md shadow-card relative">
+        <div class="hrdeck-dashboard-card bg-white p-6 relative">
             <div class="flex items-center gap-4">
-                <div class="bg-[#d821491c] p-3 rounded-md">
+                <div class="bg-[#EAF3FF] p-3 rounded-md">
                     <img
                         src="{% static 'horilla_theme/assets/img/icons/conversion-rate.svg' %}"
                         width="20"
@@ -117,9 +124,9 @@
         </div>
 
         {% if "onboarding"|app_installed %}
-            <div class="bg-white p-6 rounded-md shadow-card relative">
+            <div class="hrdeck-dashboard-card bg-white p-6 relative">
                 <div class="flex items-center gap-4">
-                    <div class="bg-[#E6E6FA] p-3 rounded-md">
+                    <div class="bg-[#F0FCFA] p-3 rounded-md">
                         <img
                             src="{% static 'horilla_theme/assets/img/icons/offer-acceptance.svg' %}"
                             width="20"
@@ -149,7 +156,7 @@
     </div>
 
     <div class="grid grid-cols-12 gap-4 mb-4">
-        <div class="xl:col-span-4 md:col-span-6 col-span-12 bg-white rounded-md shadow-card">
+        <div class="xl:col-span-4 md:col-span-6 col-span-12 hrdeck-dashboard-card bg-white">
             <div class="flex justify-between items-center p-6 pb-0 mb-2">
                 <h3 class="text-md font-semibold">
                     {% trans "Talent Pool Status" %}
@@ -163,7 +170,7 @@
                 </div>
             </div>
         </div>
-        <div class="xl:col-span-4 md:col-span-6 col-span-12 bg-white p-6 rounded-md shadow-card">
+        <div class="xl:col-span-4 md:col-span-6 col-span-12 hrdeck-dashboard-card bg-white p-6">
             <div class="flex justify-between items-center mb-2">
                 <h3 class="text-md font-semibold">
                     {% trans "Candidate Offer Letter Status" %}
@@ -181,7 +188,7 @@
         </div>
 
         {% if "onboarding"|app_installed %}
-            <div class="xl:col-span-4 md:col-span-6 col-span-12 bg-white rounded-md shadow-card">
+            <div class="xl:col-span-4 md:col-span-6 col-span-12 hrdeck-dashboard-card bg-white">
                 <div class="flex justify-between items-center p-6 pb-0 mb-4">
                     <h3 class="text-md font-semibold">
                         {% trans "Candidate on Onboard" %}
@@ -205,7 +212,7 @@
             </div>
         {% endif %}
 
-        <div class="xl:col-span-6 md:col-span-6 col-span-12 bg-white p-6 rounded-md shadow-card">
+        <div class="xl:col-span-6 md:col-span-6 col-span-12 hrdeck-dashboard-card bg-white p-6">
             <div class="flex justify-between items-center mb-2">
                 <h3 class="text-md font-semibold">
                     {% trans "Joinings Per Month" %}
@@ -220,7 +227,7 @@
             </div>
         </div>
 
-        <div class="xl:col-span-6 md:col-span-6 col-span-12 bg-white rounded-md shadow-card">
+        <div class="xl:col-span-6 md:col-span-6 col-span-12 hrdeck-dashboard-card bg-white">
             <div class="flex justify-between items-center p-6 pb-0 mb-2">
                 <h3 class="text-md font-semibold">
                     {% trans "Current Hiring Pipeline" %}
@@ -238,7 +245,7 @@
         </div>
 
         {% if ongoing_recruitments %}
-            <div class="xl:col-span-5 md:col-span-6 col-span-12 bg-white rounded-md shadow-card">
+            <div class="xl:col-span-5 md:col-span-6 col-span-12 hrdeck-dashboard-card bg-white">
                 <div class="flex justify-between items-center mb-2 p-6 pb-0">
                     <h3 class="text-md font-semibold">
                         {% trans "Ongoing Recruitments & Hiring Managers" %}
@@ -255,7 +262,7 @@
             </div>
         {% endif %}
 
-        <div class="xl:col-span-7 md:col-span-6 col-span-12 bg-white p-6 rounded-md shadow-card">
+        <div class="xl:col-span-7 md:col-span-6 col-span-12 hrdeck-dashboard-card bg-white p-6">
             <div class="flex justify-between items-center mb-2">
                 <h3 class="text-md font-semibold">
                     {% trans "Candidates Per Stage" %}
@@ -275,7 +282,7 @@
         {% if "onboarding"|app_installed %}
             {% if request.user|is_in_task_managers %}
                 <div
-                    class="xl:col-span-7 md:col-span-6 col-span-12 bg-white p-6 rounded-md shadow-card"
+                    class="xl:col-span-7 md:col-span-6 col-span-12 hrdeck-dashboard-card bg-white p-6"
                     style="height: 425px"
                 >
                     <div class="flex justify-between items-center mb-2">

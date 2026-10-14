@@ -31,15 +31,15 @@
     .dark #srTabs .sr-tab { border-color: hsl(0, 0%, 25%); color: hsl(0, 0%, 85%); }
     #srTabs .sr-tab--active {
         background-color: var(--primary-300, #fcedeb);
-        color: var(--primary-600, #E54F38);
-        border-color: var(--primary-600, #E54F38);
+        color: var(--primary-600, #2D8CFF);
+        border-color: var(--primary-600, #2D8CFF);
     }
     .dark #srTabs .sr-tab--active { background-color: rgba(229, 79, 56, .16); }
     #srTabs .sr-tab__badge {
         min-width: 24px;
         height: 24px;
         padding: 0 4px;
-        background: var(--primary-600, #E54F38);
+        background: var(--primary-600, #2D8CFF);
         border-radius: 999px;
         color: #fff;
         font-size: 12px;
@@ -134,7 +134,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    .sr-chip-item ion-icon { color: var(--primary-600, #E54F38); flex-shrink: 0; }
+    .sr-chip-item ion-icon { color: var(--primary-600, #2D8CFF); flex-shrink: 0; }
     .sr-chip-empty { padding: 8px 10px; white-space: normal; font-size: 14px; color: #666; }
     .dark .sr-chip-empty { color: hsl(0, 0%, 65%); }
     .sr-chip-item:hover { background: hsl(0, 0%, 95%); }
@@ -223,7 +223,7 @@
     .sr-rail-link:hover { background: hsl(213, 22%, 93%); color: inherit; }
     .dark .sr-rail-link:hover { background: hsl(0, 0%, 20%); }
     .sr-rail-link--hidden { display: none; }
-    .sr-rail-link--active { background: var(--primary-100, #FFF5F1); color: var(--primary-600, #E54F38); }
+    .sr-rail-link--active { background: var(--primary-100, #FFF5F1); color: var(--primary-600, #2D8CFF); }
     .dark .sr-rail-link--active { background: rgba(229, 79, 56, .16); color: var(--primary-500, #F7C8C1); }
     .sr-count-badge { font-size: 12px; color: #666; }
     .dark .sr-count-badge { color: hsl(0, 0%, 65%); }
@@ -242,7 +242,7 @@
     .dark .sr-saved-view { color: hsl(0, 0%, 80%); }
     .sr-saved-view:hover { background: hsl(213, 22%, 93%); }
     .dark .sr-saved-view:hover { background: hsl(0, 0%, 20%); }
-    .sr-saved-view--active { background: var(--primary-100, #FFF5F1); color: var(--primary-600, #E54F38); }
+    .sr-saved-view--active { background: var(--primary-100, #FFF5F1); color: var(--primary-600, #2D8CFF); }
     .dark .sr-saved-view--active { background: rgba(229, 79, 56, .16); color: var(--primary-500, #F7C8C1); }
     .sr-saved-view__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     /* "My favorites" is the one saved-view row with an icon -- a real icon
@@ -272,7 +272,7 @@
     }
     .sr-saved-view:hover .sr-saved-view__del,
     .sr-saved-view:focus-within .sr-saved-view__del { opacity: 1; }
-    .sr-saved-view__del:hover { color: var(--primary-600, #E54F38); }
+    .sr-saved-view__del:hover { color: var(--primary-600, #2D8CFF); }
     .oh-input--error { border-color: #B42318 !important; }
     .sr-save-view-btn {
         display: flex;
@@ -281,7 +281,7 @@
         padding: 7px 10px;
         font-size: 12px;
         font-weight: 600;
-        color: var(--primary-600, #E54F38);
+        color: var(--primary-600, #2D8CFF);
         background: none;
         border: none;
         cursor: pointer;
@@ -365,8 +365,8 @@
     /* Favorite/Subscribe are real oh-btn--sq-sm oh-btn--transparent icon
        buttons (see markup) — only the primary-color hover tint is added on
        top here, matching the same tint used on the report detail page. */
-    .sr-row__btn:hover { background: var(--primary-100, #FFF5F1); color: var(--primary-600, #E54F38); }
-    .sr-fav-btn.is-on { color: var(--primary-600, #E54F38); }
+    .sr-row__btn:hover { background: var(--primary-100, #FFF5F1); color: var(--primary-600, #2D8CFF); }
+    .sr-fav-btn.is-on { color: var(--primary-600, #2D8CFF); }
 
     /* Grid view — same .sr-row elements/data, restyled via CSS Grid instead
        of duplicate markup. Tokens (border #ebebeb, .shadow-card box-shadow,
@@ -427,8 +427,8 @@
         border-color: hsl(0, 0%, 32%);
     }
     .sr-sections.sr-view--grid .sr-row.is-selected {
-        border-color: var(--primary-600, #E54F38);
-        box-shadow: 0 0 0 1px var(--primary-600, #E54F38);
+        border-color: var(--primary-600, #2D8CFF);
+        box-shadow: 0 0 0 1px var(--primary-600, #2D8CFF);
     }
     .dark .sr-sections.sr-view--grid .sr-row {
         background: #242424;
@@ -568,7 +568,7 @@
     }
     .dark .sr-bulk-bar { background: rgba(229, 79, 56, .14); border-color: rgba(229, 79, 56, .35); }
     .sr-bulk-bar[hidden] { display: none; }
-    .sr-bulk-bar__count { font-size: 13px; font-weight: 600; color: var(--primary-600, #E54F38); }
+    .sr-bulk-bar__count { font-size: 13px; font-weight: 600; color: var(--primary-600, #2D8CFF); }
     .sr-bulk-bar__actions { display: flex; gap: 8px; }
 
     .sr-no-results { text-align: center; padding: 60px 0; font-size: 14px; color: #666; }
@@ -593,7 +593,7 @@
         font-size: 12px;
         font-weight: 700;
         letter-spacing: 0.05em;
-        color: var(--primary-600, #E54F38);
+        color: var(--primary-600, #2D8CFF);
         margin-bottom: 6px;
     }
     .sr-inspector__title { font-size: 16px; font-weight: 700; margin: 0 0 6px; }
@@ -1417,7 +1417,7 @@ function initStandardCatalog() {
             document.body.appendChild(host);
         }
         var el = document.createElement("div");
-        var accent = kind === "error" ? "#dc2626" : "var(--primary-600, #E54F38)";
+        var accent = kind === "error" ? "#dc2626" : "var(--primary-600, #2D8CFF)";
         el.style.cssText =
             "background:#fff;border:1px solid #ebebeb;border-left:3.4px solid " + accent +
             ";border-radius:6px;box-shadow:0px 2px 14px rgba(0,0,0,.12);padding:10px 14px;" +

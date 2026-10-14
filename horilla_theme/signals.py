@@ -20,11 +20,10 @@ def create_default_themes(sender, **kwargs):
     if sender.name != "horilla_theme":
         return
 
-    # Check if horilla_theme already exist
+    # Check that the theme table exists before seeding any missing presets.
     try:
         # Table may not exist yet in some migration orders
-        if HorillaColorTheme.objects.exists():
-            return
+        HorillaColorTheme.objects.exists()
     except (OperationalError, ProgrammingError):
         # Table not created yet — skip silently
         return

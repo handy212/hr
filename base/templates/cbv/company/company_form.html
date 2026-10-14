@@ -10,7 +10,7 @@
                 style="border: 1px solid hsl(213, 22%, 84%)"
             >
                 <img
-                    src="{% if form.instance.icon %}{{ form.instance.icon.url }}{% else %}{% static 'images/ui/auth-logo.png' %}{% endif %}"
+                    src="{% if form.instance.icon %}{{ form.instance.icon.url }}{% else %}{% static 'horilla_theme/assets/img/icon.png' %}{% endif %}"
                     class="oh-profile-section__avatar preview"
                     alt="{% trans 'Company logo' %}"
                 >
@@ -36,7 +36,7 @@
             <div class="oh-profile-section__image-container" id="companyIconFieldContainer">
                 <div class="oh-profile-section__modal-avatar" style="border: 1px solid hsl(213, 22%, 84%)">
                     <img
-                        src="{% if form.instance.icon %}{{ form.instance.icon.url }}{% else %}{% static 'images/ui/auth-logo.png' %}{% endif %}"
+                        src="{% if form.instance.icon %}{{ form.instance.icon.url }}{% else %}{% static 'horilla_theme/assets/img/icon.png' %}{% endif %}"
                         class="oh-profile-section__modal-image preview"
                         alt="{% trans 'Company logo' %}"
                     >

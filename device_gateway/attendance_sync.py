@@ -101,27 +101,35 @@ def process_punch(device, record, photo=None, retry=False):
 
     is_entry = record.get("IsEntry", 1)
     direction = device.direction
-    if direction == "in":
-        clock_in(request_data)
-    elif direction == "out":
-        clock_out(request_data)
-    elif direction == "alternate":
-        last_activity = (
-            AttendanceActivity.objects.filter(
-                employee_id=employee, attendance_date=punch_dt.date()
+    try:
+        if direction == "in":
+            clock_in(request_data)
+        elif direction == "out":
+            clock_out(request_data)
+        elif direction == "alternate":
+            last_activity = (
+                AttendanceActivity.objects.filter(
+                    employee_id=employee, attendance_date=punch_dt.date()
+                )
+                .order_by("-in_datetime", "-out_datetime")
+                .first()
             )
-            .order_by("-in_datetime", "-out_datetime")
-            .first()
+            if not last_activity or last_activity.clock_out:
+                clock_in(request_data)
+            else:
+                clock_out(request_data)
+        else:  # system: trust the device's IsEntry flag
+            if int(is_entry) == 1:
+                clock_in(request_data)
+            else:
+                clock_out(request_data)
+    except Exception:
+        logger.exception(
+            "device_gateway: clock_in/clock_out failed for punch %s "
+            "on %s (employee=%s)",
+            record_id, device.sn, employee.pk,
         )
-        if not last_activity or last_activity.clock_out:
-            clock_in(request_data)
-        else:
-            clock_out(request_data)
-    else:  # system: trust the device's IsEntry flag
-        if int(is_entry) == 1:
-            clock_in(request_data)
-        else:
-            clock_out(request_data)
+        return "error"
 
     log.attendance_created = True
     log.save(update_fields=["attendance_created"])

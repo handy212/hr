@@ -1788,12 +1788,12 @@ td .oh-profile {
 
 .oh-view-btn--active {
   background-color: #fff !important;
-  border: 1px solid var(--primary-600, #E54F38) !important;
-  color: var(--primary-600, #E54F38) !important;
+  border: 1px solid var(--primary-600, #2D8CFF) !important;
+  color: var(--primary-600, #2D8CFF) !important;
 }
 
 .oh-view-btn--active ion-icon {
-  color: var(--primary-600, #E54F38);
+  color: var(--primary-600, #2D8CFF);
 }
 
 .swal2-styled.swal2-confirm {
@@ -1815,7 +1815,7 @@ td .oh-profile {
   border: unset;
   border-radius: 5px;
   font-size: 13px;
-  color: #e54f38;
+  color: var(--primary-600, #2D8CFF);
   font-weight: 600;
   margin-bottom: 10px;
 }
@@ -1960,7 +1960,7 @@ td .oh-profile {
    input just never visibly changed color on click. Restated here, after
    the base rule, so the themed color actually wins when focused. */
 .hlv-pagination input[type="number"]:focus {
-  border-color: var(--primary-600, #E54F38);
+  border-color: var(--primary-600, #2D8CFF);
 }
 
 .hlv-pagination span {
@@ -2536,7 +2536,7 @@ ul.errorlist ul.errorlist {
   font-family: "Font Awesome 6 Free";
   font-weight: 600;
   font-size: 12px;
-  color: #e54f38;
+  color: var(--primary-600, #2D8CFF);
   position: absolute;
   left: 0;
 }
@@ -2589,7 +2589,7 @@ ul.errorlist ul.errorlist {
 }
 
 .sideboxmain.active {
-  background-color: #e34e38;
+  background-color: var(--primary-600, #2D8CFF);
 }
 
 .sideboxmain img,
@@ -2625,7 +2625,7 @@ ul.errorlist ul.errorlist {
   position: absolute;
   width: 2px;
   height: 100%;
-  background-color: #e34e38;
+  background-color: var(--primary-600, #2D8CFF);
   opacity: 0;
   inset: 0;
   right: 0;
@@ -2635,8 +2635,8 @@ ul.errorlist ul.errorlist {
 
 .sidebox ul li a:hover {
   background: rgb(227 78 56 / 10%);
-  color: #e34e38;
-  /* border-right: 2px solid #e54f38; */
+  color: var(--primary-600, #2D8CFF);
+  /* border-right: 2px solid var(--primary-600, #2D8CFF); */
 }
 
 .sidebox ul li a:hover:after,
@@ -2646,7 +2646,7 @@ ul.errorlist ul.errorlist {
 
 .sidebox ul li a.active {
   background: rgb(227 78 56 / 10%);
-  color: #e34e38;
+  color: var(--primary-600, #2D8CFF);
 }
 
 .oh-permission-panel,
@@ -2892,7 +2892,7 @@ ul.errorlist ul.errorlist {
 }
 
 .oh-titlebar__tag.filter-field {
-  border: solid 1px var(--primary-300, #ff450033);
+  border: solid 1px var(--primary-300, #B8D8FF33);
 }
 
 .oh-titlebar__tag--custom {
@@ -3271,7 +3271,7 @@ ul.errorlist ul.errorlist {
 }
 
 .oh-column-config__search:focus-within {
-  border-color: #e54f38;
+  border-color: var(--primary-600, #2D8CFF);
   background: #fff;
   box-shadow: 0 0 0 3px rgba(229, 79, 56, 0.12);
 }
@@ -3415,7 +3415,7 @@ ul.errorlist ul.errorlist {
   height: 34px;
   margin: 0 2px;
   border-radius: 8px;
-  border: 1px dashed #e54f38;
+  border: 1px dashed var(--primary-600, #2D8CFF);
   background: rgba(229, 79, 56, 0.06);
 }
 
@@ -3455,7 +3455,7 @@ ul.errorlist ul.errorlist {
 
 .oh-sticky-dropdown_btn.is-column-config-trigger:hover,
 .oh-sticky-dropdown_btn.is-column-config-trigger[aria-expanded="true"] {
-  color: var(--primary-600, #e54f38);
+  color: var(--primary-600, #2D8CFF);
   border-color: var(--primary-500, #f0c4bc);
   background: var(--primary-100, #fff5f3);
 }
@@ -3971,8 +3971,8 @@ span.oh-activity-sidebar__a img {
 }
 
 .oh-modal__dialog--custom .oh-general__tab .oh-general__tab-link--active {
-  background-color: #e54f38;
-  border: 1px solid #e54f38;
+  background-color: var(--primary-600, #2D8CFF);
+  border: 1px solid var(--primary-600, #2D8CFF);
   color: #fff;
   padding: 5px 12px;
   border-radius: 23px;
@@ -4047,7 +4047,7 @@ input[type="range"]::-webkit-slider-thumb {
   height: 20px;
   width: 20px;
   border-radius: 50%;
-  background: #e54f38;
+  background: var(--primary-600, #2D8CFF);
   /* 🔴 Thumb color */
   cursor: pointer;
   margin-top: -7px;
@@ -4067,7 +4067,7 @@ input[type="range"]::-moz-range-thumb {
   height: 20px;
   width: 20px;
   border-radius: 50%;
-  background: #e54f38;
+  background: var(--primary-600, #2D8CFF);
   cursor: pointer;
   border: none;
 }
@@ -4083,7 +4083,7 @@ input[type="range"]::-ms-thumb {
   height: 20px;
   width: 20px;
   border-radius: 50%;
-  background: #e54f38;
+  background: var(--primary-600, #2D8CFF);
   cursor: pointer;
   border: none;
 }
@@ -4274,7 +4274,7 @@ input[type="range"]::-ms-fill-upper {
 }
 
 .pvtFilterBox input[type="checkbox"].pvtFilter {
-  accent-color: #e54f38;
+  accent-color: var(--primary-600, #2D8CFF);
   width: 15px;
   height: 15px;
   cursor: pointer;

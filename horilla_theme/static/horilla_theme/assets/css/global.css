@@ -79,7 +79,7 @@
   font-family: "Font Awesome 6 Free";
   font-weight: 600;
   font-size: 12px;
-  color: #e54f38;
+  color: var(--primary-600, #2D8CFF);
   position: absolute;
   left: 0;
 }
@@ -126,7 +126,7 @@
 
 /* Comment this line for dynamic theme */
 /* .sideboxmain:hover {
-  background-color: #e34e38;
+  background-color: var(--primary-600, #2D8CFF);
 } */
 
 /* Apply image filter when sidebox is active */
@@ -135,7 +135,7 @@
 }
 
 .sideboxmain.active {
-  background-color: #e34e38;
+  background-color: var(--primary-600, #2D8CFF);
 }
 
 .sideboxmain img {
@@ -169,7 +169,7 @@
   width: 2px;
   height: 100%;
   /* Comment this line for dynamic theme */
-  /* background-color: #e34e38; */
+  /* background-color: var(--primary-600, #2D8CFF); */
   opacity: 0;
   inset: 0;
   right: 0;
@@ -180,8 +180,8 @@
 .sidebox ul li a:hover {
   background: rgb(227 78 56 / 10%);
   /* Comment this line for dynamic theme  */
-  /* color: #e34e38; */
-  /* border-right: 2px solid #e54f38; */
+  /* color: var(--primary-600, #2D8CFF); */
+  /* border-right: 2px solid var(--primary-600, #2D8CFF); */
 }
 
 .sidebox ul li a:hover:after,
@@ -191,7 +191,7 @@
 
 .sidebox ul li a.active {
   background: rgb(227 78 56 / 10%);
-  color: #e34e38;
+  color: var(--primary-600, #2D8CFF);
 }
 
 .breadcrumb {
@@ -225,7 +225,7 @@
 }
 
 .breadcrumb li.oh-breadcrumb-current {
-  color: #e54f38;
+  color: var(--primary-600, #2D8CFF);
   font-weight: 500;
 }
 
@@ -234,7 +234,7 @@
 }
 
 .breadcrumb li a:hover {
-  color: #e54f38;
+  color: var(--primary-600, #2D8CFF);
 }
 
 .stickyleft {
@@ -328,7 +328,7 @@
 .myform select:focus,
 .myform textarea:focus {
   outline: unset;
-  border: 1px solid #e54f38;
+  border: 1px solid var(--primary-600, #2D8CFF);
 }
 
 .myform label {
@@ -338,7 +338,7 @@
 }
 
 .btn {
-  background: #e54f38;
+  background: var(--primary-600, #2D8CFF);
   color: white;
   font-size: 13px;
   min-width: max-content;
@@ -405,7 +405,7 @@
 
 .select2-container--default .select2-selection--multiple .select2-selection__choice {
   /* Comment this line for dynamic theme */
-  /* background-color: #e54f38; */
+  /* background-color: var(--primary-600, #2D8CFF); */
   color: white;
   border: unset;
   height: 23px;
@@ -429,12 +429,12 @@
 .select2-container--default .select2-results__option--highlighted[aria-selected],
 .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
   background-color: var(--primary-100, #fff5f1);
-  color: var(--primary-600, #e54f38);
+  color: var(--primary-600, #2D8CFF);
 }
 
 .select2-container--default .select2-results__option--selected {
   background-color: var(--primary-100, #fff5f1);
-  color: var(--primary-600, #e54f38);
+  color: var(--primary-600, #2D8CFF);
 }
 
 .select2-container--default.select2-container--focus .select2-selection--multiple {
@@ -461,7 +461,7 @@
 
 .userbox.active,
 .userbox:hover {
-  border: 1px solid #e34e38;
+  border: 1px solid var(--primary-600, #2D8CFF);
 }
 
 .userlist {
@@ -563,15 +563,15 @@
 
 .usertablist li button.active,
 .usertablist li button:hover {
-  background-color: #e54f38;
-  border: 1px solid #e54f38;
+  background-color: var(--primary-600, #2D8CFF);
+  border: 1px solid var(--primary-600, #2D8CFF);
   color: white;
 }
 
 /* TAB DESIGN */
 
 .mytab {
-  border: 1px solid #e34e38;
+  border: 1px solid var(--primary-600, #2D8CFF);
   border-radius: 50px;
   overflow: hidden;
   padding: 5px;
@@ -581,7 +581,7 @@
 
 .mytab .tab-button.active {
   color: white;
-  background: #e34e38;
+  background: var(--primary-600, #2D8CFF);
   border-radius: 50px;
 }
 
@@ -906,8 +906,8 @@ input[type="radio"].red-radio {
 }
 
 input[type="radio"].red-radio:checked {
-  border-color: #e54f38;
-  background-color: #e54f38;
+  border-color: var(--primary-600, #2D8CFF);
+  background-color: var(--primary-600, #2D8CFF);
 }
 
 input[type="radio"].red-radio:checked::after {
@@ -939,8 +939,8 @@ table input[type="checkbox"] {
 }
 
 input[type="checkbox"].custom-checkbox:checked {
-  background-color: #e54f38;
-  border-color: #e54f38;
+  background-color: var(--primary-600, #2D8CFF);
+  border-color: var(--primary-600, #2D8CFF);
 }
 
 input[type="checkbox"].custom-checkbox:checked::after {
@@ -956,7 +956,7 @@ input[type="checkbox"].custom-checkbox:checked::after {
 }
 
 input[type="checkbox"].custom-checkbox:hover {
-  border-color: #e54f38;
+  border-color: var(--primary-600, #2D8CFF);
 }
 
 .tooltip {
@@ -1004,7 +1004,7 @@ input[type="checkbox"].custom-checkbox:hover {
 }
 
 .progress li.active .sec::before {
-  background-color: #e54f38;
+  background-color: var(--primary-600, #2D8CFF);
 }
 
 .progress li span {
@@ -1051,7 +1051,7 @@ input[type="checkbox"].custom-checkbox:hover {
   background-color: #ce4732;
 }
 .bg-primary-600 {
-  background-color: #E54F38;
+  background-color: var(--primary-600, #2D8CFF);
 }
 .bg-primary-500 {
   background-color: #F7C8C1;
@@ -1072,7 +1072,7 @@ input[type="checkbox"].custom-checkbox:hover {
   background-color: #f6f6f6;
 }
 .text-primary-600 {
-  color: #e54f38;
+  color: var(--primary-600, #2D8CFF);
 } */
 .dropdown-wrapper:focus-within .dropdown-content {
   opacity: 1;
@@ -1245,7 +1245,7 @@ input[type="checkbox"].custom-checkbox:hover {
 }
 
 .oh-column-config__search:focus-within {
-  border-color: #e54f38;
+  border-color: var(--primary-600, #2D8CFF);
   background: #fff;
   box-shadow: 0 0 0 3px rgba(229, 79, 56, 0.12);
 }
@@ -1389,7 +1389,7 @@ input[type="checkbox"].custom-checkbox:hover {
   height: 34px;
   margin: 0 2px;
   border-radius: 8px;
-  border: 1px dashed #e54f38;
+  border: 1px dashed var(--primary-600, #2D8CFF);
   background: rgba(229, 79, 56, 0.06);
 }
 
@@ -1429,7 +1429,7 @@ input[type="checkbox"].custom-checkbox:hover {
 
 .oh-sticky-dropdown_btn.is-column-config-trigger:hover,
 .oh-sticky-dropdown_btn.is-column-config-trigger[aria-expanded="true"] {
-  color: #e54f38;
+  color: var(--primary-600, #2D8CFF);
   border-color: #f0c4bc;
   background: #fff5f3;
 }

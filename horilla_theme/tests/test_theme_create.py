@@ -8,7 +8,7 @@ from horilla_theme.models import THEMES_DATA, HorillaColorTheme
 
 class ThemeCreateTests(TestCase):
     def test_create_from_theme_data(self):
-        data = dict(THEMES_DATA[1])
+        data = dict(next(item for item in THEMES_DATA if item["name"] == "Ocean Blue Theme"))
         data["name"] = "Unit Smoke Ocean Theme"
         data["is_default"] = False
         theme = HorillaColorTheme.objects.create(**data)

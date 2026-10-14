@@ -1,4 +1,4 @@
-# Development Compose stack for Horilla HR.
+# Development Compose stack for HRDeck.
 # Zero-config: `make dev` / `docker compose up --build`
 # Production: `make prod` (uses docker-compose.prod.yml + .env — see .env.dist)
 #

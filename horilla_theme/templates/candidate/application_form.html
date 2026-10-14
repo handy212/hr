@@ -13,7 +13,7 @@
     <link
         rel="apple-touch-icon"
         sizes="180x180"
-        href="{% if hq_company.icon %}{{hq_company.icon.url}} {% else %}{% static 'favicons/apple-touch-icon.png' %}{% endif %}"
+        href="{% if hq_company.icon %}{{hq_company.icon.url}} {% else %}{% static 'horilla_theme/assets/img/icon.png' %}{% endif %}"
     />
     <link
         rel="stylesheet"
@@ -23,13 +23,13 @@
         rel="icon"
         type="image/png"
         sizes="32x32"
-        href="{% if hq_company.icon %}{{hq_company.icon.url}} {% else %}{% static 'favicons/favicon-32x32.png' %}{% endif %}"
+        href="{% if hq_company.icon %}{{hq_company.icon.url}} {% else %}{% static 'horilla_theme/assets/img/icon.png' %}{% endif %}"
     />
     <link
         rel="icon"
         type="image/png"
         sizes="16x16"
-        href="{% if hq_company.icon %}{{hq_company.icon.url}} {% else %}{% static 'favicons/favicon-16x16.png' %}{% endif %}"
+        href="{% if hq_company.icon %}{{hq_company.icon.url}} {% else %}{% static 'horilla_theme/assets/img/icon.png' %}{% endif %}"
     />
     <link href="{% static 'cdn/select2/css/select2.min.css' %}" rel="stylesheet">
     <link
@@ -57,7 +57,7 @@
                         300: '{{ theme_obj.primary_300 | default:"#FCEDEB" }}',
                         400: '{{ theme_obj.primary_400 | default:"#FBE5E1" }}',
                         500: '{{ theme_obj.primary_500 | default:"#F7C8C1" }}',
-                        600: '{{ theme_obj.primary_600 | default:"#E54F38" }}',
+                        600: '{{ theme_obj.primary_600 | default:"#2D8CFF" }}',
                         700: '{{ theme_obj.primary_700 | default:"#ce4732" }}',
                         800: '{{ theme_obj.primary_800 | default:"#AC3B2A" }}',
                         900: '{{ theme_obj.primary_900 | default:"#672419" }}',
@@ -83,7 +83,7 @@
                         300: '{{ theme_obj.secondary_300 | default:"#cbd5e1" }}',
                         400: '{{ theme_obj.secondary_400 | default:"#FBE5E1" }}',
                         500: '{{ theme_obj.secondary_500 | default:"#F7C8C1" }}',
-                        600: '{{ theme_obj.secondary_600 | default:"#E54F38" }}',
+                        600: '{{ theme_obj.secondary_600 | default:"#2D8CFF" }}',
                         700: '{{ theme_obj.secondary_700 | default:"#334155" }}',
                         800: '{{ theme_obj.secondary_800 | default:"#1e293b" }}',
                         900: '{{ theme_obj.secondary_900 | default:"#0f172a" }}',
@@ -109,7 +109,7 @@
         .oh-select-2:focus,
         .oh-select-2:focus-visible {
             outline: none;
-            border-color: {{ theme_obj.primary_600|default:"#E54F38" }} !important;
+            border-color: {{ theme_obj.primary_600|default:"#2D8CFF" }} !important;
         }
         .select2-container .select2-selection__rendered {
             padding-left: 35px !important;
@@ -128,7 +128,7 @@
             height: 40px !important;
         }
         .select2-container--open .select2-selection {
-            border-color: {{ theme_obj.primary_600|default:"#E54F38" }} !important;
+            border-color: {{ theme_obj.primary_600|default:"#2D8CFF" }} !important;
         }
         #id_gender,
         #id_referral_source {
@@ -145,7 +145,7 @@
         #id_referral_source:focus,
         #id_referral_source:focus-visible {
             outline: none;
-            border-color: {{ theme_obj.primary_600|default:"#E54F38" }};
+            border-color: {{ theme_obj.primary_600|default:"#2D8CFF" }};
         }
     </style>
 </head>
@@ -168,12 +168,12 @@
                 {% if hq_company.icon %}
                     <img src="{{ hq_company.icon.url }}" alt="" class="w-full h-full object-cover">
                 {% else %}
-                    <span>{{ hq_company.company|default:"Horilla"|first|upper }}</span>
+                    <span>{{ hq_company.company|default:"HRDeck"|first|upper }}</span>
                 {% endif %}
             </div>
             <div>
                 <h1 class="text-xl font-bold leading-tight">
-                    {{ hq_company.company|default:"Horilla" }} {% trans "Careers" %}
+                    {{ hq_company.company|default:"HRDeck" }} {% trans "Careers" %}
                 </h1>
                 <p class="text-sm text-dark-100 leading-tight">
                     {% trans "Open positions across our teams" %}

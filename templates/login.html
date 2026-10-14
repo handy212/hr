@@ -6,29 +6,31 @@
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="{% static 'cdn/googleapi/css/inter-font-style.css' %}">
         <title>Login - {{ white_label_company_name }} Dashboard</title>
         <link
             rel="apple-touch-icon"
             sizes="180x180"
-            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'favicons/apple-touch-icon.png' %}{% endif %}"
+            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'horilla_theme/assets/img/icon.png' %}{% endif %}"
         >
         <link
             rel="icon"
             type="image/png"
             sizes="32x32"
-            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'favicons/favicon-32x32.png' %}{% endif %}"
+            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'horilla_theme/assets/img/icon.png' %}{% endif %}"
         >
         <link
             rel="icon"
             type="image/png"
             sizes="16x16"
-            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'favicons/favicon-16x16.png' %}{% endif %}"
+            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'horilla_theme/assets/img/icon.png' %}{% endif %}"
         >
         <link rel="stylesheet" href="{% static '/build/css/style.min.css' %}">
+        <link rel="stylesheet" href="{% static 'horilla_theme/assets/css/hrdeck-brand.css' %}?v=5">
         <link rel="manifest" href="{% static 'build/manifest.json' %}">
     </head>
 
-    <body>
+    <body class="hrdeck-auth-page hrdeck-classic-auth">
         <div id="main">
             <div class="oh-alert-container">
                 {% for message in messages %}
@@ -39,8 +41,10 @@
             </div>
             <main class="oh-auth">
                 <div class="oh-auth-card mb-4">
+                    <img src="{% if white_label_company.icon %}{{ white_label_company.icon.url }}{% else %}{% static 'horilla_theme/assets/img/logo_no_background.png' %}{% endif %}"
+                         alt="{{ white_label_company_name }}" class="hrdeck-auth-logo">
                     <h1 class="oh-onboarding-card__title oh-onboarding-card__title--h2 text-center my-3">
-                        {% trans "Sign In" %}
+                        {% trans "Welcome back!" %}
                     </h1>
                     <p class="text-muted text-center">
                         {% trans "Please login to access the dashboard." %}
@@ -54,7 +58,7 @@
                                 id="username"
                                 name="username"
                                 class="oh-input w-100"
-                                placeholder="{% trans 'e.g. adam.luis@horilla.com' %}"
+                                placeholder="{% trans 'Enter your username' %}"
                             >
                         </div>
                         <div class="oh-input-group">
@@ -135,22 +139,6 @@
                                 {% include "demo_database/auth_load_data.html" %}
                             </div>
                         </div>
-                    {% endif %}
-                </div>
-                <div style="display: contents">
-                    <img
-                        src="{% if white_label_company.icon %}
-                        "{{white_label_company.icon.url}}"
-                        alt="{{white_label_company_name}}"
-                        style=" opacity:.90; 200px; height: 140px;"
-                    {% else %}
-                        "{% static 'images/ui/auth-logo.png' %}" alt="{% trans 'Horilla' %}"
-                    {% endif %}"
-                    >
-                    {% if white_label_company %}
-                        <p style="font-size: large; color: gray; text-align: center" class="mt-2">
-                            {{ white_label_company }}
-                        </p>
                     {% endif %}
                 </div>
             </main>

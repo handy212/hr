@@ -7,7 +7,7 @@
     .sr-page { padding-bottom: 32px; }
     .sr-link-btn {
         background: none; border: none; padding: 0;
-        color: var(--primary-600, #E54F38);
+        color: var(--primary-600, #2D8CFF);
         font-size: 13px; cursor: pointer; text-decoration: none;
     }
     .sr-link-btn:hover { text-decoration: underline; text-underline-offset: 2px; }
@@ -15,13 +15,13 @@
     /* Favorite button active state — content-driven, not covered by the base button classes. */
     .sr-page .oh-btn--secondary-outline.is-on {
         background: var(--primary-100, #FFF5F1);
-        border-color: var(--primary-600, #E54F38);
+        border-color: var(--primary-600, #2D8CFF);
     }
 
     .sr-letterhead {
         display: flex; flex-direction: column; gap: 10px;
         margin-bottom: 16px;
-        border-left: 4px solid var(--primary-600, #E54F38);
+        border-left: 4px solid var(--primary-600, #2D8CFF);
     }
     .sr-letterhead__top {
         display: flex; justify-content: space-between; align-items: flex-start;
@@ -113,7 +113,7 @@
     .sr-status--error { color: #dc2626; }
     .sr-status__dot {
         width: 8px; height: 8px; border-radius: 50%;
-        background: var(--primary-600, #E54F38);
+        background: var(--primary-600, #2D8CFF);
         animation: sr-pulse 1s ease-in-out infinite;
     }
     @keyframes sr-pulse {
@@ -457,7 +457,7 @@
     const filterInputs = Array.from(document.querySelectorAll(".sr-filter-input"));
     const chartInstances = [];
 
-    const brand = getComputedStyle(document.documentElement).getPropertyValue("--primary-600").trim() || "#E54F38";
+    const brand = getComputedStyle(document.documentElement).getPropertyValue("--primary-600").trim() || "#2D8CFF";
     const brandSoft = getComputedStyle(document.documentElement).getPropertyValue("--primary-500").trim() || "#F7C8C1";
     const isDark = document.documentElement.classList.contains("dark")
         || document.body.classList.contains("dark");

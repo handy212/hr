@@ -151,6 +151,8 @@ urlpatterns = [
     path("", include("horilla_audit.urls")),
     path("", include("horilla_tour.urls")),
     path("employee/", include("employee.urls")),
+    path("api/terminal/", include("device_gateway.urls")),
+    path("device-gateway/", include("device_gateway.urls_admin")),
     path("horilla-widget/", include("horilla_widgets.urls")),
     re_path(
         "^inbox/notifications/", include(notifications.urls, namespace="notifications")

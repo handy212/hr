@@ -61,7 +61,7 @@ def _export_meta(request, definition, filters, slug: str) -> dict:
     company = company_letterhead(request, company_id=filters.company_id)
     filters_pairs = filters.summary_pairs()
     return {
-        "product_name": "Horilla HR · Standard Reports",
+        "product_name": "HRDeck · Standard Reports",
         "company": company,
         "user": getattr(request.user, "get_full_name", lambda: "")()
         or getattr(request.user, "username", ""),

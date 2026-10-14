@@ -5,6 +5,41 @@
 {% get_company as theme_obj %}
 
 <style>
+    .hrdeck-header-actions { gap: 1rem; min-width: 0; }
+    .hrdeck-header-utilities { gap: 1rem; min-width: 0; }
+    .hrdeck-header-secondary { gap: .5rem; margin-left: .25rem; }
+    .hrdeck-header-profile { padding-left: 1rem; border-left: 1px solid #E2E9F2; }
+    .hrdeck-header-secondary > button,
+    .hrdeck-header-secondary > .dropdown-wrapper > button,
+    .hrdeck-header-utilities > .dropdown-wrapper > button {
+        width: 36px; height: 36px; padding: 0;
+        display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 8px; color: #0F2D5B;
+        background: #F4F6FA;
+    }
+    .hrdeck-header-secondary > button:hover,
+    .hrdeck-header-secondary > .dropdown-wrapper > button:hover,
+    .hrdeck-header-utilities > .dropdown-wrapper > button:hover {
+        background: #EAF3FF; color: #1C70D9;
+    }
+    .hrdeck-header-actions #notifyBadgeCircle {
+        width: 16px; height: 16px; padding: 0;
+        top: -5px; right: -5px;
+        font-size: 10px; line-height: 1;
+        border: 1px solid #fff;
+    }
+    .hrdeck-header-profile > button { display: flex; align-items: center; }
+    .hrdeck-header-profile > button > div { align-items: center; gap: .6rem; }
+    .hrdeck-header-profile > button img.rounded-full { width: 36px; height: 36px; }
+    .hrdeck-header-profile h5 { color: #0F2D5B; line-height: 1.2; }
+    .hrdeck-header-profile p { color: #6D829E; line-height: 1.2; }
+    .hrdeck-header-actions button[title],
+    .hrdeck-header-actions button[aria-label] { cursor: pointer; }
+    @media (max-width: 767px) {
+        .hrdeck-header-actions, .hrdeck-header-utilities { gap: .5rem; }
+        .hrdeck-header-secondary { gap: .25rem; margin-left: 0; }
+        .hrdeck-header-profile { padding-left: .5rem; }
+    }
     /* Dark mode: the header action-icon chips use .bg-primary-100, which the
        global dark theme paints #1a1a1a — darker than the #242424 header, so the
        buttons read as recessed holes and their icons lose contrast. Give them a
@@ -17,7 +52,7 @@
         color: #ffffff;
     }
     body.dark .oh-main-header .bg-primary-100:hover {
-        background-color: {{ theme_obj.primary_600|default:'#e54f38' }} !important;
+        background-color: {{ theme_obj.primary_600|default:'#2D8CFF' }} !important;
     }
     body.dark .oh-main-header .bg-primary-100:hover i {
         color: #ffffff;
@@ -31,60 +66,17 @@
         {% endif %}
     </div>
 
-    <div class="flex items-center gap-8">
+    <div class="hrdeck-header-actions flex items-center gap-4">
         <!-- Action Icons -->
-        <div class="flex items-center gap-2">
+        <div class="hrdeck-header-utilities flex items-center gap-2">
             {% if "attendance"|app_installed %}
                 <div id="attendance-activity-container">
                     {% include "attendance/components/in_out_component.html" %}
                 </div>
             {% endif %}
-            <button
-                id="themeToggleButton"
-                class="md:block p-2 group text-primary-600 w-12 h-12 bg-primary-100 hover:bg-primary-600 rounded-full transition duration-300 flex items-center justify-center"
-            >
-                <a href="#" aria-label="{% trans 'Toggle theme' %}" onclick="return false">
-                    {% if request.session.theme == "dark" %}
-                        <i class="fa-solid fa-lightbulb transition duration-300 group-hover:text-white"></i>
-                    {% else %}
-                        <i class="fa-solid fa-moon transition duration-300 group-hover:text-white"></i>
-                    {% endif %}
-                </a>
-            </button>
-            {% if show_section %}
-                <button class="md:block p-2 group text-primary-600 w-12 h-12 bg-primary-100 hover:bg-primary-600 rounded-full transition duration-300 flex items-center justify-center">
-                    <a
-                        href="{% url 'system-preferences-view' %}"
-                        hx-get="{% url 'system-preferences-view' %}"
-                        hx-headers='{"HX-Sidebar-Nav": "true"}'
-                        hx-target="#ohMainContent"
-                        hx-select="#ohMainContent > *"
-                        hx-swap="innerHTML show:window:top"
-                        hx-push-url="true"
-                    >
-                        <i class="fas fa-cog transition duration-300 group-hover:text-white"></i>
-                    </a>
-                </button>
-            {% endif %}
-            {% if tour_launcher_enabled %}
             <div class="relative dropdown-wrapper">
                 <button
-                    id="tourLauncherBtn"
-                    type="button"
-                    title="{% trans 'Take a tour' %}"
-                    onclick="if(window.horillaTour){window.horillaTour.toggle();}"
-                    class="hidden md:block p-2 group text-primary-600 w-12 h-12 bg-primary-100 hover:bg-primary-600 rounded-full transition duration-300 relative"
-                >
-                    <i class="fas fa-circle-question transition duration-300 group-hover:text-white"></i>
-                    {% if tour_has_pending %}
-                    <span class="absolute bg-[#16a34a] w-3 h-3 rounded-full border-2 border-white [right:-2px] [top:-2px]"></span>
-                    {% endif %}
-                </button>
-            </div>
-            {% endif %}
-            <div class="relative dropdown-wrapper">
-                <button
-                    class="hidden md:block p-2 group text-primary-600 w-12 h-12 bg-primary-100 hover:bg-primary-600 rounded-full transition duration-300 relative"
+                    class="hidden md:block p-2 group text-primary-600 w-9 h-9 bg-primary-100 hover:bg-primary-600 rounded-lg transition duration-300 relative"
                     hx-get="{% url 'notifications' %}"
                     hx-target="#notificationContainer"
                     hx-trigger="load"
@@ -93,8 +85,8 @@
                     {% notifications_unread as unread_count %}
                     <span
                         id="notifyBadgeCircle"
-                        class="absolute w-7 h-7 rounded-full text-xs text-[white] font-semibold flex items-center justify-center border-2 border-white p-1 [right:-10px] [top:-7px]{% if not unread_count %} hidden{% endif %}"
-                        style="background-color: {{ theme_obj.primary_600|default:'#d7391d' }}"
+                        class="absolute rounded-full text-[white] font-semibold flex items-center justify-center{% if not unread_count %} hidden{% endif %}"
+                        style="background-color: {{ theme_obj.primary_600|default:'#2D8CFF' }}"
                     >
                         {% live_notify_badge %}
                     </span>
@@ -134,10 +126,56 @@
                 </script>
                 {% include "notification/notification.html" %}
             </div>
+            <div class="hrdeck-header-secondary flex items-center gap-2">
+            <button
+                id="themeToggleButton"
+                type="button"
+                title="{% trans 'Toggle theme' %}"
+                aria-label="{% trans 'Toggle theme' %}"
+                class="md:block p-2 group text-primary-600 w-9 h-9 bg-primary-100 hover:bg-primary-600 rounded-lg transition duration-300 flex items-center justify-center"
+            >
+                {% if request.session.theme == "dark" %}
+                    <i class="fa-solid fa-lightbulb transition duration-300 group-hover:text-white"></i>
+                {% else %}
+                    <i class="fa-solid fa-moon transition duration-300 group-hover:text-white"></i>
+                {% endif %}
+            </button>
+            {% if show_section %}
+                <button class="md:block p-2 group text-primary-600 w-9 h-9 bg-primary-100 hover:bg-primary-600 rounded-lg transition duration-300 flex items-center justify-center">
+                    <a
+                        href="{% url 'system-preferences-view' %}"
+                        hx-get="{% url 'system-preferences-view' %}"
+                        hx-headers='{"HX-Sidebar-Nav": "true"}'
+                        hx-target="#ohMainContent"
+                        hx-select="#ohMainContent > *"
+                        hx-swap="innerHTML show:window:top"
+                        hx-push-url="true"
+                    >
+                        <i class="fas fa-cog transition duration-300 group-hover:text-white"></i>
+                    </a>
+                </button>
+            {% endif %}
+            {% if tour_launcher_enabled %}
+            <div class="relative dropdown-wrapper">
+                <button
+                    id="tourLauncherBtn"
+                    type="button"
+                    title="{% trans 'Take a tour' %}"
+                    onclick="if(window.horillaTour){window.horillaTour.toggle();}"
+                    class="hidden md:block p-2 group text-primary-600 w-9 h-9 bg-primary-100 hover:bg-primary-600 rounded-lg transition duration-300 relative"
+                >
+                    <i class="fas fa-circle-question transition duration-300 group-hover:text-white"></i>
+                    {% if tour_has_pending %}
+                    <span class="absolute bg-[#16a34a] w-3 h-3 rounded-full border-2 border-white [right:-2px] [top:-2px]"></span>
+                    {% endif %}
+                </button>
+            </div>
+            {% endif %}
+
 
             {% if show_language_switcher %}
                 <div class="relative dropdown-wrapper">
-                    <button class="hidden md:block p-2 group text-primary-600 w-12 h-12 bg-primary-100 hover:bg-primary-600 rounded-full transition duration-300">
+                    <button class="hidden md:block p-2 group text-primary-600 w-9 h-9 bg-primary-100 hover:bg-primary-600 rounded-lg transition duration-300">
                         <i class="fas fa-globe transition duration-300 group-hover:text-white"></i>
                     </button>
                     {% include "base/navbar_components/language_settings.html" %}
@@ -146,15 +184,16 @@
 
             {% if show_company_switcher %}
                 <div class="relative dropdown-wrapper">
-                    <button class="hidden md:block p-2 group text-primary-600 w-12 h-12 bg-primary-100 hover:bg-primary-600 rounded-full transition duration-300">
+                    <button class="hidden md:block p-2 group text-primary-600 w-9 h-9 bg-primary-100 hover:bg-primary-600 rounded-lg transition duration-300">
                         <i class="fa-solid fa-building transition duration-300 group-hover:text-white"></i>
                     </button>
                     {% include "base/navbar_components/company_selection.html" %}
                 </div>
             {% endif %}
+            </div>
         </div>
 
-        <div class="relative dropdown-wrapper">
+        <div class="hrdeck-header-profile relative dropdown-wrapper">
             {% include "base/navbar_components/profile_section.html" %}
         </div>
     </div>
@@ -176,7 +215,7 @@
             {% trans "All Notifications" %}
         </h3>
         <button
-            class="text-primary-600 text-xs flex justify-center font-semibold hover:text-[#ac3b2a] transition duration-300"
+            class="text-primary-600 text-xs flex justify-center font-semibold hover:text-[#1C70D9] transition duration-300"
             hx-post="{% url 'delete-all-notifications' %}"
             hx-target="#sidebarModalBody"
         >

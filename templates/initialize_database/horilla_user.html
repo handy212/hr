@@ -10,19 +10,19 @@
         <link
             rel="apple-touch-icon"
             sizes="180x180"
-            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'favicons/apple-touch-icon.png' %}{% endif %}"
+            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'horilla_theme/assets/img/icon.png' %}{% endif %}"
         >
         <link
             rel="icon"
             type="image/png"
             sizes="32x32"
-            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'favicons/favicon-32x32.png' %}{% endif %}"
+            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'horilla_theme/assets/img/icon.png' %}{% endif %}"
         >
         <link
             rel="icon"
             type="image/png"
             sizes="16x16"
-            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'favicons/favicon-16x16.png' %}{% endif %}"
+            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'horilla_theme/assets/img/icon.png' %}{% endif %}"
         >
         <link rel="stylesheet" href="{% static '/build/css/style.min.css' %}">
         <link rel="manifest" href="{% static 'build/manifest.json' %}">
@@ -45,7 +45,7 @@
             <main class="oh-auth">
                 <div class="oh-onboarding-card" style="max-height: 790px; max-width: 975px" id="ohAuthCard">
                     <div class="oh-onboarding-card__header">
-                        <span class="oh-onboarding-card__company-name">{% trans "Horilla HRMS" %}</span>
+                        <span class="oh-onboarding-card__company-name">{% trans "HRDeck" %}</span>
                         <ul class="oh-onboarding-card__steps">
                             <li class="oh-onboarding-card__step oh-onboarding-card__step--active">
                                 <div class="oh-onboarding-card__count">1</div>
@@ -73,7 +73,7 @@
                         {% trans "Database Authentication" %}
                     </h1>
                     <p class="text-muted text-center">
-                        {% trans "Authenticate with your password to initialize the Horilla HRMS database." %}
+                        {% trans "Authenticate with your password to initialize the HRDeck database." %}
                     </p>
                     <form hx-post="{% url 'initialize-database' %}" hx-target="#ohAuthCard" class="oh-form-group">
                         {% csrf_token %}
@@ -118,8 +118,8 @@
                     </form>
                 </div>
                 <img
-                    src="{% if white_label_company.icon %}"{{white_label_company.icon.url}}"{% else%}"{% static 'images/ui/auth-logo.png' %}"{% endif %}"
-                    alt="{% trans 'Horilla' %}"
+                    src="{% if white_label_company.icon %}{{ white_label_company.icon.url }}{% else %}{% static 'horilla_theme/assets/img/icon.png' %}{% endif %}"
+                    alt="{% trans 'HRDeck' %}"
                 >
             </main>
         </div>

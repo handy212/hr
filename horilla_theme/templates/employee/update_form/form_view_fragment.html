@@ -7,7 +7,7 @@
     }
     .emp-input:focus {
         outline: none;
-        border-color: {{ theme_obj.primary_600|default:"#E54F38" }};
+        border-color: {{ theme_obj.primary_600|default:"#2D8CFF" }};
         box-shadow: 0 0 0 3px {{ theme_obj.primary_100|default:"rgba(229,79,56,0.1)" }};
     }
     .emp-step-btn {
@@ -15,11 +15,11 @@
         transition: all 0.15s;
     }
     .emp-step-btn--active {
-        background: {{ theme_obj.primary_600|default:"#E54F38" }};
+        background: {{ theme_obj.primary_600|default:"#2D8CFF" }};
         color: #fff;
     }
     .emp-step-btn--done {
-        color: {{ theme_obj.primary_600|default:"#E54F38" }};
+        color: {{ theme_obj.primary_600|default:"#2D8CFF" }};
     }
     @media (max-width: 768px) {
         .emp-grid-2 { grid-template-columns: 1fr !important; }

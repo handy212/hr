@@ -5,7 +5,7 @@
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <style>
     :root {
-        --pr-indigo: var(--primary-600, #E54F38);
+        --pr-indigo: var(--primary-600, #2D8CFF);
         --pr-green: #22c55e;
         --pr-amber: #f59e0b;
         --pr-red: #ef4444;
@@ -51,9 +51,9 @@
         color: inherit;
         transition: all 0.15s;
     }
-    .pr-period-preset:hover { border-color: var(--primary-600, #E54F38); color: var(--primary-600, #E54F38); }
+    .pr-period-preset:hover { border-color: var(--primary-600, #2D8CFF); color: var(--primary-600, #2D8CFF); }
     .pr-period-preset--active,
-    .pr-period-preset--active:hover { background: var(--primary-600, #E54F38) !important; color: #ffffff !important; border-color: var(--primary-600, #E54F38) !important; }
+    .pr-period-preset--active:hover { background: var(--primary-600, #2D8CFF) !important; color: #ffffff !important; border-color: var(--primary-600, #2D8CFF) !important; }
 
     /* KPI grid — sizing/spacing ported from the Payroll dashboard's pd-kpi-* */
     .pr-kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
@@ -448,7 +448,7 @@
                         if (proj && proj.id) window.location.href = PR_URLS.projectDetail.replace('__ID__', proj.id);
                     }},
                 },
-                colors: ["#E54F38"],
+                colors: ["#2D8CFF"],
                 xaxis: { categories: d.projects.map(p => p.title.length > 18 ? p.title.slice(0,18)+"…" : p.title), labels: { style: { colors: textColor, fontSize: "11px" } } },
                 yaxis: { labels: { style: { colors: textColor, fontSize: "11px" } } },
                 plotOptions: { bar: { borderRadius: 4, horizontal: true } },

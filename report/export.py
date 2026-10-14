@@ -428,7 +428,7 @@ def _apply_print_setup(ws, meta: Optional[dict] = None, landscape: bool = False)
     ws.page_setup.fitToHeight = 0
     ws.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
 
-    product = meta.get("product_name") or "Horilla HR"
+    product = meta.get("product_name") or "HRDeck"
     generated = _local_stamp()
     ws.oddFooter.left.text = f"{product}"
     ws.oddFooter.left.size = 8
@@ -487,7 +487,7 @@ def _write_letterhead(ws, company: dict, styles, meta: dict, col_span: int = 6) 
     product = ws.cell(
         row=1,
         column=col_span,
-        value=meta.get("product_name") or "Horilla HR · Standard Reports",
+        value=meta.get("product_name") or "HRDeck · Standard Reports",
     )
     product.font = styles["product_font"]
     product.alignment = styles["right"]
@@ -803,7 +803,7 @@ def _write_cover(wb, payload: dict[str, Any], meta: Optional[dict] = None):
         column=1,
         value=(
             "Confidential — for internal use only. "
-            "Figures are aggregated server-side from Horilla HR source data."
+            "Figures are aggregated server-side from HRDeck source data."
         ),
     )
     footer.font = styles["footer_font"]
@@ -1128,7 +1128,7 @@ def export_xlsx(
     props = wb.properties
     props.title = str(payload.get("title") or "Horilla Report")
     company = _company_from_meta(meta)
-    props.creator = company.get("name") or "Horilla HR"
+    props.creator = company.get("name") or "HRDeck"
     props.description = (
         f"Standard report export · {(payload.get('slug') or '')} · "
         f"{_period_label(payload.get('period') or {})}"
@@ -1397,7 +1397,7 @@ def export_pdf(
                 "dense": len(headers) > 8,
                 "report_ref": payload.get("slug") or meta.get("slug") or "",
                 "product_name": meta.get("product_name")
-                or "Horilla HR · Standard Reports",
+                or "HRDeck · Standard Reports",
                 "generated_at": generated_str,
                 "generated_by": meta.get("user") or "",
             },

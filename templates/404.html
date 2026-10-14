@@ -37,7 +37,7 @@
     }
 
     .hr-error_msg {
-        color: #e54f38;
+        color: #2D8CFF;
         font-weight: bold;
         font-size: 2rem;
     }
@@ -73,7 +73,7 @@
         width: 340px;
         height: 340px;
         border-radius: 50%;
-        background-color: #e54f38;
+        background-color: #2D8CFF;
         box-shadow: rgb(0 0 0 / 26%) 0px 4px 4px;
     }
 
@@ -97,7 +97,7 @@
             position: relative;
             width: 320px;
             height: 320px;
-            background-color: #e54f38;
+            background-color: #2D8CFF;
         }
 
         .hr-error_content {
@@ -226,18 +226,18 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{% trans "Horilla" %}</title>
+        <title>{% trans "HRDeck" %}</title>
         <link
             rel="icon"
             type="image/png"
             sizes="32x32"
-            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'favicons/favicon-32x32.png' %}{% endif %}"
+            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'horilla_theme/assets/img/icon.png' %}{% endif %}"
         >
         <link
             rel="icon"
             type="image/png"
             sizes="16x16"
-            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'favicons/favicon-16x16.png' %}{% endif %}"
+            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'horilla_theme/assets/img/icon.png' %}{% endif %}"
         >
     </head>
 

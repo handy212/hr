@@ -5,7 +5,7 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <style>
         :root {
-            --am-indigo: var(--primary-600, #e54f38);
+            --am-indigo: var(--primary-600, #2D8CFF);
             --am-green: #22c55e;
             --am-amber: #f59e0b;
             --am-red: #ef4444;
@@ -280,16 +280,16 @@
             content: "";
         }
         .am-chart-card[data-chart-section="overview"]::before {
-            background: linear-gradient(90deg, #e54f38, #a855f7);
+            background: #2D8CFF;
         }
         .am-chart-card[data-chart-section="attendance"]::before {
-            background: linear-gradient(90deg, #22c55e, #06b6d4);
+            background: #14B8A6;
         }
         .am-chart-card[data-chart-section="alerts"]::before {
-            background: linear-gradient(90deg, #f59e0b, #ef4444);
+            background: #FF7D67;
         }
         .am-chart-card[data-chart-section="hours"]::before {
-            background: linear-gradient(90deg, #3b82f6, #e54f38);
+            background: #0F2D5B;
         }
 
         .am-chart-card--wide {
@@ -1257,7 +1257,7 @@
                 : "rgba(0,0,0,0.05)";
             const cardBg = isDark ? "#242424" : "#ffffff";
             const COLORS = [
-                "#E54F38",
+                "#2D8CFF",
                 "#22c55e",
                 "#f59e0b",
                 "#ef4444",
@@ -1854,10 +1854,10 @@
                                         top: 4,
                                         blur: 10,
                                         opacity: 0.12,
-                                        color: "#E54F38",
+                                        color: "#2D8CFF",
                                     },
                                 },
-                                colors: ["#E54F38"],
+                                colors: ["#2D8CFF"],
                                 fill: {
                                     type: "gradient",
                                     gradient: {
@@ -1869,7 +1869,7 @@
                                         colorStops: [
                                             {
                                                 offset: 0,
-                                                color: "#E54F38",
+                                                color: "#2D8CFF",
                                                 opacity: 0.4,
                                             },
                                             {
@@ -1883,7 +1883,7 @@
                                 stroke: { curve: "smooth", width: 3 },
                                 markers: {
                                     size: dense ? 0 : 5,
-                                    colors: ["#E54F38"],
+                                    colors: ["#2D8CFF"],
                                     strokeColors: cardBg,
                                     strokeWidth: 2,
                                     hover: { size: 7 },
@@ -1902,7 +1902,7 @@
                                         borderRadius: 4,
                                         padding: 4,
                                         borderWidth: 0,
-                                        fillColors: ["#E54F38"],
+                                        fillColors: ["#2D8CFF"],
                                     },
                                 },
                                 xaxis: {
@@ -2547,7 +2547,7 @@
                                         },
                                     },
                                 },
-                                colors: ["#E54F38"],
+                                colors: ["#2D8CFF"],
                                 fill: {
                                     type: "gradient",
                                     gradient: {
@@ -2558,7 +2558,7 @@
                                         colorStops: [
                                             {
                                                 offset: 0,
-                                                color: "#E54F38",
+                                                color: "#2D8CFF",
                                                 opacity: 1,
                                             },
                                             {

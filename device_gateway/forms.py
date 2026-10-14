@@ -3,6 +3,7 @@ Forms for the device_gateway admin UI.
 """
 
 from base.forms import ModelForm
+from django.utils.translation import gettext_lazy as _
 
 from .models import TerminalDevice, TerminalEmployee
 
@@ -40,6 +41,15 @@ class TerminalEmployeeForm(ModelForm):
             "employee_first_name", "employee_last_name"
         )
         self.device = device
+        self.fields["device_user_id"].widget.attrs.update(
+            {
+                "placeholder": _("e.g. 1001"),
+                "class": "oh-input w-100",
+                "id": "id_device_user_id",
+            }
+        )
+        self.fields["employee"].empty_label = _("--- Select an Employee ---")
+
 
     def clean(self):
         cleaned = super().clean()

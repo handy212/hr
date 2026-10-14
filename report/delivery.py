@@ -206,7 +206,7 @@ def deliver_subscription(
         )
         filters_pairs = filters.summary_pairs()
         meta = {
-            "product_name": "Horilla HR · Standard Reports",
+            "product_name": "HRDeck · Standard Reports",
             "company": company,
             "user": (
                 str(subscription.owner)

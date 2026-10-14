@@ -134,12 +134,31 @@ class HorillaCompanyManager(models.Manager):
 
         return None
 
+    def _strict_mode(self):
+        try:
+            from django.conf import settings
+
+            return getattr(settings, "COMPANY_SCOPING_STRICT", False)
+        except Exception:
+            return False
+
     def get_queryset(self):
         qs = super().get_queryset()
         company = get_selected_company()
         filter_path = self.get_company_filter_path()
 
-        if not filter_path or not company:
+        if not filter_path:
+            return qs
+
+        if not company:
+            if self._strict_mode():
+                logger.warning(
+                    "HorillaCompanyManager: no company in context for model "
+                    f"{self.model.__name__}; returning empty queryset "
+                    "(COMPANY_SCOPING_STRICT=True). Use .unscoped() for "
+                    "intentional cross-company access."
+                )
+                return qs.none()
             return qs
 
         # Superuser / legacy "all": no company filter (true tenant-wide).
@@ -153,6 +172,13 @@ class HorillaCompanyManager(models.Manager):
                 if filter_ids is None:
                     filter_ids = getattr(request, "allowed_company_ids", None)
             if filter_ids is None:
+                if self._strict_mode():
+                    logger.warning(
+                        "HorillaCompanyManager: 'all' company context without "
+                        f"request assignment for model {self.model.__name__}; "
+                        "returning empty queryset (COMPANY_SCOPING_STRICT=True)."
+                    )
+                    return qs.none()
                 return qs
             if not filter_ids:
                 return qs.none()
@@ -248,4 +274,12 @@ class HorillaCompanyManager(models.Manager):
         return queryset
 
     def entire(self):
+        return super().get_queryset()
+
+    def unscoped(self):
+        """
+        Explicit opt-out of company filtering for code that legitimately
+        spans tenants (schedulers, platform administration, migrations).
+        Equivalent to entire(); named to make the intent greppable.
+        """
         return super().get_queryset()

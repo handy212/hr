@@ -5,7 +5,7 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <style>
         :root {
-            --md-indigo: var(--primary-600, #e54f38);
+            --md-indigo: var(--primary-600, #2D8CFF);
             --md-green: #22c55e;
             --md-amber: #f59e0b;
             --md-red: #ef4444;
@@ -371,7 +371,7 @@
             pointer-events: none;
         }
         .md-chart-card[data-chart-section='overview']::before {
-            background: linear-gradient(90deg, #e54f38, #a855f7);
+            background: linear-gradient(90deg, #2D8CFF, #a855f7);
         }
         .md-chart-card[data-chart-section='attendance']::before {
             background: linear-gradient(90deg, #22c55e, #06b6d4);
@@ -380,7 +380,7 @@
             background: linear-gradient(90deg, #f59e0b, #ef4444);
         }
         .md-chart-card[data-chart-section='leave']::before {
-            background: linear-gradient(90deg, #3b82f6, #e54f38);
+            background: linear-gradient(90deg, #3b82f6, #2D8CFF);
         }
 
         .md-chart-card--wide {
@@ -1918,7 +1918,7 @@
             const subTextColor = isDark ? '#64748b' : '#94a3b8';
             const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
             const cardBg = isDark ? '#242424' : '#ffffff';
-            const COLORS = ['#E54F38','#22c55e','#f59e0b','#ef4444','#3b82f6','#a855f7','#06b6d4','#ec4899','#14b8a6','#f97316'];
+            const COLORS = ['#2D8CFF','#22c55e','#f59e0b','#ef4444','#3b82f6','#a855f7','#06b6d4','#ec4899','#14b8a6','#f97316'];
             const ANIM = { enabled: true, easing: 'easeinout', speed: 700, animateGradually: { enabled: true, delay: 80 }, dynamicAnimation: { enabled: true, speed: 500 } };
             const GRID = { borderColor: gridColor, strokeDashArray: 5, padding: { left: 4, right: 4 } };
             const TOOLTIP_STYLE = { theme: isDark ? 'dark' : 'light', style: { fontSize: '12px' } };
@@ -2565,11 +2565,11 @@
                     renderChart('attendance-trend', document.querySelector("#chart-attendance-trend"), {
                         series: [{ name: '{% trans "Attendance Rate"|escapejs %}', data: data.weeks.map(w => w.rate) }],
                         chart: { type: 'area', height: 280, toolbar: { show: false }, background: 'transparent', fontFamily: 'inherit', animations: ANIM },
-                        colors: ['#E54F38'],
+                        colors: ['#2D8CFF'],
                         fill: { type: 'gradient', gradient: { type: 'vertical', shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.02, stops: [0, 90, 100],
-                            colorStops: [{ offset: 0, color: '#E54F38', opacity: 0.4 }, { offset: 100, color: '#a855f7', opacity: 0.02 }] } },
+                            colorStops: [{ offset: 0, color: '#2D8CFF', opacity: 0.4 }, { offset: 100, color: '#a855f7', opacity: 0.02 }] } },
                         stroke: { curve: 'straight', width: 3 },
-                        markers: { size: 5, colors: ['#E54F38'], strokeColors: cardBg, strokeWidth: 2, hover: { size: 7 } },
+                        markers: { size: 5, colors: ['#2D8CFF'], strokeColors: cardBg, strokeWidth: 2, hover: { size: 7 } },
                         dataLabels: { enabled: false },
                         xaxis: { ...XAXIS_STYLE, categories: data.weeks.map(w => w.week) },
                         yaxis: { ...YAXIS_STYLE, min: 0, max: 100, tickAmount: 5, forceNiceScale: false, labels: { ...YAXIS_STYLE.labels, formatter: v => v + '%' } },
@@ -2843,7 +2843,7 @@
                                     window.location.href = "{% url 'candidate-view' %}?recruitment=" + encodeURIComponent(recruitment) + "&stage_id__stage_type=" + encodeURIComponent(stage.toLowerCase());
                                 }}
                             },
-                            colors: ['#E54F38', '#3b82f6', '#06b6d4', '#22c55e', '#f59e0b'],
+                            colors: ['#2D8CFF', '#3b82f6', '#06b6d4', '#22c55e', '#f59e0b'],
                             plotOptions: { bar: { borderRadius: 6, columnWidth: '60%' } },
                             xaxis: { ...XAXIS_STYLE, categories: data.labels },
                             yaxis: { ...YAXIS_STYLE },
@@ -2962,7 +2962,7 @@
                                 window.location.href = "{% url 'request-view' %}?department=" + encodeURIComponent(dept);
                             }}
                         },
-                        colors: ['#3b82f6','#E54F38','#a855f7','#ec4899','#06b6d4','#14b8a6'],
+                        colors: ['#3b82f6','#2D8CFF','#a855f7','#ec4899','#06b6d4','#14b8a6'],
                         plotOptions: { bar: { borderRadius: 8, borderRadiusApplication: 'end', horizontal: true, barHeight: '52%', distributed: true } },
                         xaxis: { ...XAXIS_STYLE, categories: data.labels },
                         yaxis: { labels: { style: { colors: textColor, fontSize: '11px', fontWeight: 500 } } },
@@ -2986,7 +2986,7 @@
                     renderChart('leave-days', document.querySelector("#chart-leave-days"), {
                         series: [{ name: '{% trans "Leave Days"|escapejs %}', data: data.dataset[0].data }],
                         chart: { type: 'bar', height: 300, toolbar: { show: false }, background: 'transparent', fontFamily: 'inherit', animations: ANIM },
-                        colors: ['#3b82f6','#E54F38','#a855f7','#06b6d4','#14b8a6','#ec4899','#f59e0b','#22c55e','#ef4444','#f97316'],
+                        colors: ['#3b82f6','#2D8CFF','#a855f7','#06b6d4','#14b8a6','#ec4899','#f59e0b','#22c55e','#ef4444','#f97316'],
                         plotOptions: { bar: { borderRadius: 8, borderRadiusApplication: 'end', horizontal: true, barHeight: '50%', distributed: true } },
                         xaxis: { ...XAXIS_STYLE, categories: data.labels },
                         yaxis: { labels: { style: { colors: textColor, fontSize: '11px', fontWeight: 500 } } },
@@ -3154,7 +3154,7 @@
                         chartInstances['recruitment-funnel'] = null;
                     }
                     if (!data.stages || !data.stages.length) { el.innerHTML = emptyHtml('{% trans "No active recruitments"|escapejs %}'); return; }
-                    const stageColors = { initial: '#94a3b8', applied: '#E54F38', test: '#3b82f6', interview: '#f59e0b', hired: '#22c55e', cancelled: '#ef4444' };
+                    const stageColors = { initial: '#94a3b8', applied: '#2D8CFF', test: '#3b82f6', interview: '#f59e0b', hired: '#22c55e', cancelled: '#ef4444' };
                     const maxCount = Math.max(...data.stages.map(s => s.count), 1);
                     const total = data.total_candidates || data.stages.reduce((a, s) => a + (s.count || 0), 0) || 1;
                     let html = '<div class="md-funnel">';
@@ -3237,7 +3237,7 @@
 
                     el.innerHTML = `
                 <div style="padding:10px 4px 4px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding:14px 16px;border-radius:12px;background:linear-gradient(135deg,#E54F38 0%,#a855f7 100%);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding:14px 16px;border-radius:12px;background:linear-gradient(135deg,#2D8CFF 0%,#a855f7 100%);">
                         <div>
                             <div style="font-size:10px;color:rgba(255,255,255,0.7);text-transform:uppercase;font-weight:700;letter-spacing:0.06em;margin-bottom:2px;">{% trans "Net Pay"|escapejs %}</div>
                             <div style="font-size:28px;font-weight:800;color:#fff;line-height:1;">${fmt(data.current.net)}</div>

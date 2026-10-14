@@ -3,11 +3,11 @@
 <style>
     #sidebar,
     #sidebarFlyout {
-        --sidebar-accent: {{ theme_obj.primary_600|default:'#E54F38' }};
+        --sidebar-accent: {{ theme_obj.primary_600|default:'#2D8CFF' }};
         --sidebar-accent-dark: {{ theme_obj.primary_700|default:'#c73f2a' }};
-        --sidebar-accent-soft: {{ theme_obj.primary_100|default:'#FEF6F5' }};
+        --sidebar-accent-soft: {{ theme_obj.primary_100|default:'#D7E9FF' }};
     }
-    /* === Sidebar collapse / expand === */
+    /* Hover expands temporarily; pinning keeps the sidebar open. */
     #sidebar {
         width: 4rem !important; /* 64 px — collapsed default */
         overflow: hidden !important;
@@ -17,7 +17,6 @@
     #sidebar.sidebar-pinned {
         width: 13rem !important; /* 208 px — expanded */
     }
-
     /* Labels & chevron: invisible when collapsed, fade in when expanded */
     .oh-sidebar-label,
     .sidebar-chevron {
@@ -103,7 +102,7 @@
         left: 13rem;
     }
 
-    /* Floating action button: track sidebar width (collapsed / hover / pinned) */
+    /* Floating action button follows the visible sidebar width. */
     #sidebar ~ #floating-buttons .fab-container {
         left: 4rem;
         transition: left 0.22s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease, box-shadow 0.3s ease;
@@ -299,10 +298,18 @@
         gap: 0 !important;
     }
 
-    /* Collapsed: hide the hamburger (pin button); user hovers to expand, then
-       clicks the hamburger that appears in expanded state. */
-    #sidebar:not(:hover):not(.sidebar-pinned) #sidebarPinBtn {
-        display: none !important;
+    /* Keep the pin control reachable at the bottom of the icon rail. */
+    #sidebar:not(.sidebar-pinned) #sidebarPinBtn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        bottom: 1rem;
+        left: .75rem;
+        width: 2.5rem;
+        height: 2.5rem;
+        color: #DCE8F7 !important;
+        background: rgba(255, 255, 255, .08);
     }
 
     /* Collapsed: show the brand logo centred at the top of the rail, overriding
@@ -339,9 +346,16 @@
         overflow: hidden !important;
     }
 
-    /* Chevron hidden — accordion is replaced by hover flyout */
+    /* Expanded navigation uses in-place submenus. */
     .sidebar-chevron {
         display: none !important;
+    }
+    #sidebar:hover .sidebar-chevron,
+    #sidebar.sidebar-pinned .sidebar-chevron {
+        display: block !important;
+    }
+    #sidebar:not(:hover):not(.sidebar-pinned) .sidebar-version {
+        display: none;
     }
 
     /* Flyout submenu panel */
@@ -349,24 +363,31 @@
         visibility: hidden;
         z-index: 10060;
         position: fixed;
-        min-width: 200px;
-        max-width: 260px;
-        padding: 6px;
-        transform: translateX(-6px);
-        border: 1px solid #e5e7eb;
-        border-radius: 10px;
-        background: #ffffff;
-        box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.12), 0 2px 8px -2px rgba(15, 23, 42, 0.06);
+        width: min(240px, calc(100vw - 72px));
+        padding: 10px;
+        border: 1px solid #2C466B;
+        border-radius: 0 12px 12px 0;
+        background: #0F2D5B;
+        box-shadow: 8px 12px 24px rgba(15, 45, 91, .18);
+        max-height: calc(100vh - 16px);
+        overflow-y: auto;
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s linear 0.15s;
+        transition: opacity 0.12s ease, visibility 0s linear 0.12s;
     }
     #sidebarFlyout.is-visible {
         visibility: visible;
-        transform: translateX(0);
         opacity: 1;
         pointer-events: auto;
-        transition: opacity 0.15s ease, transform 0.15s ease;
+        transition: opacity 0.12s ease;
+    }
+    #sidebarFlyoutTitle {
+        color: #9AAFC9;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .08em;
+        padding: 6px 10px 10px;
+        text-transform: uppercase;
     }
     body.dark #sidebarFlyout {
         border-color: #374151;
@@ -374,24 +395,26 @@
     }
     /* Flyout link hover highlight */
     #sidebarFlyout a.sidebar-subnav-link {
-        color: #374151;
+        color: #DCE8F7;
+        border-radius: 7px;
+        padding: 9px 10px;
         transition: background-color 0.12s ease, color 0.12s ease;
     }
     #sidebarFlyout a.sidebar-subnav-link:hover {
-        background-color: color-mix(in srgb, {{ theme_obj.primary_600|default:"#E54F38" }} 8%, transparent) !important;
-        color: {{ theme_obj.primary_600|default:"#E54F38" }} !important;
+        background-color: rgba(255, 255, 255, .12) !important;
+        color: #fff !important;
     }
     #sidebarFlyout a.sidebar-subnav-link.oh-sidebar-active-link {
         background-color: var(--sidebar-accent) !important;
         color: #ffffff !important;
         font-weight: 600;
-        box-shadow: 0 4px 14px -4px rgba(20, 20, 30, 0.25);
+        box-shadow: none;
     }
     body.dark #sidebarFlyout a.sidebar-subnav-link {
         color: #d1d5db;
     }
     body.dark #sidebarFlyout a.sidebar-subnav-link:hover {
-        background-color: color-mix(in srgb, {{ theme_obj.primary_600|default:"#E54F38" }} 15%, transparent) !important;
+        background-color: color-mix(in srgb, {{ theme_obj.primary_600|default:"#2D8CFF" }} 15%, transparent) !important;
         color: {{ theme_obj.primary_400|default:"#F87060" }} !important;
     }
     body.dark #sidebarFlyout a.sidebar-subnav-link.oh-sidebar-active-link {
@@ -408,16 +431,8 @@
         }
     }
 
-    /* Narrow viewports: the "pinned open" (13rem, labels visible) sidebar state
-       leaves too little room for the main content — headers, tables, and the
-       employee-profile card overflow the viewport instead of wrapping. Below
-       tablet width, keep the sidebar in its collapsed icon rail regardless of
-       pin state; hover/tap still reveals the flyout submenu for navigation. */
+    /* Narrow viewports always use the icon rail and its flyout. */
     @media (max-width: 991.98px) {
-        /* Every state, :hover included. The base rule is `#sidebar:hover`,
-           which outranks a bare `#sidebar` here regardless of the media query,
-           so hovering expanded the rail to 13rem while .oh-main-content kept
-           its 4rem margin -- 144px of the page vanished underneath it. */
         #sidebar,
         #sidebar:hover,
         #sidebar.sidebar-pinned,
@@ -431,10 +446,7 @@
             opacity: 0 !important;
             pointer-events: none !important;
         }
-        /* Labels stay hidden even on hover: there is no room in a 4rem rail,
-           and navigation at this width is the hover flyout, which is what the
-           breakpoint was written for. Revealing them here was what made the
-           rail look broken -- text with nowhere to go. */
+        /* Keep labels hidden while the rail is narrow. */
         #sidebar:hover .oh-sidebar-label,
         #sidebar:hover .sidebar-chevron {
             opacity: 0 !important;
@@ -519,21 +531,22 @@
         #sidebar .sidebar-subnav:not(.hidden) {
             display: none !important;
         }
-        #sidebar:not(:hover) #sidebarPinBtn {
+        #sidebar:not(.sidebar-pinned) #sidebarPinBtn,
+        #sidebar.sidebar-pinned #sidebarPinBtn {
             display: none !important;
         }
     }
 </style>
 <div id="sidebar" class="fixed inset-y-0 left-0 bg-white border-r border-r-dark-50 z-50">
     <div class="p-4">
-        <!-- Header: hamburger pin toggle + company logo -->
+        <!-- Header: hamburger pin toggle + HRDeck identity -->
         <div class="flex items-center gap-3 mb-6">
             <button
                 id="sidebarPinBtn"
                 title="{% trans 'Lock sidebar open' %}"
                 aria-label="{% trans 'Lock sidebar open' %}"
                 data-pin-label="{% trans 'Lock sidebar open' %}"
-                data-unpin-label="{% trans 'Unlock sidebar (auto-collapses on hover-out)' %}"
+                data-unpin-label="{% trans 'Collapse sidebar to icon rail' %}"
                 class="flex-shrink-0 p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors duration-150"
             >
                 <!-- Unlocked padlock: shown when the sidebar is NOT pinned (hover-to-expand mode) -->
@@ -570,7 +583,7 @@
             <div class="flex items-center gap-2 min-w-0 flex-1">
                 {% if request.session.selected_company_instance %}
                     <img
-                        src="{{ request.session.selected_company_instance.icon }}"
+                        src="{% static 'horilla_theme/assets/img/icon.png' %}"
                         class="oh-sidebar-label w-7 h-7 rounded-full flex-shrink-0"
                         title="{{ request.session.selected_company_instance.company }}"
                         alt="{{ request.session.selected_company_instance.company }}"
@@ -579,24 +592,24 @@
                         <span
                             class="oh-sidebar__company-title truncate"
                             style="font-size: 13px"
-                        >{{ request.session.selected_company_instance.company }}.</span>
+                        >HRDeck</span>
                         <a href="#" class="oh-sidebar__company-link truncate" style="font-size: 10px">
-                            {% trans request.session.selected_company_instance.text %}
+                            {{ request.session.selected_company_instance.company }}
                         </a>
                     </div>
                 {% else %}
                     <img
-                        src="{% if request.user.employee_get.employee_work_info.company_id.icon %}{{ request.user.employee_get.employee_work_info.company_id.icon.url }}{% else %}/static/horilla_theme/assets/img/horilla-logo.png{% endif %}"
-                        alt="{% trans 'Company logo' %}"
+                        src="{% static 'horilla_theme/assets/img/icon.png' %}"
+                        alt="HRDeck"
                         class="oh-sidebar-label w-7 h-7 rounded-full flex-shrink-0"
                     >
                     <div class="oh-sidebar__company-details oh-sidebar-label min-w-0">
                         <span
                             class="oh-sidebar__company-title truncate"
                             style="font-size: 13px"
-                        >{{ request.user.employee_get.employee_work_info.company_id }}.</span>
+                        >HRDeck</span>
                         <a href="#" class="oh-sidebar__company-link truncate" style="font-size: 10px">
-                            {% trans "My Company" %}
+                            {{ request.user.employee_get.employee_work_info.company_id|default:'My Company' }}
                         </a>
                     </div>
                 {% endif %}
@@ -690,15 +703,16 @@
             Collapses to just the number when the sidebar is unpinned.
         {% endcomment %}
         <div class="sidebar-version px-4 pt-3 pb-6 border-t border-t-dark-50 text-[11px] leading-none text-[#999] select-text"
-             title="{% trans 'Horilla HR version' %} {{ horilla_version }}">
+             title="{% trans 'HRDeck version' %} {{ horilla_version }}">
             <span class="sidebar-version__label">{% trans "Version" %}</span>
             <span class="font-medium">{{ horilla_version }}</span>
         </div>
     </div>
-    <!-- Flyout panel: populated and positioned by JS on hover -->
-    <div id="sidebarFlyout">
-        <ul id="sidebarFlyoutList" class="space-y-0.5"></ul>
-    </div>
+</div>
+<!-- Keep the panel outside #sidebar, whose overflow clips the icon rail. -->
+<div id="sidebarFlyout">
+    <div id="sidebarFlyoutTitle"></div>
+    <ul id="sidebarFlyoutList" class="space-y-0.5"></ul>
 </div>
 <script>
     function highlightRow(checkbox) {
@@ -814,6 +828,24 @@
           window.location.href = dest;
         }
 
+        function isExpandedSidebar() {
+          var navSidebar = document.getElementById("sidebar");
+          return !!(navSidebar && window.innerWidth >= 992 &&
+            (navSidebar.classList.contains("sidebar-pinned") || navSidebar.matches(":hover")));
+        }
+
+        function setOpenSubnav(item, open) {
+          var navSidebar = document.getElementById("sidebar");
+          if (!navSidebar) return;
+          navSidebar.querySelectorAll(".sidebar-item").forEach(function (other) {
+            var subnav = other.querySelector(".sidebar-subnav");
+            var button = other.querySelector(".sideboxmain");
+            var shouldOpen = open && other === item;
+            if (subnav) subnav.classList.toggle("hidden", !shouldOpen);
+            if (button) button.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+          });
+        }
+
         function setActiveSidebarMenu(btn) {
           if (!btn) return;
           // Persistent current-page highlight: clear from every module button, then
@@ -825,6 +857,11 @@
             });
             btn.classList.add("sidebox-current");
           } catch (_) {}
+          var navSidebar = document.getElementById("sidebar");
+          if (navSidebar && isExpandedSidebar()) {
+            var activeItem = btn.closest(".sidebar-item");
+            setOpenSubnav(activeItem, !!activeItem);
+          }
           try {
             if (btn.dataset.menu) localStorage.setItem("activeSidebarMenu", btn.dataset.menu);
           } catch (_) {}
@@ -834,26 +871,27 @@
 
         var flyoutEl = document.getElementById("sidebarFlyout");
         var flyoutListEl = document.getElementById("sidebarFlyoutList");
+        var flyoutTitleEl = document.getElementById("sidebarFlyoutTitle");
         var flyoutCloseTimer = null;
         var currentFlyoutBtn = null;
+        var currentFlyoutItem = null;
 
         function positionFlyout(itemRect) {
           var sidebarRect = sidebarEl.getBoundingClientRect();
           var sidebarRight = sidebarRect.right;
 
-          // getBoundingClientRect() fires at mouseenter while the sidebar's
-          // width transition (64px → 208px, 0.22s) is still mid-flight,
-          // so `right` can read as 64px even though the sidebar will expand
-          // to 208px. Clamp to the expanded target width whenever the sidebar
-          // is in hover/pinned state so the flyout never lands inside it.
-          if (sidebarEl.matches(':hover') || sidebarEl.classList.contains('sidebar-pinned')) {
+          // Pinned desktop navigation occupies the full 13rem width. An
+          // unpinned flyout stays attached to the 4rem icon rail.
+          if (window.innerWidth >= 992 && sidebarEl.classList.contains('sidebar-pinned')) {
             var rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
             var expandedRight = sidebarRect.left + rootFontSize * 13; /* 13rem */
             if (expandedRight > sidebarRight) sidebarRight = expandedRight;
           }
 
-          var left = sidebarRight + 6;
-          var top = itemRect.top;
+          // Keep the panel touching the rail, so the pointer can enter it
+          // without crossing a dead zone that closes the menu.
+          var left = Math.min(sidebarRight, window.innerWidth - flyoutEl.offsetWidth - 8);
+          var top = Math.max(8, itemRect.top);
           flyoutEl.style.left = left + "px";
           flyoutEl.style.top = top + "px";
           requestAnimationFrame(function () {
@@ -874,6 +912,7 @@
           clearTimeout(flyoutCloseTimer);
 
           var label = btn.querySelector(".oh-sidebar-label");
+          if (flyoutTitleEl) flyoutTitleEl.textContent = label ? label.textContent.trim() : (btn.dataset.menu || "");
           flyoutListEl.innerHTML = "";
           liItems.forEach(function (li) { flyoutListEl.appendChild(li.cloneNode(true)); });
           if (window.htmx) htmx.process(flyoutListEl);
@@ -897,17 +936,19 @@
           // Hover-only indicator — does NOT touch the persisted 'active' class or localStorage
           if (currentFlyoutBtn && currentFlyoutBtn !== btn) currentFlyoutBtn.classList.remove("sidebox-active");
           currentFlyoutBtn = btn;
+          currentFlyoutItem = item;
           btn.classList.add("sidebox-active");
         }
 
         function hideFlyout() {
           if (flyoutEl) flyoutEl.classList.remove("is-visible");
           if (currentFlyoutBtn) { currentFlyoutBtn.classList.remove("sidebox-active"); currentFlyoutBtn = null; }
+          currentFlyoutItem = null;
         }
 
         function scheduleFlyoutClose() {
           clearTimeout(flyoutCloseTimer);
-          flyoutCloseTimer = setTimeout(hideFlyout, 120);
+          flyoutCloseTimer = setTimeout(hideFlyout, 250);
         }
 
         function cancelFlyoutClose() {
@@ -919,18 +960,30 @@
           var btn = item.querySelector(".sideboxmain");
           if (!btn) return;
           item.addEventListener("mouseenter", function () {
+            if (isExpandedSidebar()) {
+              hideFlyout();
+              if (!sidebarEl.classList.contains("sidebar-pinned")) setOpenSubnav(item, true);
+              return;
+            }
             cancelFlyoutClose();
             showFlyout(item, btn);
+          });
+          btn.addEventListener("click", function () {
+            cancelFlyoutClose();
+            if (isExpandedSidebar()) {
+              hideFlyout();
+              var subnav = item.querySelector(".sidebar-subnav");
+              var willOpen = subnav && subnav.classList.contains("hidden");
+              setOpenSubnav(item, !!willOpen);
+            } else {
+              showFlyout(item, btn);
+            }
           });
           item.addEventListener("mouseleave", function (e) {
             // If the mouse moved directly into the flyout panel, keep the hover indicator alive
             if (flyoutEl && flyoutEl.contains(e.relatedTarget)) return;
-            // Don't strip the highlight synchronously: there's a 6px gap between the
-            // module rail and the flyout, so crossing into the flyout reports a
-            // relatedTarget outside it — clearing here would leave the flyout open
-            // with its owning button un-highlighted. Let scheduleFlyoutClose()/
-            // hideFlyout() clear the hover state when the flyout actually closes;
-            // moving straight to another item clears it via showFlyout() instead.
+            // Keep the hover state through the pointer's move into the panel.
+            // showFlyout() will switch it immediately when another item is entered.
             scheduleFlyoutClose();
           });
         });
@@ -975,6 +1028,17 @@
             });
           }, true);
         }
+
+        // Keep the panel beside its icon when the navigation scrolls or the
+        // viewport changes while the panel is open.
+        var sidebarNav = sidebarEl && sidebarEl.querySelector("nav.sidebar-scroll");
+        function updateVisibleFlyoutPosition() {
+          if (currentFlyoutItem && flyoutEl.classList.contains("is-visible")) {
+            positionFlyout(currentFlyoutItem.getBoundingClientRect());
+          }
+        }
+        if (sidebarNav) sidebarNav.addEventListener("scroll", updateVisibleFlyoutPosition, { passive: true });
+        window.addEventListener("resize", updateVisibleFlyoutPosition);
 
         // Highlight active module button based on current URL (no accordion to open)
         function ohAccordionInit() {
@@ -1036,6 +1100,13 @@
 
           sidebarEl.classList.toggle("sidebar-pinned", pinned);
           if (content) content.style.marginLeft = pinned ? "13rem" : "";
+          if (pinned && isExpandedSidebar()) {
+            var current = sidebarEl.querySelector(".sideboxmain.sidebox-current");
+            if (current) setActiveSidebarMenu(current);
+          } else {
+            sidebarEl.querySelectorAll(".sidebar-subnav").forEach(function (subnav) { subnav.classList.add("hidden"); });
+            sidebarEl.querySelectorAll(".sidebar-item .sideboxmain").forEach(function (button) { button.setAttribute("aria-expanded", "false"); });
+          }
 
           // Keep the lock button's tooltip/aria-label in sync with the state.
           // (The open vs closed padlock icon itself is swapped via CSS on .sidebar-pinned.)
@@ -1060,6 +1131,7 @@
         if (pinBtn) {
           pinBtn.addEventListener("click", function (e) {
             e.stopPropagation();
+            hideFlyout();
             applySidebarPin(!sidebarPinned, true);
           });
         }
@@ -1068,6 +1140,7 @@
         if (sidebarEl) {
           sidebarEl.addEventListener("mouseleave", function () {
             scheduleFlyoutClose();
+            if (!sidebarEl.classList.contains("sidebar-pinned")) setOpenSubnav(null, false);
           });
         }
 

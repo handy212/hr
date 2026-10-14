@@ -5,7 +5,7 @@
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <style>
     :root {
-        --ld-indigo: var(--primary-600, #E54F38);
+        --ld-indigo: var(--primary-600, #2D8CFF);
         --ld-green: #22c55e;
         --ld-amber: #f59e0b;
         --ld-red: #ef4444;
@@ -346,7 +346,7 @@
     const textColor = isDark ? '#e2e8f0' : '#334155';
     const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
     const cardBg = isDark ? '#242424' : '#ffffff';
-    const COLORS = ['#E54F38','#22c55e','#f59e0b','#ef4444','#3b82f6','#a855f7','#06b6d4','#ec4899','#14b8a6','#f97316'];
+    const COLORS = ['#2D8CFF','#22c55e','#f59e0b','#ef4444','#3b82f6','#a855f7','#06b6d4','#ec4899','#14b8a6','#f97316'];
     const emptyHtml = (msg) => `<div class="ld-empty"><img src="/static/images/ui/no_records.svg" alt="">${msg}</div>`;
     const leaveRequestUrl = "{% url 'request-view' %}";
     const leaveRequestUrlFor = id => id ? `${leaveRequestUrl}?employee_id=${id}` : '#';
@@ -669,7 +669,7 @@
             renderChart('weekly-pattern', document.querySelector("#chart-weekly-pattern"), {
                 series: [{ name: '{% trans "Leave Days"|escapejs %}', data: data.counts }],
                 chart: { type: 'radar', height: 300, toolbar: { show: false }, background: 'transparent', fontFamily: 'inherit' },
-                colors: ['#E54F38'],
+                colors: ['#2D8CFF'],
                 fill: { opacity: 0.25 },
                 stroke: { width: 2 },
                 xaxis: { categories: data.days },

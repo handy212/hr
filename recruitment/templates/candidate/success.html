@@ -45,7 +45,7 @@
                             50:  '{{ theme_obj.primary_50  | default:"#f6f6f6" }}',
                             100: '{{ theme_obj.primary_100 | default:"#FFF5F1" }}',
                             200: '{{ theme_obj.primary_200 | default:"#FEF6F5" }}',
-                            600: '{{ theme_obj.primary_600 | default:"#E54F38" }}',
+                            600: '{{ theme_obj.primary_600 | default:"#2D8CFF" }}',
                             700: '{{ theme_obj.primary_700 | default:"#ce4732" }}',
                             800: '{{ theme_obj.primary_800 | default:"#AC3B2A" }}',
                         },
@@ -72,12 +72,12 @@
                     {% if hq_company.icon %}
                         <img src="{{ hq_company.icon.url }}" alt="" class="w-full h-full object-cover">
                     {% else %}
-                        <span>{{ hq_company.company|default:"Horilla"|first|upper }}</span>
+                        <span>{{ hq_company.company|default:"HRDeck"|first|upper }}</span>
                     {% endif %}
                 </div>
                 <div>
                     <h1 class="text-xl font-bold leading-tight">
-                        {{ hq_company.company|default:"Horilla" }} {% trans "Careers" %}
+                        {{ hq_company.company|default:"HRDeck" }} {% trans "Careers" %}
                     </h1>
                     <p class="text-sm text-dark-100 leading-tight">
                         {% trans "Open positions across our teams" %}

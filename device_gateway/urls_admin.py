@@ -26,6 +26,11 @@ urlpatterns = [
         name="terminal-employee-map",
     ),
     path(
+        "devices/<int:pk>/unmap-employee/<int:mapping_id>/",
+        views_admin.employee_mapping_delete,
+        name="terminal-employee-unmap",
+    ),
+    path(
         "devices/<int:pk>/punches/<int:log_id>/retry/",
         views_admin.punch_retry,
         name="terminal-punch-retry",
@@ -49,5 +54,10 @@ urlpatterns = [
         "sync-tasks/<int:pk>/retry/",
         views_admin.sync_task_retry,
         name="terminal-sync-task-retry",
+    ),
+    path(
+        "sync-tasks/retry-all/",
+        views_admin.sync_task_retry_all,
+        name="terminal-sync-task-retry-all",
     ),
 ]

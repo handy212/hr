@@ -1,4 +1,9 @@
-# Horilla HRMS
+# HRDeck
+
+HRDeck is the branded deployment of the open-source Horilla HRMS codebase. The
+application uses the supplied HRDeck assets for its default UI branding. The
+upstream repository links and LGPL license information below are retained for
+source attribution and maintenance.
 
 [![License: LGPL v2.1](https://img.shields.io/badge/License-LGPL%20v2.1-blue.svg)](https://www.gnu.org/licenses/lgpl-2.1)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)

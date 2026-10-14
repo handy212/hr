@@ -6,6 +6,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="{% static 'cdn/googleapi/css/inter-font-style.css' %}">
         <link href="{% static 'horilla_theme/assets/css/tailwind.css' %}" rel="stylesheet">
         <title>
             {% blocktrans with company_name=white_label_company_name %}Login - {{ company_name }}
@@ -14,28 +15,29 @@
         <link
             rel="apple-touch-icon"
             sizes="180x180"
-            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'favicons/apple-touch-icon.png' %}{% endif %}"
+            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'horilla_theme/assets/img/icon.png' %}{% endif %}"
         >
         <link
             rel="icon"
             type="image/png"
             sizes="32x32"
-            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'favicons/favicon-32x32.png' %}{% endif %}"
+            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'horilla_theme/assets/img/icon.png' %}{% endif %}"
         >
         <link
             rel="icon"
             type="image/png"
             sizes="16x16"
-            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'favicons/favicon-16x16.png' %}{% endif %}"
+            href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'horilla_theme/assets/img/icon.png' %}{% endif %}"
         >
         <link
             rel="stylesheet"
-            href="/static/horilla_theme/assets/css/global.css"
+            href="/static/horilla_theme/assets/css/global.css?v=2"
         >
         <link
             rel="stylesheet"
-            href="/static/horilla_theme/assets/css/v1_styles.css"
+            href="/static/horilla_theme/assets/css/v1_styles.css?v=15"
         >
+        <link rel="stylesheet" href="{% static 'horilla_theme/assets/css/hrdeck-brand.css' %}?v=5">
         <script src='{% static "horilla_theme/assets/js/tailwindcdn.js" %}'></script>
         <script>
             window.tailwind.config = {
@@ -43,28 +45,28 @@
                     colors: {
                         white: '#FFFFFF',
                         primary: {
-                            50:  '{{ theme_obj.primary_50  | default:"#f6f6f6" }}',
-                            100: '{{ theme_obj.primary_100 | default:"#FFF5F1" }}',
-                            200: '{{ theme_obj.primary_200 | default:"#FEF6F5" }}',
-                            300: '{{ theme_obj.primary_300 | default:"#FCEDEB" }}',
-                            400: '{{ theme_obj.primary_400 | default:"#FBE5E1" }}',
-                            500: '{{ theme_obj.primary_500 | default:"#F7C8C1" }}',
-                            600: '{{ theme_obj.primary_600 | default:"#E54F38" }}',
-                            700: '{{ theme_obj.primary_700 | default:"#ce4732" }}',
-                            800: '{{ theme_obj.primary_800 | default:"#AC3B2A" }}',
-                            900: '{{ theme_obj.primary_900 | default:"#672419" }}',
+                            50:  '{{ theme_obj.primary_50  | default:"#F4F6FA" }}',
+                            100: '{{ theme_obj.primary_100 | default:"#EAF3FF" }}',
+                            200: '{{ theme_obj.primary_200 | default:"#D7E9FF" }}',
+                            300: '{{ theme_obj.primary_300 | default:"#B8D8FF" }}',
+                            400: '{{ theme_obj.primary_400 | default:"#8FC2FF" }}',
+                            500: '{{ theme_obj.primary_500 | default:"#5AA6FF" }}',
+                            600: '{{ theme_obj.primary_600 | default:"#2D8CFF" }}',
+                            700: '{{ theme_obj.primary_700 | default:"#1C70D9" }}',
+                            800: '{{ theme_obj.primary_800 | default:"#1254AA" }}',
+                            900: '{{ theme_obj.primary_900 | default:"#0F2D5B" }}',
                         },
                         brand: {
-                            50:  '{{ theme_obj.primary_50  | default:"#f6f6f6" }}',
-                            100: '{{ theme_obj.primary_100 | default:"#FFF5F1" }}',
-                            200: '{{ theme_obj.primary_200 | default:"#FEF6F5" }}',
-                            300: '{{ theme_obj.primary_300 | default:"#FCEDEB" }}',
-                            400: '{{ theme_obj.primary_400 | default:"#FBE5E1" }}',
-                            500: '{{ theme_obj.primary_500 | default:"#F7C8C1" }}',
-                            600: '{{ theme_obj.primary_600 | default:"#E54F38" }}',
-                            700: '{{ theme_obj.primary_700 | default:"#ce4732" }}',
-                            800: '{{ theme_obj.primary_800 | default:"#AC3B2A" }}',
-                            900: '{{ theme_obj.primary_900 | default:"#672419" }}',
+                            50:  '{{ theme_obj.primary_50  | default:"#F4F6FA" }}',
+                            100: '{{ theme_obj.primary_100 | default:"#EAF3FF" }}',
+                            200: '{{ theme_obj.primary_200 | default:"#D7E9FF" }}',
+                            300: '{{ theme_obj.primary_300 | default:"#B8D8FF" }}',
+                            400: '{{ theme_obj.primary_400 | default:"#8FC2FF" }}',
+                            500: '{{ theme_obj.primary_500 | default:"#5AA6FF" }}',
+                            600: '{{ theme_obj.primary_600 | default:"#2D8CFF" }}',
+                            700: '{{ theme_obj.primary_700 | default:"#1C70D9" }}',
+                            800: '{{ theme_obj.primary_800 | default:"#1254AA" }}',
+                            900: '{{ theme_obj.primary_900 | default:"#0F2D5B" }}',
                         },
                         dark: {
                             50:  '{{ theme_obj.dark_50  | default:"#E6E6E6" }}',
@@ -80,9 +82,9 @@
                             100: '{{ theme_obj.secondary_100 | default:"#f1f5f9" }}',
                             200: '{{ theme_obj.secondary_200 | default:"#e2e8f0" }}',
                             300: '{{ theme_obj.secondary_300 | default:"#cbd5e1" }}',
-                            400: '{{ theme_obj.secondary_400 | default:"#FBE5E1" }}',
-                            500: '{{ theme_obj.secondary_500 | default:"#F7C8C1" }}',
-                            600: '{{ theme_obj.secondary_600 | default:"#E54F38" }}',
+                            400: '{{ theme_obj.secondary_400 | default:"#8FC2FF" }}',
+                            500: '{{ theme_obj.secondary_500 | default:"#5AA6FF" }}',
+                            600: '{{ theme_obj.secondary_600 | default:"#2D8CFF" }}',
                             700: '{{ theme_obj.secondary_700 | default:"#334155" }}',
                             800: '{{ theme_obj.secondary_800 | default:"#1e293b" }}',
                             900: '{{ theme_obj.secondary_900 | default:"#0f172a" }}',
@@ -104,7 +106,7 @@
         </script>
         <script src="{% static '/jquery/jquery.min.js' %}"></script>
     </head>
-    <body class="bg-[{{theme_obj.primary_50}}] font-[Inter,_sans-serif]">
+    <body class="hrdeck-auth-page bg-[{{theme_obj.primary_50}}] font-[Inter,_sans-serif]">
         <div class="oh-alert-container">
             {% for message in messages %}
                 <div class="oh-alert oh-alert--animated {{ message.tags }}">
@@ -113,21 +115,19 @@
             {% endfor %}
         </div>
 
-        <div class="h-screen w-full flex items-center justify-center">
-            <div class="bg-[{{theme_obj.primary_200}}] p-[50px] rounded-2xl [box-shadow:0px_0px_25px_#a1a1a1] w-[450px]">
+        <div class="hrdeck-auth-layout min-h-screen w-full flex items-center justify-center">
+            <div class="hrdeck-auth-card bg-white w-[450px]">
                 <img
-                    src="{% if white_label_company.icon %}{{white_label_company.icon.url}}{% else %}{% static 'horilla_theme/assets/img/logo.svg' %}{% endif %}"
+                    src="{% if white_label_company.icon %}{{white_label_company.icon.url}}{% else %}{% static 'horilla_theme/assets/img/logo_no_background.png' %}{% endif %}"
                     alt=""
-                    class="m-auto mb-4"
-                    width="80"
+                    class="m-auto mb-6 hrdeck-auth-logo"
+                    width="170"
                 >
-                <h1 class="text-3xl font-bold mb-2 text-center">
-                    {% trans "Welcome to" %}
-                    {{ white_label_company_name }}
-                    {% trans "HR" %}
+                <h1 class="hrdeck-auth-title text-center">
+                    {% trans "Welcome back!" %}
                 </h1>
-                <p class="mb-5 text-center text-sm text-color-600">
-                    {% trans "Please login to access the dashboard." %}
+                <p class="hrdeck-auth-subtitle mb-5 text-center text-sm text-color-600">
+                    {% blocktrans with company_name=white_label_company_name %}Sign in to your {{ company_name }} account.{% endblocktrans %}
                 </p>
                 <form method="post" class="oh-form-group">
                     {% csrf_token %}
@@ -137,7 +137,7 @@
                             type="text"
                             id="username"
                             name="username"
-                            placeholder="{% trans 'e.g. adam.luis@horilla.com' %}"
+                            placeholder="{% trans 'Enter your username' %}"
                             class="text-color-600 w-full border border-dark-50 rounded-md p-3 mt-1 focus-visible:outline-0 placeholder:text-[#00000041] placeholder:font-medium text-xs [transition:.3s] {% if theme_obj %} focus:border-[{{theme_obj.primary_700}}] {% else %} focus:border-primary-600 {% endif %}"
                         >
                     </div>
@@ -170,7 +170,7 @@
                         <div class="flex justify-end">
                             <a
                                 href="{% url 'forgot-password' %}"
-                                class="text-sm text-right font-medium text-[red] mb-3 mt-2 cursor-pointer"
+                                class="text-sm text-right font-medium text-primary-600 mb-3 mt-2 cursor-pointer"
                             >
                                 {% trans "Forgot Password ?" %}
                             </a>
@@ -190,7 +190,7 @@
                                 href="{% url 'initialize-database' %}"
                                 class="oh-btn oh-onboarding-card__button mt-4 oh-btn--shadow w-full mb-4"
                                 role="button"
-                                style="background-color: rgba(229, 79, 56, 0.1); color: hsl(8, 77%, 56%)"
+                                style="background-color: #EAF3FF; color: #1254AA"
                             >
                                 {% trans "Initialize Database" %}
                                 <ion-icon

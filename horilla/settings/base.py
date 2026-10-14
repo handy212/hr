@@ -497,6 +497,13 @@ DB_INIT_PASSWORD = env(
 # Instant rollback switch: set the COMPANY_SCOPED_PERMISSIONS env var to False.
 COMPANY_SCOPED_PERMISSIONS = env.bool("COMPANY_SCOPED_PERMISSIONS", default=True)
 
+# When True, HorillaCompanyManager fails closed: with no company in context it
+# returns an empty queryset instead of an unfiltered one. Code that
+# legitimately spans companies (schedulers, platform admin) must opt out
+# explicitly via .unscoped()/.entire(). Defaults to False while scoping
+# coverage is being completed; enable for SaaS deployments.
+COMPANY_SCOPING_STRICT = env.bool("COMPANY_SCOPING_STRICT", default=False)
+
 NO_PERMISSION_MODALS = [
     "companygroupassignment",
     "historicalbonuspoint",

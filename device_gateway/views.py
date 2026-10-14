@@ -16,7 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
-from .attendance_sync import process_punch, resolve_employee
+from .attendance_sync import process_punch
 from .models import (
     TerminalCommand,
     TerminalEmployee,
@@ -247,6 +247,7 @@ class DownloadPeopleListResultView(BaseTerminalView):
     """People/DownloadPeopleListResult — import outcome per user."""
 
     def post(self, request):
+        failed_pks = []
         for item in request.data.get("FailList") or []:
             task = (
                 self.device.sync_tasks.filter(
@@ -259,9 +260,11 @@ class DownloadPeopleListResultView(BaseTerminalView):
                 task.status = "failed"
                 task.fail_detail = item
                 task.save(update_fields=["status", "fail_detail"])
-        self.device.sync_tasks.filter(status="sent", action="add").update(
-            status="acked"
-        )
+                failed_pks.append(task.pk)
+        qs = self.device.sync_tasks.filter(status="sent", action="add")
+        if failed_pks:
+            qs = qs.exclude(pk__in=failed_pks)
+        qs.update(status="acked")
         return ok()
 
 

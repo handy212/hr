@@ -15,9 +15,41 @@ from horilla.models import HorillaModel
 
 THEMES_DATA = [
     {
+        "name": "HRDeck Brand",
+        "description": "HRDeck navy, blue, teal, coral and light gray palette",
+        "is_default": True,
+        "primary_50": "#F4F6FA",
+        "primary_100": "#EAF3FF",
+        "primary_200": "#D7E9FF",
+        "primary_300": "#B8D8FF",
+        "primary_400": "#8FC2FF",
+        "primary_500": "#5AA6FF",
+        "primary_600": "#2D8CFF",
+        "primary_700": "#1C70D9",
+        "primary_800": "#1254AA",
+        "primary_900": "#0F2D5B",
+        "dark_50": "#F4F6FA",
+        "dark_100": "#D6DFEB",
+        "dark_200": "#9AAFC9",
+        "dark_300": "#6D829E",
+        "dark_400": "#536987",
+        "dark_500": "#2C466B",
+        "dark_600": "#0F2D5B",
+        "secondary_50": "#F0FCFA",
+        "secondary_100": "#E3F8F5",
+        "secondary_200": "#C8F1EC",
+        "secondary_300": "#A1E7DF",
+        "secondary_400": "#75D9CD",
+        "secondary_500": "#39C8B9",
+        "secondary_600": "#14B8A6",
+        "secondary_700": "#0E9487",
+        "secondary_800": "#0C756B",
+        "secondary_900": "#07584F",
+    },
+    {
         "name": "Coral Red Theme (Default)",
         "description": "Warm coral-red based theme",
-        "is_default": True,
+        "is_default": False,
         "primary_50": "#f6f6f6",
         "primary_100": "#FFF5F1",  # f0f0f0
         "primary_200": "#FEF6F5",
@@ -577,7 +609,7 @@ class HorillaColorTheme(HorillaModel):
         default_theme = cls.objects.filter(is_default=True).first()
         if default_theme:
             return default_theme
-        return cls.objects.filter(name="Coral Red Theme (Default)").first()
+        return cls.objects.filter(name="HRDeck Brand").first()
 
 
 class CompanyTheme(HorillaModel):

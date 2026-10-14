@@ -23,7 +23,7 @@ body.dark .bg-secondary-50 {
    overrides — reassert theme primary on hover for related-object chips. */
 body.dark .group:hover .group-hover\:text-primary-600,
 body.dark .group:hover .group-hover\:text-primary-700 {
-  color: var(--primary-600, #e54f38) !important;
+  color: var(--primary-600, #2D8CFF) !important;
 }
 /* .accordion-panel ul li a below is more specific than .text-primary-600
    above, so it wins the cascade and flattens the active Settings sub-menu

@@ -5,7 +5,7 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <style>
         :root {
-            --ess-indigo: var(--primary-600, #e54f38);
+            --ess-indigo: var(--primary-600, #2D8CFF);
             --ess-green: #22c55e;
             --ess-amber: #f59e0b;
             --ess-red: #ef4444;
@@ -292,7 +292,7 @@
             pointer-events: none;
         }
         .ess-chart-card[data-section="leave"]::before {
-            background: linear-gradient(90deg, #e54f38, #a855f7);
+            background: linear-gradient(90deg, #2D8CFF, #a855f7);
         }
         .ess-chart-card[data-section="attendance"]::before {
             background: linear-gradient(90deg, #22c55e, #06b6d4);
@@ -301,7 +301,7 @@
             background: linear-gradient(90deg, #f59e0b, #ef4444);
         }
         .ess-chart-card[data-section="goals"]::before {
-            background: linear-gradient(90deg, #3b82f6, #e54f38);
+            background: linear-gradient(90deg, #3b82f6, #2D8CFF);
         }
         .ess-chart-card[data-section="calendar"]::before {
             background: linear-gradient(90deg, #22c55e, #06b6d4);
@@ -1173,7 +1173,7 @@
                     ],
                     xaxis: { categories: categories, labels: { style: { colors: axisColor(), fontSize: '11px' } } },
                     yaxis: { labels: { style: { colors: axisColor(), fontSize: '11px' } } },
-                    colors: ['#E54F38', '#22c55e'],
+                    colors: ['#2D8CFF', '#22c55e'],
                     dataLabels: { enabled: false },
                     legend: { position: 'top', fontSize: '11px' },
                     theme: { mode: themeMode() },
@@ -1219,7 +1219,7 @@
                         max: 12,
                         labels: { formatter: function (v) { return v + 'h'; }, style: { colors: axisColor(), fontSize: '11px' } }
                     },
-                    colors: ['#E54F38'],
+                    colors: ['#2D8CFF'],
                     plotOptions: { bar: { borderRadius: 5, columnWidth: '55%' } },
                     dataLabels: { enabled: false },
                     annotations: { yaxis: [{ y: 8, borderColor: '#f59e0b', strokeDashArray: 4,
@@ -1276,7 +1276,7 @@
                     calSummItem(s.absent,   '#ef4444', '{% trans "Absent"|escapejs %}')  +
                     calSummItem(s.late,     '#f59e0b', '{% trans "Late"|escapejs %}')    +
                     {% endif %}
-                    calSummItem(s.leave,    '#E54F38', '{% trans "Leave"|escapejs %}')   +
+                    calSummItem(s.leave,    '#2D8CFF', '{% trans "Leave"|escapejs %}')   +
                     calSummItem(s.holiday,  '#a855f7', '{% trans "Holiday"|escapejs %}');
                 })
                 .catch(function () {});
@@ -1320,7 +1320,7 @@
                         axisBorder: { show: false }, axisTicks: { show: false }
                     },
                     yaxis: { labels: { formatter: function (v) { return v.toLocaleString(); }, style: { colors: axisColor(), fontSize: '10px' } } },
-                    colors: ['#E54F38', '#22c55e'],
+                    colors: ['#2D8CFF', '#22c55e'],
                     plotOptions: { bar: { borderRadius: 5, columnWidth: '60%' } },
                     dataLabels: { enabled: false },
                     legend: { position: 'top', fontSize: '11px' },
