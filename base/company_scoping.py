@@ -31,6 +31,34 @@ GLOBAL_MODELS = {
     ("base", "company"),
     ("django_apscheduler", "djangojob"),
     ("django_apscheduler", "djangojobexecution"),
+    # Auth/token internals — per-user credentials, no company dimension.
+    ("token_blacklist", "outstandingtoken"),
+    ("token_blacklist", "blacklistedtoken"),
+    ("horilla_auth", "legacyuser"),
+    ("horilla_auth", "authusergroups"),
+    ("horilla_auth", "authuseruserpermissions"),
+    ("axes", "accessattemptexpiration"),
+    # Vendor audit trail — global log; horilla_audit carries its own config.
+    ("auditlog", "logentry"),
+    # Vendor notifications — recipient is a user FK; no company dimension (Phase 1).
+    ("notifications", "notification"),
+    # Platform-level operations/config.
+    ("horilla_backup", "localbackup"),
+    ("horilla_backup", "googledrivebackup"),
+    ("horilla_ldap", "ldapsettings"),
+    ("horilla_theme", "horillacolortheme"),  # shared theme catalog
+    ("horilla_audit", "audittag"),  # global tags for history entries
+    ("horilla_audit", "accountblockunblock"),  # global feature toggle
+    ("horilla_audit", "auditmodelconfig"),  # global audit configuration
+    # Per-user/per-employee UI state — stores prefs, not tenant data.
+    ("horilla_views", "togglecolumn"),
+    ("horilla_views", "activetab"),
+    ("horilla_views", "activegroup"),
+    ("horilla_views", "savedfilter"),
+    ("horilla_views", "activeview"),
+    ("horilla_views", "columnorder"),
+    ("accessibility", "defaultaccessibility"),  # platform-wide accessibility defaults
+    ("base", "driverviewed"),  # per-user onboarding-tour state
 }
 
 

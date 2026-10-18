@@ -12,12 +12,26 @@
 **Objective:** Know exactly what leaks today, and stop new leaks from being introduced.
 
 - [x] **Full model coverage audit.** `python manage.py audit_company_scoping` (`base/company_scoping.py`) walks all 283 models. Baseline 2026-10-14: **143 scoped, 127 unscoped gaps, 13 intentionally global**. Definite gaps (unscoped but have a company FK): `facedetection.facedetection`, `geofencing.geofencing`, `horilla_theme.companytheme`, `horilla_audit.historytrackingfields`, `pms.historicalkeyresult`, `pms.historicalobjective`, `base.dynamicemailconfiguration`, `base.companygroupassignment`, `base.companylanguagesetting`, `base.defaultexportpermission`, `base.integrationapps`, `base.setupchecklistdismissal`. Also found: broken filter path on `recruitment.questionordering` (`recruitment_ids__company_id` — field doesn't exist).
-- [x] **Fail-closed scoping.** `COMPANY_SCOPING_STRICT` env flag added (`horilla/settings/base.py`); when True, `HorillaCompanyManager` returns an empty queryset with no company context (and for "all" without request assignment) instead of unfiltered. Default False until coverage is complete. Explicit escape hatch: `.unscoped()` (alias of `.entire()`) on the manager.
+- [x] **Fail-closed scoping.** `COMPANY_SCOPING_STRICT` env flag added (`horilla/settings/base.py`); when True, `HorillaCompanyManager` returns an empty queryset with no company context (and for "all" without request assignment) instead of unfiltered. Default changed to True on 2026-10-15; coverage remains incomplete. Explicit escape hatch: `.unscoped()` (alias of `.entire()`) on the manager.
 - [x] **Extend the testkit / CI gate.** `base/tests/test_company_scoping.py`: strict-mode behavior tests + `test_no_new_unscoped_models` fails CI when any model outside the `KNOWN_UNSCOPED` allowlist (127-entry snapshot) is unscoped. The allowlist must only shrink.
 - [ ] **Audit bypass paths.** Catalog uses of `.entire()`, `_base_manager`, `raw()`, and direct SQL; wrap or flag each.
+  - Initial runtime sweep (2026-10-18): direct SQL in `horilla_views/views.py` rechecks submitted IDs through `model.objects`; migration/demo SQL is operational. Scoped manager reads now replace bypasses in the employee profile, recruitment pipeline shell, and legacy offboarding dashboard/list views, with two-company regression tests for the profile, pipeline, and chart. Remaining request-path bypasses include `employee/views.py` profile/update paths; verify their authorization behavior before replacing them. This is a triage list, not a completed audit.
 - [ ] **Baseline threat model.** Document every place cross-tenant data could surface (API, exports, reports, mail previews, notifications, admin).
+  - Mail configuration is a concrete control-plane risk: `base/views.py:replace_primary_mail` previously allowed any logged-in user to replace the global primary mail server; it now requires the change permission. `DynamicEmailConfiguration.save()` still clears the globally primary flag across companies. Define platform versus tenant mail ownership before SaaS rollout.
 
 **Exit criteria:** Coverage inventory published; fail-closed manager merged behind a flag; CI scoping test running.
+
+### Phase 0 threat-model baseline (2026-10-18)
+
+| Surface | Current control | Isolation work still required |
+|---|---|---|
+| Session web views | Company ContextVar and scoped managers | Audit remaining `.entire()` / `_base_manager` request paths; test cross-company object IDs. |
+| JWT API | `TenantScopedJWTAuthentication` sets company context or rejects an unassigned user | Test every viewset and serializer relation with two tenants; define tenant switching for users in multiple companies. |
+| Exports and reports | `has_export_access` gates the shared export helper; raw SQL export in `horilla_views/views.py` rechecks IDs through a scoped manager | Check every export/report entry point, including relation traversal and stored report results. |
+| Mail and notifications | Mail replacement now requires change permission; notification API starts from the authenticated user's notifications | Separate platform and tenant SMTP ownership; verify notification creation and read paths never expose another tenant's content. |
+| History, admin, and files | Some history and third-party models remain global; Django admin registers tenant models | Define tenant filters for history/admin and tenant-owned upload paths before shared-instance deployment. |
+
+This is an entry-point inventory, not a completed security review. Phase 1 exit criteria remain unmet while unscoped models and bypass paths remain.
 
 ---
 
@@ -25,7 +39,8 @@
 
 **Objective:** No query path can return another tenant's data.
 
-- [ ] Scope all remaining tenant-owned models (payroll, attendance edge models, biometric, geofencing, facedetection, whatsapp, audit).
+- [~] Scope all remaining tenant-owned models. **Progress 2026-10-14: 153/283 scoped (was 143).** Done: broken `recruitment.questionordering` path fixed (`recruitment_id__company_id`); scoped `facedetection.facedetection`, `geofencing.geofencing`, `horilla_theme.companytheme`, `horilla_audit.historytrackingfields`, `base.dynamicemailconfiguration`, `base.companylanguagesetting`, `base.defaultexportpermission`, `base.integrationapps`, `base.setupchecklistdismissal`. Deliberately deferred: `base.companygroupassignment` (CompanyScopedBackend resolves assignments across all companies at `base/auth_backends.py:80` — scoping breaks "all companies" permission resolution; needs a dedicated design), all simple-history tables (written without request context; scope via parent in a separate pass). Remaining unscoped: 117, mostly comments/attachments/history and view-state tables.
+- [x] **Strict-mode blockers fixed; `COMPANY_SCOPING_STRICT` now defaults to True (2026-10-15).** (a) `base/backends.py` `get_dynamic_email_config()` — company-context config preferred, unscoped global-primary fallback for scheduler mail; (b) `base/models.py` `DynamicEmailConfiguration.save()` primary-bookkeeping via `.unscoped()`; (c) `base/views.py` `replace_primary_mail` switches the primary without deleting a mail configuration. Suite-wide strict fallout also fixed: Company post-save seeders (`base/signals.py` AnnouncementExpire/DefaultExportPermission, `create_shift_days`), `employee/models.py` `bonus_post_save`, `horilla_audit` `seed_default_row`, export-access readers (`base/methods.py`, `base/context_processors.py`), and testkit `make_employee` now use `.unscoped()` where cross-company access is intended. Full `base` suite: identical results with strict ON vs OFF (162 tests; only pre-existing environmental redis/observability failures). Remaining known strict hazard: `base.companygroupassignment` still unscoped by design (CompanyScopedBackend resolves across companies — needs a dedicated design before scoping).
 - [ ] Add `unique_together` constraints including `company` where uniqueness is currently global (codes, badges, work types, etc.).
 - [ ] Scope or replace global third-party tables:
   - `django-notifications` — filter by recipient's company or add tenant FK via custom model.
@@ -96,6 +111,7 @@
 ## Key risks
 
 1. **Fail-open legacy paths** — the single biggest leak risk; mitigated by Phase 0/1 CI gates.
+   The scoped manager also includes `company_id IS NULL` rows for a selected company; confirm every such row is deliberately shared before claiming isolation.
 2. **Scheduler scale** — single-process apscheduler iterating many tenants will bottleneck; budget a Celery migration if tenant count grows.
 3. **Payroll/audit correctness** — scoping payroll wrong is a legal problem, not just a bug; extra review + staging validation.
 4. **Global settings refactor** — touches mail delivery for everyone; do it with dual-read fallbacks.

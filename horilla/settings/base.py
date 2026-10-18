@@ -500,9 +500,9 @@ COMPANY_SCOPED_PERMISSIONS = env.bool("COMPANY_SCOPED_PERMISSIONS", default=True
 # When True, HorillaCompanyManager fails closed: with no company in context it
 # returns an empty queryset instead of an unfiltered one. Code that
 # legitimately spans companies (schedulers, platform admin) must opt out
-# explicitly via .unscoped()/.entire(). Defaults to False while scoping
-# coverage is being completed; enable for SaaS deployments.
-COMPANY_SCOPING_STRICT = env.bool("COMPANY_SCOPING_STRICT", default=False)
+# explicitly via .unscoped()/.entire(). Enabled by default for SaaS;
+# set COMPANY_SCOPING_STRICT=0 to restore the legacy unfiltered fallback.
+COMPANY_SCOPING_STRICT = env.bool("COMPANY_SCOPING_STRICT", default=True)
 
 NO_PERMISSION_MODALS = [
     "companygroupassignment",

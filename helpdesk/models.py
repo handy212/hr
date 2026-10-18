@@ -423,6 +423,9 @@ class ClaimRequest(HorillaModel):
         null=True,
         blank=True,
     )
+    objects = HorillaCompanyManager(
+        "ticket_id__employee_id__employee_work_info__company_id"
+    )
     employee_id = models.ForeignKey(
         Employee,
         on_delete=models.CASCADE,
@@ -453,6 +456,7 @@ class Comment(HorillaModel):
         Employee, on_delete=models.DO_NOTHING, related_name="employee_comment"
     )
     date = models.DateTimeField(auto_now_add=True)
+    objects = HorillaCompanyManager("ticket__employee_id__employee_work_info__company_id")
 
     def __str__(self):
         return self.comment
@@ -476,6 +480,7 @@ class Attachment(HorillaModel):
         blank=True,
         related_name="comment_attachment",
     )
+    objects = HorillaCompanyManager("ticket__employee_id__employee_work_info__company_id")
 
     def get_file_format(self):
         image_format = [".jpg", ".jpeg", ".png", ".svg"]

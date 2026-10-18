@@ -1429,7 +1429,7 @@ class RosterPublishLog(models.Model):
         verbose_name=_("Total Employees"),
     )
 
-    objects = models.Manager()
+    objects = HorillaCompanyManager("department__company_id")
 
     class Meta:
         verbose_name = _("Roster Publish Log")
@@ -1665,7 +1665,9 @@ class WorkTypeRequestComment(HorillaModel):
     employee_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
     comment = models.TextField(null=True, verbose_name=_("Comment"))
     files = models.ManyToManyField(BaserequestFile, blank=True)
-    objects = models.Manager()
+    objects = HorillaCompanyManager(
+        "request_id__employee_id__employee_work_info__company_id"
+    )
 
     def __str__(self) -> str:
         return f"{self.comment}"
@@ -1977,7 +1979,9 @@ class ShiftRequestComment(HorillaModel):
     employee_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
     files = models.ManyToManyField(BaserequestFile, blank=True)
     comment = models.TextField(null=True, verbose_name=_("Comment"))
-    objects = models.Manager()
+    objects = HorillaCompanyManager(
+        "request_id__employee_id__employee_work_info__company_id"
+    )
 
     def __str__(self) -> str:
         return f"{self.comment}"
@@ -2114,6 +2118,7 @@ class DynamicEmailConfiguration(HorillaModel):
         blank=True,
         verbose_name=_("Company"),
     )
+    objects = HorillaCompanyManager()
 
     def highlight_cell(self):
         if self.is_primary:
@@ -2144,11 +2149,13 @@ class DynamicEmailConfiguration(HorillaModel):
         return self.username
 
     def save(self, *args, **kwargs) -> None:
+        # "Primary" is a global flag, so the bookkeeping must see all rows
+        # regardless of company context (strict mode included).
         if self.is_primary:
-            DynamicEmailConfiguration.objects.filter(is_primary=True).update(
-                is_primary=False
-            )
-        if not DynamicEmailConfiguration.objects.exists():
+            DynamicEmailConfiguration.objects.unscoped().filter(
+                is_primary=True
+            ).update(is_primary=False)
+        if not DynamicEmailConfiguration.objects.unscoped().exists():
             self.is_primary = True
 
         super().save(*args, **kwargs)
@@ -2466,6 +2473,7 @@ class Attachment(models.Model):
     """
 
     file = models.FileField(upload_to=upload_path)
+    objects = HorillaCompanyManager("announcement_attachments__company_id")
 
     def __str__(self):
         return self.file.name
@@ -2591,7 +2599,7 @@ class AnnouncementComment(HorillaModel):
     announcement_id = models.ForeignKey(Announcement, on_delete=models.CASCADE)
     employee_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
     comment = models.TextField(null=True, verbose_name=_("Comment"), max_length=255)
-    objects = models.Manager()
+    objects = HorillaCompanyManager("announcement_id__company_id")
 
 
 class AnnouncementView(models.Model):
@@ -2604,7 +2612,7 @@ class AnnouncementView(models.Model):
     viewed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
 
-    objects = models.Manager()
+    objects = HorillaCompanyManager("announcement__company_id")
 
     def announcement_viewed_by_col(self):
         """
@@ -2699,6 +2707,7 @@ class DashboardEmployeeCharts(HorillaModel):
     charts = models.JSONField(
         verbose_name=_("Excluded Charts"), default=list, blank=True, null=True
     )
+    objects = HorillaCompanyManager("employee__employee_work_info__company_id")
 
     class Meta:
         verbose_name = _("Dashboard Employee Charts")
@@ -3092,6 +3101,7 @@ class PenaltyAccounts(HorillaModel):
     penalty_amount = models.FloatField(
         default=0.0, null=True, verbose_name=_("Penalty Amount")
     )
+    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
 
     def get_delete_url(self):
         """
@@ -3160,6 +3170,7 @@ class NotificationSound(models.Model):
         Employee, on_delete=models.CASCADE, related_name="notification_sound"
     )
     sound_enabled = models.BooleanField(default=False)
+    objects = HorillaCompanyManager("employee__employee_work_info__company_id")
 
 
 class IntegrationApps(HorillaModel, NoPermissionModel):
@@ -3172,6 +3183,7 @@ class IntegrationApps(HorillaModel, NoPermissionModel):
         verbose_name=_("Company"),
     )
     is_enabled = models.BooleanField(default=False)
+    objects = HorillaCompanyManager("company")
 
     class Meta:
         unique_together = ("app_label", "company")
@@ -3196,6 +3208,7 @@ class SetupChecklistDismissal(models.Model):
         related_name="setup_checklist_dismissals",
     )
     dismissed_at = models.DateTimeField(auto_now_add=True)
+    objects = HorillaCompanyManager("company")
 
     class Meta:
         app_label = "base"
@@ -3223,7 +3236,7 @@ class DefaultExportPermission(HorillaModel):
         on_delete=models.CASCADE,
         verbose_name=_("Company"),
     )
-    objects = models.Manager()
+    objects = HorillaCompanyManager()
 
     class Meta:
         # Every reader does .filter(company_id=...).first(), so a second row
@@ -3274,7 +3287,7 @@ class CompanyLanguageSetting(HorillaModel):
         verbose_name=_("Company"),
     )
     enabled_languages = models.JSONField(default=list, blank=True)
-    objects = models.Manager()
+    objects = HorillaCompanyManager()
 
 
 # User.add_to_class("is_new_employee", models.BooleanField(default=False))

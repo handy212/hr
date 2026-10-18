@@ -1059,7 +1059,7 @@ class OffboardingEmployeeList(HorillaListView):
 
     def get_queryset(self, queryset=None, filtered=False, *args, **kwargs):
         if not getattr(self, "queryset", None):
-            qs = OffboardingEmployee.objects.entire()
+            qs = OffboardingEmployee.objects.all()
             queryset = super().get_queryset(qs, filtered, *args, **kwargs)
             if not (
                 self.request.user.has_perm("offboarding.view_offboarding")
@@ -1241,7 +1241,7 @@ class DashboardTaskListview(HorillaListView):
         Returns a filtered queryset of records assigned to a specific employee
         """
 
-        qs = OffboardingEmployee.objects.entire()
+        qs = OffboardingEmployee.objects.all()
         queryset = super().get_queryset(queryset=qs)
         return queryset
 
@@ -1279,10 +1279,10 @@ if apps.is_installed("asset"):
             Returns a filtered queryset of records assigned to a specific employee
             """
 
-            offboarding_employees = OffboardingEmployee.objects.entire().values_list(
+            offboarding_employees = OffboardingEmployee.objects.values_list(
                 "employee_id__id", flat=True
             )
-            qs = self.model.objects.entire().filter(
+            qs = self.model.objects.filter(
                 return_status__isnull=True,
                 assigned_to_employee_id__in=offboarding_employees,
             )
@@ -1338,7 +1338,7 @@ if apps.is_installed("pms"):
             """
             Returns a filtered queryset of records assigned to a specific employee
             """
-            offboarding_employees = OffboardingEmployee.objects.entire().values_list(
+            offboarding_employees = OffboardingEmployee.objects.values_list(
                 "employee_id__id", "notice_period_starts"
             )
             if offboarding_employees:
@@ -1347,7 +1347,7 @@ if apps.is_installed("pms"):
                 id_list, date_list = [], []
 
             qs = (
-                self.model.objects.entire()
+                self.model.objects
                 .filter(employee_id__in=id_list)
                 .exclude(status="Closed")
             )

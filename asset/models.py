@@ -445,6 +445,7 @@ class AssetReport(HorillaModel):
     asset_id = models.ForeignKey(
         Asset, related_name="asset_report", on_delete=models.CASCADE
     )
+    objects = HorillaCompanyManager("asset_id__asset_category_id__company_id")
 
     def __str__(self):
         """
@@ -473,7 +474,9 @@ class AssetDocuments(HorillaModel):
         "AssetReport", related_name="documents", on_delete=models.CASCADE
     )
     file = models.FileField(upload_to=upload_path, blank=True, null=True)
-    objects = models.Manager()
+    objects = HorillaCompanyManager(
+        "asset_report__asset_id__asset_category_id__company_id"
+    )
 
     class Meta:
         verbose_name = _("Asset Document")
@@ -921,6 +924,9 @@ class AssetRequestComment(HorillaModel):
     created_at = models.DateTimeField(
         auto_now_add=True, verbose_name=_("Created At"), null=True
     )
+    objects = HorillaCompanyManager(
+        "request_id__requested_employee_id__employee_work_info__company_id"
+    )
 
     def __str__(self) -> str:
         return f"{self.comment}"
@@ -1096,6 +1102,9 @@ class AssetServiceRequestNote(HorillaModel):
     employee_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
     note = models.TextField(verbose_name=_("Note"))
     created_at = models.DateTimeField(auto_now_add=True)
+    objects = HorillaCompanyManager(
+        "request_id__requested_employee_id__employee_work_info__company_id"
+    )
 
     class Meta:
         """Meta class for AssetServiceRequestNote model"""

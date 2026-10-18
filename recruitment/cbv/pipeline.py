@@ -311,7 +311,7 @@ class RecruitmentPipelineContentShell(TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         rec_id = kwargs.get("rec_id")
-        if not models.Recruitment.objects.entire().filter(id=rec_id).exists():
+        if not models.Recruitment.objects.filter(id=rec_id).exists():
             return HorillaRedirect(
                 request, message=_("No recruitment found matching the query.")
             )
@@ -356,7 +356,7 @@ class RecruitmentPipelineContentShell(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        rec = models.Recruitment.objects.entire().get(pk=self.kwargs.get("rec_id"))
+        rec = models.Recruitment.objects.get(pk=self.kwargs.get("rec_id"))
         # Falls back to "card" (not just None) when neither this request nor
         # a saved ActiveView row picked a view - content_url below already
         # defaults to the card endpoint in that case, so the Nav's view-type

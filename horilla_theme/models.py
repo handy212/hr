@@ -10,6 +10,7 @@ from django.db import models, transaction
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
+from base.horilla_company_manager import HorillaCompanyManager
 from base.models import Company
 from horilla.models import HorillaModel
 
@@ -632,6 +633,7 @@ class CompanyTheme(HorillaModel):
         verbose_name=_("Company"),
         # related_name="theme"
     )
+    objects = HorillaCompanyManager("company")
 
     class Meta:
         """

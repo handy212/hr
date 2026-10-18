@@ -200,7 +200,7 @@ class LeaveTypeCondition(HorillaModel):
         help_text=_("Required for value-based conditions such as gender"),
     )
 
-    objects = models.Manager()
+    objects = HorillaCompanyManager("leavetype_set__company_id")
 
     class Meta:
         ordering = ["-id"]
@@ -2111,6 +2111,7 @@ class LeaverequestComment(HorillaModel):
     employee_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
     files = models.ManyToManyField(LeaverequestFile, blank=True)
     comment = models.TextField(null=True, verbose_name=_("Comment"), max_length=255)
+    objects = HorillaCompanyManager("request_id__employee_id__employee_work_info__company_id")
 
     def __str__(self) -> str:
         return f"{self.comment}"
@@ -2319,6 +2320,7 @@ class LeaveallocationrequestComment(HorillaModel):
     employee_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
     files = models.ManyToManyField(LeaverequestFile, blank=True)
     comment = models.TextField(null=True, verbose_name=_("Comment"), max_length=255)
+    objects = HorillaCompanyManager("request_id__employee_id__employee_work_info__company_id")
 
     def __str__(self) -> str:
         return f"{self.comment}"
@@ -2330,6 +2332,7 @@ class LeaveRequestConditionApproval(models.Model):
     is_rejected = models.BooleanField(default=False)
     leave_request_id = models.ForeignKey(LeaveRequest, on_delete=models.CASCADE)
     manager_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    objects = HorillaCompanyManager("leave_request_id__employee_id__employee_work_info__company_id")
 
 
 class RestrictLeave(HorillaModel):
@@ -2635,6 +2638,7 @@ if apps.is_installed("attendance"):
         employee_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
         files = models.ManyToManyField(LeaverequestFile, blank=True)
         comment = models.TextField(null=True, verbose_name=_("Comment"), max_length=255)
+        objects = HorillaCompanyManager("request_id__employee_id__employee_work_info__company_id")
 
         def __str__(self) -> str:
             return f"{self.comment}"

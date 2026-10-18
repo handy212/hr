@@ -192,6 +192,7 @@ class BatchAttendance(HorillaModel):
     """
 
     title = models.CharField(max_length=150, verbose_name=_("Title"))
+    objects = HorillaCompanyManager("attendance_set__employee_id__employee_work_info__company_id")
 
     def __str__(self):
         return f"{self.title}-{self.id}"
@@ -1078,6 +1079,9 @@ class Attendance(HorillaModel):
 
 class AttendanceRequestFile(HorillaModel):
     file = models.FileField(upload_to=upload_path)
+    objects = HorillaCompanyManager(
+        "attendancerequestcomment_set__request_id__employee_id__employee_work_info__company_id"
+    )
 
 
 class AttendanceRequestComment(HorillaModel):
@@ -1089,6 +1093,7 @@ class AttendanceRequestComment(HorillaModel):
     employee_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
     files = models.ManyToManyField(AttendanceRequestFile, blank=True)
     comment = models.TextField(null=True, verbose_name=_("Comment"), max_length=255)
+    objects = HorillaCompanyManager("request_id__employee_id__employee_work_info__company_id")
 
     def __str__(self) -> str:
         return f"{self.comment}"

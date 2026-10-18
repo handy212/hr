@@ -2,7 +2,7 @@
 
 from datetime import date, timedelta
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from base.models import Holidays
 from horilla.testkit import CompanyFilterTestMixin, make_company
@@ -52,7 +52,10 @@ class HolidayCompanyIsolationTests(CompanyFilterTestMixin, TestCase):
         self.assertIn(self.holiday_b, all_rows)
 
     def test_no_company_context_returns_unfiltered(self):
-        self.clear_company_context()
-        all_rows = list(Holidays.objects.all())
+        # This documents the non-strict fallback; strict mode legitimately
+        # returns an empty queryset here instead.
+        with override_settings(COMPANY_SCOPING_STRICT=False):
+            self.clear_company_context()
+            all_rows = list(Holidays.objects.all())
         self.assertIn(self.holiday_a, all_rows)
         self.assertIn(self.holiday_b, all_rows)

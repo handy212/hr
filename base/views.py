@@ -2183,6 +2183,7 @@ def mail_server_delete(request):
 
 
 @login_required
+@permission_required("base.change_dynamicemailconfiguration")
 def replace_primary_mail(request):
     """
     This method is used to replace primary mail server
@@ -2195,7 +2196,6 @@ def replace_primary_mail(request):
 
     email_config.is_primary = True
     email_config.save()
-    DynamicEmailConfiguration.objects.filter(is_primary=True).first().delete()
     messages.success(request, _("Primary Mail server configuration replaced"))
     return redirect("mail-server-conf")
 

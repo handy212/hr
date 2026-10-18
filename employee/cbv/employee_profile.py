@@ -45,7 +45,7 @@ class EmployeeProfileView(HorillaProfileView):
     key_name = "obj_id"
 
     def get_queryset(self):
-        return Employee.objects.entire()
+        return Employee.objects.all()
 
     def dispatch(self, request, *args, **kwargs):
 
@@ -53,7 +53,7 @@ class EmployeeProfileView(HorillaProfileView):
             return redirect("login")
 
         obj_id = kwargs.get("pk")
-        if not Employee.objects.entire().filter(id=obj_id).exists():
+        if not self.get_queryset().filter(id=obj_id).exists():
             return HorillaRedirect(
                 request, message=_("No employee found matching the query.")
             )

@@ -79,11 +79,11 @@ def make_employee(
         updates["work_type_id"] = work_type
     if department is not None:
         updates["department_id"] = department
-    updated = EmployeeWorkInformation.objects.filter(employee_id=emp).update(**updates)
+    updated = EmployeeWorkInformation.objects.unscoped().filter(employee_id=emp).update(**updates)
     if updated == 0:
-        EmployeeWorkInformation.objects.create(employee_id=emp, **updates)
+        EmployeeWorkInformation.objects.unscoped().create(employee_id=emp, **updates)
     # Avoid stale reverse OneToOne cache from create().
-    return Employee.objects.select_related("employee_work_info").get(pk=emp.pk)
+    return Employee.objects.unscoped().select_related("employee_work_info").get(pk=emp.pk)
 
 
 # ---------------------------------------------------------------------------

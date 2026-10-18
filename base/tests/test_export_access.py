@@ -32,14 +32,14 @@ class HasExportAccessTests(TestCase):
         return SimpleNamespace(user=user, session=session)
 
     def test_superuser_always_allowed(self):
-        DefaultExportPermission.objects.update_or_create(
+        DefaultExportPermission.objects.unscoped().update_or_create(
             company_id=self.company, defaults={"is_enabled": False}
         )
         request = self._request(self.superuser, selected_company=str(self.company.pk))
         self.assertTrue(has_export_access(request, Holidays))
 
     def test_default_enabled_allows_everyone(self):
-        DefaultExportPermission.objects.update_or_create(
+        DefaultExportPermission.objects.unscoped().update_or_create(
             company_id=self.company, defaults={"is_enabled": True}
         )
         request = self._request(self.user, selected_company=str(self.company.pk))
@@ -52,19 +52,19 @@ class HasExportAccessTests(TestCase):
         deletes the seeded row to exercise the path an old install hits
         before migrating.
         """
-        DefaultExportPermission.objects.filter(company_id=self.company).delete()
+        DefaultExportPermission.objects.unscoped().filter(company_id=self.company).delete()
         request = self._request(self.user, selected_company=str(self.company.pk))
         self.assertTrue(has_export_access(request, Holidays))
 
     def test_disabled_without_perm_denies(self):
-        DefaultExportPermission.objects.update_or_create(
+        DefaultExportPermission.objects.unscoped().update_or_create(
             company_id=self.company, defaults={"is_enabled": False}
         )
         request = self._request(self.user, selected_company=str(self.company.pk))
         self.assertFalse(has_export_access(request, Holidays))
 
     def test_disabled_with_export_perm_allows(self):
-        DefaultExportPermission.objects.update_or_create(
+        DefaultExportPermission.objects.unscoped().update_or_create(
             company_id=self.company, defaults={"is_enabled": False}
         )
         ct = ContentType.objects.get_for_model(Holidays)

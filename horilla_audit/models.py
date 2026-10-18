@@ -22,6 +22,7 @@ from simple_history.signals import (  # pre_create_historical_m2m_records,; post
 
 # from employee.models import Employee
 from horilla.models import HorillaModel
+from base.horilla_company_manager import HorillaCompanyManager
 from horilla_audit.methods import remove_duplicate_history
 
 logger = logging.getLogger(__name__)
@@ -193,7 +194,7 @@ class HistoryTrackingFields(HorillaModel):
         on_delete=models.CASCADE,
         verbose_name=_("Company"),
     )
-    objects = models.Manager()
+    objects = HorillaCompanyManager()
 
     class Meta:
         verbose_name = _("History Tracking Fields")
@@ -219,9 +220,9 @@ class HistoryTrackingFields(HorillaModel):
         such row exists yet. Safe to call repeatedly (e.g. on every
         post_migrate) — never overwrites an existing configuration.
         """
-        if cls.objects.filter(company_id__isnull=True).exists():
+        if cls.objects.unscoped().filter(company_id__isnull=True).exists():
             return
-        cls.objects.create(
+        cls.objects.unscoped().create(
             company_id=None,
             work_info_track=True,
             tracking_fields={"tracking_fields": list(cls.DEFAULT_TRACKING_FIELDS)},

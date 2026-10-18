@@ -1104,7 +1104,9 @@ class EmployeeBankDetails(HorillaModel):
 
 class NoteFiles(HorillaModel):
     files = models.FileField(upload_to=upload_path, blank=True, null=True)
-    objects = models.Manager()
+    objects = HorillaCompanyManager(
+        "employeenote_set__employee_id__employee_work_info__company_id"
+    )
 
     def __str__(self):
         return self.files.name.split("/")[-1]
@@ -1137,6 +1139,7 @@ class PolicyMultipleFile(HorillaModel):
     """
 
     attachment = models.FileField(upload_to=upload_path)
+    objects = HorillaCompanyManager("policy_set__company_id")
 
     @property
     def _attachment_name(self):
@@ -1264,8 +1267,8 @@ class BonusPoint(HorillaModel):
                                 post-save signal.
             **_kwargs: Additional keyword arguments passed by the signal.
         """
-        if not BonusPoint.objects.filter(employee_id__id=instance.id).exists():
-            BonusPoint.objects.create(employee_id=instance)
+        if not BonusPoint.objects.unscoped().filter(employee_id__id=instance.id).exists():
+            BonusPoint.objects.unscoped().create(employee_id=instance)
 
 
 class Actiontype(HorillaModel):

@@ -33,9 +33,9 @@ def create_announcement_expire_setting(sender, instance, created, raw, **kwargs)
     whenever a new Company is created. This does NOT skip creation during
     loaddata, so the object will also be created when fixture data is loaded.
     """
-    AnnouncementExpire.objects.get_or_create(company_id=None)
+    AnnouncementExpire.objects.unscoped().get_or_create(company_id=None)
     if created:
-        AnnouncementExpire.objects.get_or_create(company_id=instance)
+        AnnouncementExpire.objects.unscoped().get_or_create(company_id=instance)
 
 
 @receiver(post_save, sender=Company)
@@ -49,11 +49,11 @@ def create_default_export_permission(sender, instance, created, raw, **kwargs):
     announcement-expire receiver above, including the NULL-company row that
     the "All companies" session scope reads.
     """
-    DefaultExportPermission.objects.get_or_create(
+    DefaultExportPermission.objects.unscoped().get_or_create(
         company_id=None, defaults={"is_enabled": True}
     )
     if created:
-        DefaultExportPermission.objects.get_or_create(
+        DefaultExportPermission.objects.unscoped().get_or_create(
             company_id=instance, defaults={"is_enabled": True}
         )
 
@@ -205,7 +205,7 @@ def clean_work_records(sender, **kwargs):
 def create_shift_days(sender, **kwargs):
     from base.models import EmployeeShiftDay
 
-    if not EmployeeShiftDay.objects.exists():
+    if not EmployeeShiftDay.objects.unscoped().exists():
         days = [
             ("monday", "Monday"),
             ("tuesday", "Tuesday"),

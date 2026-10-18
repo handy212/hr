@@ -325,22 +325,9 @@ def employee_view_individual(request, obj_id, **kwargs):
     """
     This method is used to view profile of an employee.
     """
-    try:
-        employee = Employee.objects.get(id=obj_id)
-    except ObjectDoesNotExist:
-        try:
-            employee = Employee.objects.entire().get(id=obj_id)
-            company = getattr(
-                getattr(employee, "employee_work_info", None), "company_id", None
-            )
-            company_id = getattr(company, "pk", None)
-            if company_id != request.session["selected_company"]:
-                messages.error(
-                    request, _("Employee is not working in the selected company.")
-                )
-                return redirect("employee-view")
-        except Exception as e:
-            return render(request, "404.html", status=404)
+    employee = Employee.objects.filter(id=obj_id).first()
+    if employee is None:
+        return render(request, "404.html", status=404)
 
     # request_ids_str = json.dumps(
     #     [
@@ -1653,58 +1640,29 @@ def employee_view_update(request, obj_id, **kwargs):
         or request.POST.get("container") == "true"
     )
     employee = Employee.objects.filter(id=obj_id).first()
-    emp = Employee.objects.entire().filter(id=obj_id).first()
-
-    if not employee and not emp:
+    if employee is None:
         return HorillaRedirect(
             request, message=_("No Employee found matching the query.")
         )
 
-    selected_company_id = request.session["selected_company"]
     user = Employee.objects.filter(employee_user_id=request.user).first()
 
-    if not employee and emp and hasattr(emp, "employee_work_info"):
-        if (
-            emp.employee_work_info
-            and emp.employee_work_info.company_id
-            and emp.employee_work_info.company_id_id != selected_company_id
-        ):
-
-            messages.error(
-                request, _("Employee is not working in the selected company.")
-            )
-            return redirect(f"{reverse('employee-view')}?view=list")
-
     tracking_company = None
-    work_info_source = employee or emp
+    work_info_source = employee
     if (
         work_info_source
         and hasattr(work_info_source, "employee_work_info")
         and work_info_source.employee_work_info
     ):
         tracking_company = work_info_source.employee_work_info.company_id
-    elif selected_company_id and selected_company_id != "all":
-        tracking_company = Company.objects.filter(id=selected_company_id).first()
+    else:
+        selected_company_id = request.session.get("selected_company")
+        if selected_company_id and selected_company_id != "all":
+            tracking_company = Company.objects.filter(id=selected_company_id).first()
     history_tracking = HistoryTrackingFields.for_company(tracking_company)
     work_info_history = bool(
         history_tracking is not None and history_tracking.work_info_track
     )
-
-    if employee is None:
-        employee = emp
-        cmpny = Company.objects.get(id=selected_company_id)
-
-        work = (
-            EmployeeWorkInformation.objects.entire()
-            .filter(employee_id=employee)
-            .first()
-        )
-
-        if work and selected_company_id != "all":
-            work.company_id = cmpny
-            work.save()
-
-        employee.save()
 
     if (
         user

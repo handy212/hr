@@ -1507,6 +1507,9 @@ class RejectedCandidate(HorillaModel):
 
 class StageFiles(HorillaModel):
     files = models.FileField(upload_to=upload_path, blank=True, null=True)
+    objects = HorillaCompanyManager(
+        "stagenote_set__candidate_id__recruitment_id__company_id"
+    )
 
     def __str__(self):
         return self.files.name.split("/")[-1]
@@ -1653,7 +1656,7 @@ class QuestionOrdering(HorillaModel):
     question_id = models.ForeignKey(RecruitmentSurvey, on_delete=models.CASCADE)
     recruitment_id = models.ForeignKey(Recruitment, on_delete=models.CASCADE)
     sequence = models.IntegerField(default=0)
-    objects = HorillaCompanyManager(related_company_field="recruitment_ids__company_id")
+    objects = HorillaCompanyManager(related_company_field="recruitment_id__company_id")
 
 
 class RecruitmentSurveyAnswer(HorillaModel):
@@ -1811,6 +1814,8 @@ class CandidateRating(HorillaModel):
     rating = models.IntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(5)]
     )
+
+    objects = HorillaCompanyManager("candidate_id__recruitment_id__company_id")
 
     class Meta:
         unique_together = ["employee_id", "candidate_id"]
@@ -1974,6 +1979,7 @@ class Resume(models.Model):
         Recruitment, on_delete=models.CASCADE, related_name="resume"
     )
     is_candidate = models.BooleanField(default=False)
+    objects = HorillaCompanyManager("recruitment_id__company_id")
 
     def __str__(self):
         return f"{self.recruitment_id} - Resume {self.pk}"
@@ -2028,6 +2034,7 @@ class CandidateDocument(HorillaModel):
     reject_reason = models.TextField(
         blank=True, null=True, max_length=255, verbose_name=_("Rejection Reason")
     )
+    objects = HorillaCompanyManager("candidate_id__recruitment_id__company_id")
 
     def __str__(self):
         return f"{self.candidate_id} - {self.title}"

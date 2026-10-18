@@ -444,7 +444,7 @@ def export_access_enabled(request):
     else:
         company = Company.objects.filter(id=selected_company).first()
 
-    setting = DefaultExportPermission.objects.filter(company_id=company).first()
+    setting = DefaultExportPermission.objects.unscoped().filter(company_id=company).first()
     enabled = setting is None or bool(setting.is_enabled)
     return {"export_access_enabled": enabled}
 

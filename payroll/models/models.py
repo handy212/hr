@@ -2462,7 +2462,7 @@ class ReimbursementMultipleAttachment(models.Model):
     """
 
     attachment = models.FileField(upload_to=upload_path)
-    objects = models.Manager()
+    objects = HorillaCompanyManager("reimbursement_set__employee_id__employee_work_info__company_id")
 
 
 class Reimbursement(HorillaModel):
@@ -2768,7 +2768,9 @@ class Reimbursement(HorillaModel):
 
 class ReimbursementFile(models.Model):
     file = models.FileField(upload_to=upload_path)
-    objects = models.Manager()
+    objects = HorillaCompanyManager(
+        "reimbursementrequestcomment_set__request_id__employee_id__employee_work_info__company_id"
+    )
 
 
 class ReimbursementrequestComment(HorillaModel):
@@ -2780,6 +2782,7 @@ class ReimbursementrequestComment(HorillaModel):
     employee_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
     comment = models.TextField(null=True, verbose_name=_("Comment"), max_length=255)
     files = models.ManyToManyField(ReimbursementFile, blank=True)
+    objects = HorillaCompanyManager("request_id__employee_id__employee_work_info__company_id")
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name=_("Created At"),

@@ -1391,8 +1391,8 @@ def offboarding_dashboard(request):
             onboarding_stage__isnull=False, converted_employee_id__isnull=True
         )
 
-    employees = Employee.objects.entire()
-    offboarding_employees = OffboardingEmployee.objects.entire()
+    employees = Employee.objects.all()
+    offboarding_employees = OffboardingEmployee.objects.all()
     archived_employees = offboarding_employees.filter(stage_id__type="archived")
     resigning_employees = employees.filter(resignationletter__isnull=False).exclude(
         offboardingemployee__stage_id__type="archived"
@@ -1422,7 +1422,7 @@ def dashboard_task_table(request):
     This method is used to render the employee task table page in the dashboard.
     """
 
-    employees = OffboardingEmployee.objects.entire()
+    employees = OffboardingEmployee.objects.all()
     return render(
         request,
         "offboarding/dashboard/employee_task_table.html",
@@ -1445,10 +1445,10 @@ if apps.is_installed("asset"):
             app_label="asset", model="assetassignment"
         )
 
-        offboarding_employees = OffboardingEmployee.objects.entire().values_list(
+        offboarding_employees = OffboardingEmployee.objects.values_list(
             "employee_id__id", flat=True
         )
-        assets = AssetAssignment.objects.entire().filter(
+        assets = AssetAssignment.objects.filter(
             return_status__isnull=True,
             assigned_to_employee_id__in=offboarding_employees,
         )
@@ -1471,7 +1471,7 @@ if apps.is_installed("pms"):
 
         Feedback = get_horilla_model_class(app_label="pms", model="feedback")
 
-        offboarding_employees = OffboardingEmployee.objects.entire().values_list(
+        offboarding_employees = OffboardingEmployee.objects.values_list(
             "employee_id__id", "notice_period_starts"
         )
 
@@ -1481,7 +1481,7 @@ if apps.is_installed("pms"):
             id_list, date_list = [], []
 
         feedbacks = (
-            Feedback.objects.entire()
+            Feedback.objects
             .filter(employee_id__in=id_list)
             .exclude(status="Closed")
         )
@@ -1499,8 +1499,8 @@ def dashboard_join_chart(request):
     This method is used to render the joining - offboarding chart.
     """
 
-    employees = Employee.objects.entire()
-    offboarding_employees = OffboardingEmployee.objects.entire()
+    employees = Employee.objects.all()
+    offboarding_employees = OffboardingEmployee.objects.all()
     archived_employees = offboarding_employees.filter(stage_id__type="archived")
     resigning_employees = employees.filter(resignationletter__isnull=False).exclude(
         offboardingemployee__stage_id__type="archived"
@@ -1534,7 +1534,7 @@ def department_job_postion_chart(request):
     """
 
     departments = Department.objects.all()
-    offboarding_employees = OffboardingEmployee.objects.entire()
+    offboarding_employees = OffboardingEmployee.objects.all()
 
     selected_departments = [
         dept

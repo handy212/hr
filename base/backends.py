@@ -70,7 +70,9 @@ class DefaultHorillaMailBackend(EmailBackend):
             company_id=company
         ).first()
         if configuration is None:
-            configuration = DynamicEmailConfiguration.objects.filter(
+            # Fallback is intentionally unscoped: scheduler mail runs without
+            # a request/company context, and "primary" is a global setting.
+            configuration = DynamicEmailConfiguration.objects.unscoped().filter(
                 is_primary=True
             ).first()
         if configuration:

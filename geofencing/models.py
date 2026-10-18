@@ -4,6 +4,8 @@ from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from geopy.geocoders import Nominatim
 
+from base.horilla_company_manager import HorillaCompanyManager
+
 
 class GeoFencing(models.Model):
     latitude = models.FloatField()
@@ -17,6 +19,7 @@ class GeoFencing(models.Model):
         null=True,
     )
     start = models.BooleanField(default=False)
+    objects = HorillaCompanyManager()
 
     def clean(self):
         if self.company_id is None:
