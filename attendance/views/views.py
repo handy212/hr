@@ -36,7 +36,12 @@ from django.core.validators import validate_ipv46_address
 from django.db import transaction
 from django.db.models import ProtectedError
 from django.forms import ValidationError
-from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.http import (
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseForbidden,
+    JsonResponse,
+)
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -3027,17 +3032,38 @@ def enable_timerunner(request):
     """
     Enable/disable Time Runner for the currently selected company, then refresh
     the navbar Check-In/Out control so the live timer appears immediately.
-    When the company switcher is on "all", apply the change to every
-    AttendanceGeneralSetting row (global + per-company).
+    All-company updates are restricted to the requester's assigned companies;
+    only platform superusers can change every tenant and the shared setting.
     """
     company = get_session_company(request)
     enabled = "time_runner" in request.GET.keys()
     if company is None:
-        # "All companies" — keep every tenant row in sync so the navbar timer
-        # works no matter which company an employee belongs to.
-        updated = AttendanceGeneralSetting.objects.entire().update(time_runner=enabled)
-        if not updated:
-            AttendanceGeneralSetting(company_id=None, time_runner=enabled).save()
+        if request.user.is_superuser:
+            updated = AttendanceGeneralSetting.objects.entire().update(
+                time_runner=enabled
+            )
+            if not updated:
+                AttendanceGeneralSetting(company_id=None, time_runner=enabled).save()
+        else:
+            from saas.scope import effective_company_ids
+
+            company_ids = effective_company_ids()
+            if not company_ids:
+                return HttpResponseForbidden(
+                    _("You don't have access to any companies.")
+                )
+
+            with transaction.atomic():
+                for company_id in company_ids:
+                    settings_qs = AttendanceGeneralSetting.objects.unscoped().filter(
+                        company_id_id=company_id
+                    )
+                    if settings_qs.exists():
+                        settings_qs.update(time_runner=enabled)
+                    else:
+                        AttendanceGeneralSetting(
+                            company_id_id=company_id, time_runner=enabled
+                        ).save()
     else:
         settings_qs = AttendanceGeneralSetting.objects.filter(company_id=company)
         if settings_qs.exists():
@@ -3050,8 +3076,6 @@ def enable_timerunner(request):
         request, _("Time Runner has been {} successfully.").format(message)
     )
 
-    # Retarget so the settings toggle form is left alone, while the navbar
-    # attendance button re-renders with/without the live timer.
     response = render(
         request,
         "attendance/components/in_out_component.html",

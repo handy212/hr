@@ -39,6 +39,8 @@ Generic history views are also a tenancy boundary: they resolve base objects thr
 
 Generic import views are a tenancy boundary as well: related records must resolve through authorized querysets, missing or out-of-scope references fail closed, and create/update permissions are checked against the current request. Employee imports may only resolve companies in the effective company scope and never provision Company records.
 
+The attendance Time Runner setting action is also tenant-scoped: an “all companies” selection updates only the authenticated user's effective company IDs, while a platform superuser retains the global operation. An empty customer scope is denied, and the shared setting is not changed by customer requests.
+
 ## Upstream update procedure
 
 The configured `upstream` remote is `https://github.com/horilla/horilla-hr.git`; `origin` is this product's fork. Fetch and inspect the intended release before merging on a temporary integration branch. Never pull upstream directly into a running environment. Resolve core changes with the register above; retain the platform app and migration graph. Do not blindly replace local authentication or tenancy code with upstream versions.

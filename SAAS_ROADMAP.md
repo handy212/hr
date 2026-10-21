@@ -32,6 +32,12 @@ See [TENANT_MANAGEMENT.md](TENANT_MANAGEMENT.md) for operation, migration and ve
 - Verification: the three focused employee import tests, `saas.tests`, and `horilla_views.tests` passed together (**72 tests**) with SQLite and `LocMemCache`. A broader 87-test run including all `employee.tests` reported six failures/errors in archive, company-work-info, and last-superuser-delete tests; those remain open.
 - This closes one confirmed request-path bypass; the remaining Phase 1 isolation audit and exit criteria are still outstanding.
 
+## Attendance settings isolation checkpoint — 2026-10-22
+
+- **The Time Runner “all companies” action now respects tenant scope.** Regular users update settings only within `effective_company_ids()`; an empty scope is rejected with `403`. The shared setting and unrelated tenant rows are not changed by customer users. Platform superusers retain the existing global behavior.
+- Regression coverage verifies updates for multiple assigned companies, rejection with no company scope, and global behavior for a superuser employee account.
+- Verification: `attendance.tests.test_timerunner_company_scope` passed (**3 tests**). This closes one more request-path bypass; it does not satisfy Phase 1 exit criteria.
+
 ## Review checkpoint — 2026-10-19
 
 The conversion remains in Phases 0–1. Tenant provisioning, billing, and self-service signup are still pending. The counts below supersede the older progress snapshots in this document; manager coverage alone does not prove isolation.
