@@ -93,7 +93,12 @@ def authenticate_device(request):
         raise DeviceRejected("Tenant access is disabled", code=UNAUTHORIZED)
     device.last_seen = timezone.now()
     device.is_online = True
-    device.save(update_fields=["last_seen", "is_online"])
+    fields = ["last_seen", "is_online"]
+    ip = request.META.get("REMOTE_ADDR") or None
+    if ip and ip != device.ip_address:
+        device.ip_address = ip
+        fields.append("ip_address")
+    device.save(update_fields=fields)
     return device
 
 

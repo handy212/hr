@@ -1,0 +1,73 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% block content %}
+<div class="terminal-page">
+    <section class="oh-wrapper oh-main__topbar">
+        <div class="oh-main__titlebar oh-main__titlebar--left">
+            <h1 class="oh-main__titlebar-title fw-bold">
+                <ion-icon name="options-outline" class="me-2"></ion-icon>
+                {% trans "Working parameters" %} — {{ device.name|default:device.sn }}
+            </h1>
+        </div>
+        <div class="oh-main__titlebar oh-main__titlebar--right d-flex gap-2">
+            <form method="post" action="{% url 'terminal-device-action' device.pk 'refresh-parameters' %}">
+                {% csrf_token %}
+                <button type="submit" class="oh-btn oh-btn--small">
+                    <ion-icon name="refresh-outline" class="me-1"></ion-icon>{% trans "Refresh from device" %}
+                </button>
+            </form>
+            <a href="{% url 'terminal-device-detail' device.pk %}" class="oh-btn oh-btn--small">
+                <ion-icon name="arrow-back-outline" class="me-1"></ion-icon>{% trans "Back to device" %}
+            </a>
+        </div>
+    </section>
+    {% include 'device_gateway/_ui.html' with active='devices' device_tab='parameters' %}
+    <div class="oh-wrapper">
+        {% if device.params_dirty %}
+            <div class="oh-alert oh-alert--warning mb-3">{% trans "Changes are waiting for the next heartbeat." %}</div>
+        {% endif %}
+        {% if no_parameters %}
+            <div class="oh-card p-4">
+                <p class="mb-0">{% trans "The device has not uploaded its parameters yet. Use “Refresh from device” and reload once it heartbeats." %}</p>
+            </div>
+        {% else %}
+            <form method="post">
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                {% for title, fields in grouped_fields %}
+                    <section class="oh-card p-4 mb-4">
+                        <h2 class="oh-card__title--lg mb-3">{{ title }}</h2>
+                        <div class="row g-3">
+                            {% for field in fields %}
+                                <div class="{% if field.field.widget.input_type == 'textarea' or field.name == 'TimeGroups' %}col-12{% else %}col-12 col-md-6 col-xl-4{% endif %}">
+                                    {% if field.field.widget.input_type == 'checkbox' %}
+                                        <label class="d-flex align-items-center gap-2">{{ field }} {{ field.label }}</label>
+                                    {% else %}
+                                        <label class="terminal-field-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                        {{ field }}
+                                    {% endif %}
+                                    {% for error in field.errors %}<div class="text-danger oh-text--xs">{{ error }}</div>{% endfor %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endfor %}
+                <div class="d-flex justify-content-end mb-4">
+                    <button type="submit" class="oh-btn oh-btn--secondary oh-btn--shadow">
+                        <ion-icon name="cloud-upload-outline" class="me-1"></ion-icon>{% trans "Save and push to device" %}
+                    </button>
+                </div>
+            </form>
+            {% if other_parameters %}
+                <section class="oh-card p-4 mb-4">
+                    <h2 class="oh-card__title--lg mb-1">{% trans "Reported by the device (read-only)" %}</h2>
+                    <p class="oh-text--light oh-text--xs mb-3">{% trans "Network and server settings are not editable remotely to avoid locking the terminal out." %}</p>
+                    {% for key, value in other_parameters %}
+                        <span class="terminal-param-badge"><span class="param-name">{{ key }}</span><span class="param-val">{{ value }}</span></span>
+                    {% endfor %}
+                </section>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (
     TerminalCommand,
     TerminalDevice,
+    TerminalDevicePerson,
     TerminalEmployee,
     TerminalPunchLog,
     TerminalSnapshot,
@@ -17,3 +18,4 @@ admin.site.register(TerminalCommand)
 admin.site.register(TerminalPunchLog)
 admin.site.register(TerminalSystemRecord)
 admin.site.register(TerminalSnapshot)
+admin.site.register(TerminalDevicePerson)

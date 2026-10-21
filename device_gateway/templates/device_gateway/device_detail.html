@@ -36,16 +36,6 @@
                 <a href="{% url 'terminal-device-list' %}" class="oh-btn oh-btn--small">
                     <ion-icon name="arrow-back-outline" class="me-1"></ion-icon>{% trans "Back to devices" %}
                 </a>
-                {% if perms.device_gateway.view_terminalpunchlog %}
-                    <a href="{% url 'terminal-punch-logs' %}?device={{ device.pk }}" class="oh-btn oh-btn--small">
-                        <ion-icon name="finger-print-outline" class="me-1"></ion-icon>{% trans "Punches" %}
-                    </a>
-                {% endif %}
-                {% if perms.device_gateway.view_terminalsynctask %}
-                    <a href="{% url 'terminal-sync-tasks' %}?device={{ device.pk }}" class="oh-btn oh-btn--small">
-                        <ion-icon name="sync-outline" class="me-1"></ion-icon>{% trans "Sync Tasks" %}
-                    </a>
-                {% endif %}
                 {% if perms.device_gateway.change_terminaldevice %}
                     <a href="{% url 'terminal-device-edit' device.pk %}" class="oh-btn oh-btn--secondary oh-btn--small oh-btn--shadow">
                         <ion-icon name="create-outline" class="me-1"></ion-icon>{% trans "Edit Device" %}
@@ -54,7 +44,7 @@
             </div>
         </div>
     </section>
-    {% include 'device_gateway/_ui.html' with active='devices' %}
+    {% include 'device_gateway/_ui.html' with active='devices' device_tab='overview' %}
 
     <div class="oh-wrapper">
         <!-- Dashboard Metric Summary Cards -->
@@ -152,7 +142,7 @@
         <!-- Main Row: Device Overview & Remote Operations -->
         <div class="row mb-4">
             <!-- Left: Device Information -->
-            <div class="col-12 col-lg-8 mb-3 mb-lg-0">
+            <div class="col-12">
                 <section class="oh-card p-4 h-100" aria-labelledby="device-information-title">
                     <div class="d-flex align-items-center justify-content-between flex-wrap pb-3 mb-3 border-bottom">
                         <div class="d-flex align-items-center">
@@ -183,6 +173,42 @@
                         </div>
 
                         <div class="col-12 col-sm-6 col-md-4 mb-3">
+                            <span class="terminal-field-label">{% trans "IP Address" %}</span>
+                            <span class="terminal-field-value">{{ device.ip_address|default:"-" }}</span>
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-4 mb-3">
+                            <span class="terminal-field-label">{% trans "Firmware" %}</span>
+                            <span class="terminal-field-value">{{ device.firmware_version|default:"-" }}</span>
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-4 mb-3">
+                            <span class="terminal-field-label">{% trans "Active Alarms" %}</span>
+                            <span class="terminal-field-value {% if active_alarms %}text-danger{% endif %}">{% if active_alarms %}{{ active_alarms|join:", " }}{% else %}{% trans "None" %}{% endif %}</span>
+                            {% if active_alarms and perms.device_gateway.change_terminaldevice %}
+                                <form method="post" action="{% url 'terminal-device-action' device.pk 'close-alarm' %}" class="mt-1">
+                                    {% csrf_token %}
+                                    <button class="oh-btn oh-btn--small oh-btn--danger-outline">{% trans "Silence alarms" %}</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                        {% if storage.people %}
+                            <div class="col-12 col-sm-6 col-md-4 mb-3">
+                                <span class="terminal-field-label">{% trans "People Storage" %}</span>
+                                <span class="terminal-field-value">{{ storage.people.Person.Current|default:0 }} / {{ storage.people.Person.Max|default:0 }}</span>
+                            </div>
+                        {% endif %}
+                        {% if storage.records %}
+                            <div class="col-12 col-sm-6 col-md-4 mb-3">
+                                <span class="terminal-field-label">{% trans "Verify Records Stored" %}</span>
+                                <span class="terminal-field-value">{{ storage.records.VerifyRecord.Current|default:0 }} / {{ storage.records.VerifyRecord.Max|default:0 }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="col-12 col-sm-6 col-md-4 mb-3">
+                            <span class="terminal-field-label">{% trans "Parameters" %}</span>
+                            <span class="terminal-field-value">
+                                {% if device.params_dirty %}<span class="oh-badge oh-badge--small oh-badge--round oh-badge--warning">{% trans "Waiting to sync" %}</span>{% elif device.last_params_at %}<span class="oh-badge oh-badge--small oh-badge--round oh-badge--secondary">{% trans "In sync" %}</span> <span class="oh-text--light oh-text--xs">{{ device.last_params_at|date:"DATETIME_FORMAT" }}</span>{% else %}<span class="oh-text--light">{% trans "Not received" %}</span>{% endif %}
+                            </span>
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-4 mb-3">
                             <span class="terminal-field-label">{% trans "Company" %}</span>
                             <span class="terminal-field-value">{{ device.company_id.company|default:device.company_id|default:_("Global (All Companies)") }}</span>
                         </div>
@@ -193,11 +219,6 @@
                                     {{ device.get_direction_display }}
                                 </span>
                             </span>
-                        </div>
-
-                        <div class="col-12 col-sm-6 col-md-4 mb-3">
-                            <span class="terminal-field-label">{% trans "Firmware Version" %}</span>
-                            <span class="terminal-field-value">{{ device.firmware_version|default:"-" }}</span>
                         </div>
 
                         <div class="col-12 col-sm-6 col-md-4 mb-3">
@@ -223,98 +244,218 @@
                         </div>
 
                         <div class="col-12 col-sm-6 col-md-4 mb-3">
-                            <span class="terminal-field-label">{% trans "Parameters State" %}</span>
-                            <span class="terminal-field-value">
-                                {% if device.params_dirty %}
-                                    <span class="oh-badge oh-badge--small oh-badge--round oh-badge--warning">{% trans "Pending Push" %}</span>
-                                {% else %}
-                                    <span class="oh-badge oh-badge--small oh-badge--round oh-badge--secondary">{% trans "In Sync" %}</span>
-                                {% endif %}
-                            </span>
-                        </div>
-
-                        <div class="col-12 col-sm-6 col-md-4 mb-3">
                             <span class="terminal-field-label">{% trans "Created Date" %}</span>
                             <span class="terminal-field-value">{{ device.created_at|date:"M d, Y" }}</span>
                         </div>
                     </div>
                 </section>
             </div>
-            <!-- Right: Remote Operations Console -->
-            <div class="col-12 col-lg-4">
-                <section class="oh-card p-4 h-100" aria-labelledby="remote-operations-title">
-                    <div class="d-flex align-items-center pb-3 mb-3 border-bottom">
-                        <ion-icon name="game-controller-outline" class="me-2 text-primary fs-4"></ion-icon>
-                        <h2 class="oh-card__title--lg mb-0" id="remote-operations-title">{% trans "Remote Operations" %}</h2>
-                    </div>
-                    <p class="oh-text--light oh-text--xs mb-3">
-                        {% trans "Commands are queued on the server and delivered when the device heartbeats in (typically within 3–10 seconds)." %}
-                    </p>
+        </div>
 
-                    {% if perms.device_gateway.change_terminaldevice %}
-                        <!-- Synchronization -->
-                        <div class="mb-3">
-                            <label class="terminal-field-label mb-2">{% trans "Data Synchronization" %}</label>
+        <!-- Remote Operations Console -->
+        <section class="oh-card p-4 mb-4" id="operations-section" aria-labelledby="remote-operations-title">
+            <div class="d-flex align-items-center justify-content-between flex-wrap pb-3 mb-3 border-bottom">
+                <div class="d-flex align-items-center">
+                    <ion-icon name="game-controller-outline" class="me-2 text-primary fs-4"></ion-icon>
+                    <h2 class="oh-card__title--lg mb-0" id="remote-operations-title">{% trans "Remote Operations" %}</h2>
+                </div>
+                {% if device.is_online %}
+                    <span class="oh-text--xs text-success fw-bold"><span class="terminal-pulse me-1"></span>{% trans "Online — commands are delivered within seconds" %}</span>
+                {% else %}
+                    <span class="oh-text--xs text-warning fw-bold"><ion-icon name="time-outline" class="me-1"></ion-icon>{% trans "Offline — commands stay queued until the device reconnects" %}</span>
+                {% endif %}
+            </div>
+
+            {% if perms.device_gateway.change_terminaldevice %}
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="terminal-ops-group">
+                            <h3 class="terminal-ops-title"><ion-icon name="key-outline"></ion-icon>{% trans "Door control" %}</h3>
+                            <form method="post" action="{% url 'terminal-device-action' device.pk 'open-door' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="terminal-ops-btn terminal-ops-btn--primary"><ion-icon name="lock-open-outline"></ion-icon>{% trans "Open door now" %}</button>
+                            </form>
+                            {% for act, label in door_actions %}
+                                {% if act != 'close-alarm' %}
+                                    <form method="post" action="{% url 'terminal-device-action' device.pk act %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="terminal-ops-btn">{{ label }}</button>
+                                    </form>
+                                {% endif %}
+                            {% endfor %}
+                            <form method="post" action="{% url 'terminal-device-action' device.pk 'close-alarm' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="terminal-ops-btn"><ion-icon name="notifications-off-outline"></ion-icon>{% trans "Silence alarms" %}</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="terminal-ops-group">
+                            <h3 class="terminal-ops-title"><ion-icon name="swap-vertical-outline"></ion-icon>{% trans "Data & sync" %}</h3>
                             <form method="post" action="{% url 'terminal-device-action' device.pk 'sync-all' %}">
                                 {% csrf_token %}
-                                <button type="submit" class="oh-btn oh-btn--secondary oh-btn--small oh-btn--shadow w-100" title="{% trans 'Queue sync tasks for all active employees' %}">
-                                    <ion-icon name="cloud-upload-outline" class="me-1"></ion-icon>{% trans "Sync All Personnel" %}
-                                </button>
+                                <button type="submit" class="terminal-ops-btn terminal-ops-btn--primary" title="{% trans 'Queue sync tasks for all active employees' %}"><ion-icon name="cloud-upload-outline"></ion-icon>{% trans "Sync all personnel" %}</button>
                             </form>
-                        </div>
-
-                        <!-- Hardware Commands -->
-                        <div class="mb-3">
-                            <label class="terminal-field-label mb-2">{% trans "Hardware Commands" %}</label>
-                            <div class="d-flex flex-column gap-2">
-                                <form method="post" action="{% url 'terminal-device-action' device.pk 'open-door' %}">
+                            {% for act, label in data_actions %}
+                                <form method="post" action="{% url 'terminal-device-action' device.pk act %}">
                                     {% csrf_token %}
-                                    <button type="submit" class="oh-btn oh-btn--light-bkg oh-btn--small w-100 text-start d-flex align-items-center justify-content-between">
-                                        <span><ion-icon name="lock-open-outline" class="me-2 text-success"></ion-icon>{% trans "Unlock Door / Gate" %}</span>
-                                        <ion-icon name="chevron-forward-outline" class="oh-text--light"></ion-icon>
-                                    </button>
+                                    <button type="submit" class="terminal-ops-btn">{{ label }}</button>
                                 </form>
-
-                                <form method="post" action="{% url 'terminal-device-action' device.pk 'snapshot' %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="oh-btn oh-btn--light-bkg oh-btn--small w-100 text-start d-flex align-items-center justify-content-between">
-                                        <span><ion-icon name="camera-outline" class="me-2 text-primary"></ion-icon>{% trans "Capture Instant Snapshot" %}</span>
-                                        <ion-icon name="chevron-forward-outline" class="oh-text--light"></ion-icon>
-                                    </button>
-                                </form>
-
-                                <form method="post" action="{% url 'terminal-device-action' device.pk 'reboot' %}" onsubmit="return confirm('{% trans "Are you sure you want to reboot this terminal device?"|escapejs %}');">
-                                    {% csrf_token %}
-                                    <button type="submit" class="oh-btn oh-btn--light-bkg oh-btn--small w-100 text-start d-flex align-items-center justify-content-between">
-                                        <span><ion-icon name="refresh-circle-outline" class="me-2 text-warning"></ion-icon>{% trans "Reboot Terminal Device" %}</span>
-                                        <ion-icon name="chevron-forward-outline" class="oh-text--light"></ion-icon>
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-
-                        <!-- Danger Zone -->
-                        <div class="terminal-danger-panel mt-3">
-                            <div class="d-flex align-items-center mb-1 text-danger">
-                                <ion-icon name="warning-outline" class="me-1"></ion-icon>
-                                <span class="oh-text--xs fw-bold">{% trans "Danger Zone" %}</span>
-                            </div>
-                            <p class="oh-text--xs oh-text--light mb-2">
-                                {% trans "Wipes all enrolled personnel and facial/card credentials from the terminal's memory." %}
-                            </p>
-                            <form method="post" action="{% url 'terminal-device-action' device.pk 'delete-all' %}" onsubmit="return confirm('{% trans "WARNING: This will permanently delete ALL personnel from this terminal device! Are you sure you want to proceed?"|escapejs %}');">
+                            {% endfor %}
+                            <form method="post" action="{% url 'terminal-device-action' device.pk 'snapshot' %}">
                                 {% csrf_token %}
-                                <button type="submit" class="oh-btn oh-btn--danger-outline oh-btn--small w-100">
-                                    <ion-icon name="trash-outline" class="me-1"></ion-icon>{% trans "Delete All Personnel" %}
-                                </button>
+                                <button type="submit" class="terminal-ops-btn"><ion-icon name="camera-outline"></ion-icon>{% trans "Capture snapshot" %}</button>
+                            </form>
+                            <form method="post" action="{% url 'terminal-device-action' device.pk 'reboot' %}" onsubmit="return confirm('{% trans "Are you sure you want to reboot this terminal device?"|escapejs %}');">
+                                {% csrf_token %}
+                                <button type="submit" class="terminal-ops-btn"><ion-icon name="refresh-circle-outline"></ion-icon>{% trans "Reboot terminal" %}</button>
                             </form>
                         </div>
-                    {% else %}
-                        <p class="oh-text--light oh-text--sm mb-0">{% trans "You do not have permission to execute device commands." %}</p>
-                    {% endif %}
-                </section>
-            </div>
-        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-6">
+                        <div class="terminal-ops-group">
+                            <h3 class="terminal-ops-title"><ion-icon name="construct-outline"></ion-icon>{% trans "Advanced commands" %}</h3>
+                            <div class="row g-2">
+                                <div class="col-12 col-md-6">
+                                    <details class="terminal-ops-details">
+                                        <summary>{% trans "Register credential on terminal" %}</summary>
+                                        <form method="post" action="{% url 'terminal-device-action' device.pk 'register-credential' %}" class="d-flex flex-column gap-2 mt-2">
+                                            {% csrf_token %}
+                                            <select name="register_type" class="oh-select oh-select--sm w-100">
+                                                {% for value, label in register_types %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+                                            </select>
+                                            <input name="user_id" class="oh-input w-100" placeholder="{% trans 'Terminal UserID' %}" inputmode="numeric" required>
+                                            <input name="register_index" class="oh-input w-100" placeholder="{% trans 'Index (fingerprint 0-9, palm 1-2)' %}" inputmode="numeric">
+                                            <button class="oh-btn oh-btn--secondary oh-btn--small">{% trans "Start registration" %}</button>
+                                        </form>
+                                    </details>
+                                    <details class="terminal-ops-details">
+                                        <summary>{% trans "Query people by UserID" %}</summary>
+                                        <form method="post" action="{% url 'terminal-device-action' device.pk 'query-people' %}" class="d-flex flex-column gap-2 mt-2">
+                                            {% csrf_token %}
+                                            <input name="user_ids" class="oh-input w-100" placeholder="1,2,3" required>
+                                            <button class="oh-btn oh-btn--secondary oh-btn--small">{% trans "Request" %}</button>
+                                        </form>
+                                    </details>
+                                    <details class="terminal-ops-details">
+                                        <summary>{% trans "Elevator ports" %}</summary>
+                                        <form method="post" action="{% url 'terminal-device-action' device.pk 'elevator' %}" class="d-flex flex-column gap-2 mt-2">
+                                            {% csrf_token %}
+                                            <select name="operation" class="oh-select oh-select--sm w-100">
+                                                <option value="open">{% trans "Open" %}</option>
+                                                <option value="keep-open">{% trans "Keep open" %}</option>
+                                                <option value="close">{% trans "Exit keep-open" %}</option>
+                                                <option value="lock">{% trans "Lock" %}</option>
+                                                <option value="unlock">{% trans "Unlock" %}</option>
+                                            </select>
+                                            <input name="ports" class="oh-input w-100" placeholder="1,2,3" required>
+                                            <button class="oh-btn oh-btn--secondary oh-btn--small">{% trans "Send" %}</button>
+                                        </form>
+                                    </details>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    {% if perms.device_gateway.delete_terminaldevice %}
+                                        <details class="terminal-ops-details">
+                                            <summary>{% trans "Firmware upgrade" %}</summary>
+                                            <form method="post" action="{% url 'terminal-device-action' device.pk 'push-firmware' %}" class="d-flex flex-column gap-2 mt-2" onsubmit="return confirm('{% trans "Push this firmware to the terminal?"|escapejs %}');">
+                                                {% csrf_token %}
+                                                <input name="url" class="oh-input w-100" placeholder="https://…/firmware.bin" required>
+                                                <input name="md5" class="oh-input w-100" placeholder="{% trans 'MD5 (32 hex chars)' %}" required>
+                                                <input name="version" class="oh-input w-100" placeholder="{% trans 'Version' %}" required>
+                                                <button class="oh-btn oh-btn--secondary oh-btn--small">{% trans "Push firmware" %}</button>
+                                            </form>
+                                        </details>
+                                    {% endif %}
+                                    <details class="terminal-ops-details">
+                                        <summary>{% trans "Standby / boot image" %}</summary>
+                                        <form method="post" action="{% url 'terminal-device-action' device.pk 'push-file' %}" class="d-flex flex-column gap-2 mt-2">
+                                            {% csrf_token %}
+                                            <select name="file_type" class="oh-select oh-select--sm w-100">
+                                                <option value="1">{% trans "Standby image (index 1-8)" %}</option>
+                                                <option value="2">{% trans "Boot image (index 1)" %}</option>
+                                            </select>
+                                            <input name="file_index" class="oh-input w-100" value="1" inputmode="numeric">
+                                            <input name="url" class="oh-input w-100" placeholder="https://…/image.jpg">
+                                            <input name="md5" class="oh-input w-100" placeholder="{% trans 'MD5 (32 hex chars)' %}">
+                                            <label class="d-flex gap-2 align-items-center"><input type="checkbox" name="delete" value="1"> {% trans "Delete this file instead" %}</label>
+                                            <button class="oh-btn oh-btn--secondary oh-btn--small">{% trans "Send" %}</button>
+                                        </form>
+                                    </details>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <details class="terminal-danger-panel mt-3">
+                    <summary class="text-danger fw-bold oh-text--sm" style="cursor: pointer;">
+                        <ion-icon name="warning-outline" class="me-1"></ion-icon>{% trans "Danger zone" %}
+                    </summary>
+                    <p class="oh-text--xs oh-text--light my-2">{% trans "These actions are irreversible and ask for confirmation." %}</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <form method="post" action="{% url 'terminal-device-action' device.pk 'delete-all' %}" onsubmit="return confirm('{% trans "WARNING: This will permanently delete ALL personnel from this terminal device! Are you sure you want to proceed?"|escapejs %}');">
+                            {% csrf_token %}
+                            <button type="submit" class="oh-btn oh-btn--danger-outline oh-btn--small"><ion-icon name="trash-outline" class="me-1"></ion-icon>{% trans "Delete all personnel" %}</button>
+                        </form>
+                        {% if perms.device_gateway.delete_terminaldevice %}
+                            <form method="post" action="{% url 'terminal-device-action' device.pk 'clear-records' %}" onsubmit="return confirm('{% trans "Delete ALL records stored on the terminal?"|escapejs %}');">
+                                {% csrf_token %}
+                                <button type="submit" class="oh-btn oh-btn--danger-outline oh-btn--small">{% trans "Clear device records" %}</button>
+                            </form>
+                            <form method="post" action="{% url 'terminal-device-action' device.pk 'factory-reset' %}" onsubmit="return confirm('{% trans "Factory reset erases ALL settings and data on the terminal. Continue?"|escapejs %}');">
+                                {% csrf_token %}
+                                <button type="submit" class="oh-btn oh-btn--danger-outline oh-btn--small">{% trans "Factory reset" %}</button>
+                            </form>
+                            <form method="post" action="{% url 'terminal-device-delete' device.pk %}" onsubmit="return confirm('{% trans "Delete this device registration together with its logs and mappings?"|escapejs %}');">
+                                {% csrf_token %}
+                                <button type="submit" class="oh-btn oh-btn--danger-outline oh-btn--small">{% trans "Remove device" %}</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </details>
+            {% else %}
+                <p class="oh-text--light oh-text--sm mb-0">{% trans "You do not have permission to execute device commands." %}</p>
+            {% endif %}
+
+            {% if recent_commands %}
+                <div class="mt-4 pt-3 border-top">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="terminal-field-label mb-0">{% trans "Latest commands" %}</span>
+                        <a href="{% url 'terminal-device-activity' device.pk %}" class="oh-text--xs">{% trans "All activity" %}<ion-icon name="arrow-forward-outline" class="ms-1"></ion-icon></a>
+                    </div>
+                    {% for command in recent_commands %}
+                        <div class="d-flex align-items-center justify-content-between py-1 oh-text--sm">
+                            <span><code>{{ command.summary }}</code> <span class="oh-text--light oh-text--xs ms-1">{{ command.created_at|timesince }} {% trans "ago" %}</span></span>
+                            <span class="oh-badge oh-badge--small oh-badge--round {% if command.status == 'acked' %}oh-badge--secondary{% elif command.status == 'sent' %}oh-badge--info{% else %}oh-badge--warning{% endif %}">{{ command.get_status_display }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+
+        {% if roster_unmapped %}
+            <section class="oh-card p-4 mb-4" aria-labelledby="roster-unmapped-title">
+                <h2 class="oh-card__title--lg mb-1" id="roster-unmapped-title">{% trans "People on the device without an employee" %}</h2>
+                <p class="oh-text--light oh-text--xs mb-3">{% trans "Link them to an employee so their punches create attendance, or queue their removal." %}</p>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for person in roster_unmapped %}
+                        <span class="terminal-param-badge">
+                            <span class="param-name">UID {{ person.user_id }}</span>
+                            <span class="param-val me-2">{{ person.name|default:"-" }}</span>
+                            <a href="?uid={{ person.user_id }}#mappings-section" class="me-2">{% trans "Link" %}</a>
+                            {% if perms.device_gateway.change_terminaldevice %}
+                                <form method="post" action="{% url 'terminal-roster-remove' device.pk person.user_id %}" class="d-inline" onsubmit="return confirm('{% trans "Remove this person from the terminal?"|escapejs %}');">
+                                    {% csrf_token %}
+                                    <button class="terminal-link-danger">{% trans "Remove" %}</button>
+                                </form>
+                            {% endif %}
+                        </span>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
 
         <!-- Terminal UserID Mappings Section -->
         <section class="oh-card p-4 mb-4" id="mappings-section" aria-labelledby="terminal-mappings-title">
@@ -357,7 +498,7 @@
             {% endif %}
             <div class="row">
                 <!-- Left: Mappings Table -->
-                <div class="col-12 col-lg-8 mb-3 mb-lg-0">
+                <div class="col-12 mb-3">
                     {% if employee_mappings %}
                         <div class="oh-sticky-table oh-sticky-table--no-overflow">
                             <div class="oh-sticky-table__table">
@@ -403,14 +544,24 @@
                                                     <span class="oh-badge oh-badge--small oh-badge--round oh-badge--info">{% trans "Not yet synced" %}</span>
                                                 {% endif %}
                                             </div>
-                                            <div class="oh-sticky-table__td text-end">
+                                            <div class="oh-sticky-table__td "><div class="d-flex align-items-center justify-content-end gap-1 flex-nowrap">
                                                 {% if perms.device_gateway.change_terminaldevice %}
+                                                    <a href="{% url 'terminal-employee-edit' device.pk mapping.pk %}" class="oh-btn oh-btn--small oh-btn--light-bkg p-1" title="{% trans 'Access rules' %}"><ion-icon name="options-outline"></ion-icon></a>
+                                                    <form method="post" action="{% url 'terminal-employee-action' device.pk mapping.pk 'sync' %}" class="d-inline">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="oh-btn oh-btn--small oh-btn--light-bkg p-1" title="{% trans 'Push to terminal' %}"><ion-icon name="cloud-upload-outline"></ion-icon></button>
+                                                    </form>
+                                                    <form method="post" action="{% url 'terminal-employee-action' device.pk mapping.pk 'remove' %}" class="d-inline" onsubmit="return confirm('{% trans "Remove this person from the terminal?"|escapejs %}');">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="oh-btn oh-btn--small oh-btn--light-bkg p-1" title="{% trans 'Remove from terminal' %}"><ion-icon name="person-remove-outline" class="text-warning"></ion-icon></button>
+                                                    </form>
                                                     <form method="post" action="{% url 'terminal-employee-unmap' device.pk mapping.pk %}" class="d-inline" onsubmit="return confirm('{% trans "Are you sure you want to remove the mapping for"|escapejs %} {{ mapping.employee.get_full_name|escapejs }} (UID {{ mapping.device_user_id }})?');">
                                                         {% csrf_token %}
                                                         <button type="submit" class="oh-btn oh-btn--danger-outline oh-btn--light-bkg p-1" title="{% trans 'Unmap Employee' %}" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px;">
                                                             <ion-icon name="trash-outline" class="text-danger"></ion-icon>
                                                         </button>
                                                     </form>
+                                                </div>
                                                 {% endif %}
                                             </div>
                                         </div>
@@ -427,7 +578,7 @@
                     {% endif %}
                 </div>
                 <!-- Right: Add New Mapping Form -->
-                <div class="col-12 col-lg-4">
+                <div class="col-12 col-lg-6 col-xl-4">
                     <div class="oh-card p-3 border bg-light h-100">
                         <div class="d-flex align-items-center mb-3">
                             <ion-icon name="person-add-outline" class="me-2 text-primary fs-5"></ion-icon>

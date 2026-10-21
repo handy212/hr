@@ -13,7 +13,7 @@ The first platform management slice is implemented. After applying `base.0017_te
 
 Suspension is enforced on authenticated session and JWT requests; platform recovery and company switching remain available. Background jobs, devices and public pages are outside this first suspension policy. Repeated provisioning also fixes strict-mode attendance-default seeding, preserving existing duplicate configurations rather than deleting them.
 
-Current model-manager inventory (2026-10-21): **244 scoped / 0 unscoped / 42 classified global**, across 286 models. This manager-level count does not cover `.unscoped()`/`_base_manager`/raw-query bypasses or prove every global model is safe to expose. `Tenant` is intentionally global control-plane metadata with explicit platform-only access. The Phase 1 isolation tasks below still block shared-customer launch. Domain routing, plans, billing, self-service signup and deletion remain pending.
+Current model-manager inventory (2026-10-21): **244 scoped / 0 unscoped / 42 classified global**, across 286 models. This manager-level count does not cover `.unscoped()`/`_base_manager`/raw-query bypasses or prove every global model is safe to expose. `Tenant` is intentionally global control-plane metadata with explicit platform-only access. The Phase 1 isolation tasks below still block shared-customer launch. Domain routing, plans, billing, ghself-service signup and deletion remain pending.
 
 See [TENANT_MANAGEMENT.md](TENANT_MANAGEMENT.md) for operation, migration and verification details, and [SPEC-tenants.md](SPEC-tenants.md) for the implemented acceptance contract. The configured application database has not been migrated during development.
 

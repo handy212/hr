@@ -41,6 +41,41 @@ urlpatterns = [
         name="terminal-device-action",
     ),
     path(
+        "devices/<int:pk>/delete/",
+        views_admin.device_delete,
+        name="terminal-device-delete",
+    ),
+    path(
+        "devices/<int:pk>/parameters/",
+        views_admin.device_parameters,
+        name="terminal-device-parameters",
+    ),
+    path(
+        "devices/<int:pk>/activity/",
+        views_admin.device_activity,
+        name="terminal-device-activity",
+    ),
+    path(
+        "devices/<int:pk>/commands/<int:command_id>/cancel/",
+        views_admin.command_cancel,
+        name="terminal-command-cancel",
+    ),
+    path(
+        "devices/<int:pk>/mappings/<int:mapping_id>/edit/",
+        views_admin.employee_mapping_edit,
+        name="terminal-employee-edit",
+    ),
+    path(
+        "devices/<int:pk>/mappings/<int:mapping_id>/<str:action>/",
+        views_admin.employee_mapping_action,
+        name="terminal-employee-action",
+    ),
+    path(
+        "devices/<int:pk>/roster/<int:user_id>/remove/",
+        views_admin.roster_remove,
+        name="terminal-roster-remove",
+    ),
+    path(
         "punch-logs/",
         views_admin.punch_log_list,
         name="terminal-punch-logs",

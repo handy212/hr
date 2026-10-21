@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -52,9 +53,30 @@ class TerminalDevice(HorillaModel):
         default=False,
         help_text=_("Set to push the stored working parameters to the device."),
     )
+    params_refresh_requested = models.BooleanField(
+        default=False,
+        editable=False,
+        help_text=_("Ask the device to re-upload its working parameters."),
+    )
+    last_params_at = models.DateTimeField(null=True, blank=True, editable=False)
+    ip_address = models.GenericIPAddressField(null=True, blank=True, editable=False)
     device_status = models.JSONField(
         default=dict, blank=True, editable=False
     )  # relay/door/alarm state from heartbeats
+
+    @property
+    def storage_info(self):
+        """People/record capacity as reported in the uploaded parameters."""
+        params = self.work_parameters or {}
+        return {
+            "people": params.get("PeopleStorageInfo") or {},
+            "records": params.get("RecordStorageInfo") or {},
+        }
+
+    @property
+    def active_alarms(self):
+        alarm = (self.device_status or {}).get("AlarmStatus") or ""
+        return [a.strip() for a in str(alarm).strip('"').split(",") if a.strip()]
 
     def __str__(self):
         return f"{self.name or self.sn} ({self.sn})"
@@ -65,6 +87,12 @@ class TerminalEmployee(HorillaModel):
 
     objects = HorillaCompanyManager("device__company_id")
 
+    ACCESS_TYPE_CHOICES = [
+        (0, _("Normal")),
+        (1, _("Administrator")),
+        (2, _("Blacklist")),
+    ]
+
     device = models.ForeignKey(
         TerminalDevice, on_delete=models.CASCADE, related_name="terminal_employees"
     )
@@ -73,6 +101,29 @@ class TerminalEmployee(HorillaModel):
     )
     device_user_id = models.PositiveBigIntegerField(verbose_name=_("Device user ID"))
     synced_at = models.DateTimeField(null=True, blank=True)
+    card_num = models.CharField(max_length=20, blank=True, verbose_name=_("Card number"))
+    access_type = models.PositiveSmallIntegerField(
+        choices=ACCESS_TYPE_CHOICES, default=0, verbose_name=_("Role")
+    )
+    expiration_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("Access expires"),
+        help_text=_("Leave empty for no expiry."),
+    )
+    open_times = models.PositiveIntegerField(
+        default=65535,
+        validators=[MaxValueValidator(65535)],
+        verbose_name=_("Allowed passes"),
+        help_text=_("65535 = unlimited, 0 = no passage allowed."),
+    )
+    timegroup = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(64)],
+        verbose_name=_("Time group"),
+        help_text=_("Device time group 1-64. Empty = device default."),
+    )
 
     class Meta:
         constraints = [
@@ -140,7 +191,12 @@ class TerminalCommand(HorillaModel):
     )
     payload = models.JSONField(default=dict)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    sent_at = models.DateTimeField(null=True, blank=True)
     result = models.JSONField(default=dict, blank=True)
+
+    @property
+    def summary(self):
+        return ", ".join(self.payload.keys()) if self.payload else "-"
 
     def __str__(self):
         return f"cmd#{self.pk} {self.device.sn} ({self.status})"
@@ -179,8 +235,18 @@ class TerminalSystemRecord(HorillaModel):
 
     objects = HorillaCompanyManager("device__company_id")
 
+    CATEGORY_DOOR_SENSOR = 1
+    CATEGORY_SYSTEM = 2
+    CATEGORY_CHOICES = [
+        (CATEGORY_DOOR_SENSOR, _("Door sensor")),
+        (CATEGORY_SYSTEM, _("System")),
+    ]
+
     device = models.ForeignKey(
         TerminalDevice, on_delete=models.CASCADE, related_name="system_records"
+    )
+    category = models.PositiveSmallIntegerField(
+        choices=CATEGORY_CHOICES, default=CATEGORY_SYSTEM
     )
     record_id = models.BigIntegerField()
     record_type = models.IntegerField()
@@ -189,7 +255,8 @@ class TerminalSystemRecord(HorillaModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["device", "record_id"], name="unique_terminal_system_record"
+                fields=["device", "category", "record_id"],
+                name="unique_terminal_system_record_v2",
             ),
         ]
         ordering = ["-record_date"]
@@ -207,3 +274,39 @@ class TerminalSnapshot(HorillaModel):
 
     class Meta:
         ordering = ["-created_at"]
+
+
+class TerminalDevicePerson(HorillaModel):
+    """Personnel record as stored on the device (from People/PushPeople)."""
+
+    objects = HorillaCompanyManager("device__company_id")
+
+    device = models.ForeignKey(
+        TerminalDevice, on_delete=models.CASCADE, related_name="roster"
+    )
+    user_id = models.PositiveBigIntegerField()
+    name = models.CharField(max_length=100, blank=True)
+    job = models.CharField(max_length=100, blank=True)
+    department = models.CharField(max_length=100, blank=True)
+    identity_card = models.CharField(max_length=64, blank=True)
+    card_num = models.CharField(max_length=24, blank=True)
+    access_type = models.PositiveSmallIntegerField(default=0)
+    expiration_date = models.DateTimeField(null=True, blank=True)
+    open_times = models.PositiveIntegerField(default=65535)
+    has_face = models.BooleanField(default=False)
+    has_photo = models.BooleanField(default=False)
+    fingerprint_count = models.PositiveSmallIntegerField(default=0)
+    palmvein_count = models.PositiveSmallIntegerField(default=0)
+    photo = models.ImageField(upload_to="terminal_people/", null=True, blank=True)
+    last_pushed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["device", "user_id"], name="unique_terminal_roster_user"
+            ),
+        ]
+        ordering = ["user_id"]
+
+    def __str__(self):
+        return f"{self.name or self.user_id} @ {self.device.sn}"

@@ -1,0 +1,41 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% block content %}
+<div class="terminal-page">
+    <section class="oh-wrapper oh-main__topbar">
+        <div class="oh-main__titlebar oh-main__titlebar--left">
+            <h1 class="oh-main__titlebar-title fw-bold">
+                <ion-icon name="id-card-outline" class="me-2"></ion-icon>
+                {% trans "Access rules" %} — {{ mapping.employee.get_full_name }} (UID {{ mapping.device_user_id }})
+            </h1>
+        </div>
+        <div class="oh-main__titlebar oh-main__titlebar--right">
+            <a href="{% url 'terminal-device-detail' device.pk %}#mappings-section" class="oh-btn oh-btn--small">
+                <ion-icon name="arrow-back-outline" class="me-1"></ion-icon>{% trans "Back to device" %}
+            </a>
+        </div>
+    </section>
+    {% include 'device_gateway/_ui.html' with active='devices' device_tab='people' %}
+    <div class="oh-wrapper">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-10 col-xl-8">
+                <div class="oh-card p-4">
+                    <p class="oh-text--light oh-text--sm mb-4">
+                        {% trans "Saving re-sends this employee to the terminal with the rules below." %}
+                    </p>
+                    <form method="post">
+                        {% csrf_token %}
+                        {% include 'normal_form.html' %}
+                        <div class="p-0 pt-3 d-flex justify-content-end">
+                            <a href="{% url 'terminal-device-detail' device.pk %}" class="oh-btn">{% trans "Cancel" %}</a>
+                            <button type="submit" class="oh-btn oh-btn--secondary oh-btn--shadow ms-2">
+                                <ion-icon name="save-outline" class="me-1"></ion-icon>{% trans "Save and sync" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

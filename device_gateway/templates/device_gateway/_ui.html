@@ -147,10 +147,31 @@
         color: #212529;
     }
 
+    /* Remote operations console */
+    .terminal-ops-group { background: #F8FAFD; border: 1px solid #E2E9F2; border-radius: 10px; padding: .9rem; height: 100%; display: flex; flex-direction: column; gap: .45rem; }
+    .terminal-ops-title { display: flex; align-items: center; gap: .4rem; color: #0F2D5B; font-size: .85rem; font-weight: 700; margin: 0 0 .25rem; }
+    .terminal-ops-title ion-icon { color: #2D8CFF; font-size: 1.05rem; }
+    .terminal-ops-btn { width: 100%; display: flex; align-items: center; gap: .5rem; text-align: left; background: #fff; color: #0F2D5B; border: 1px solid #E2E9F2; border-radius: 8px; padding: .5rem .7rem; font-size: .83rem; font-weight: 600; cursor: pointer; transition: border-color .15s, background .15s; }
+    .terminal-ops-btn:hover { border-color: #2D8CFF; background: #EAF3FF; }
+    .terminal-ops-btn:focus-visible, .terminal-ops-details summary:focus-visible { outline: 2px solid #2D8CFF; outline-offset: 2px; }
+    .terminal-ops-btn--primary { background: #2D8CFF; border-color: #2D8CFF; color: #fff; }
+    .terminal-ops-btn--primary:hover { background: #1C70D9; border-color: #1C70D9; }
+    .terminal-ops-details { background: #fff; border: 1px solid #E2E9F2; border-radius: 8px; padding: .5rem .7rem; margin-bottom: .5rem; }
+    .terminal-ops-details summary { cursor: pointer; font-size: .83rem; font-weight: 600; color: #0F2D5B; }
+    .terminal-ops-details[open] { border-color: #2D8CFF; }
+    .terminal-page .terminal-device-tabs { margin-bottom: 1.25rem; border-bottom: 1px solid #E2E9F2; }
+    .terminal-page .terminal-device-tabs .oh-general__tabs { justify-content: flex-start; gap: .25rem; padding-bottom: .5rem; }
+    .terminal-page .terminal-device-tabs .oh-general__tab { flex: 0 0 auto; margin: 0; }
+    .terminal-page .terminal-device-tabs .oh-general__tab-link { font-size: .8rem; }
+    .terminal-link-danger { background: none; border: 0; padding: 0; color: #D92D20; font-size: .8rem; font-weight: 600; cursor: pointer; }
+    .terminal-page .terminal-device-tabs .oh-general__tab-link--active { color: #2D8CFF; font-weight: 700; background: #EAF3FF; border-radius: 999px; border-bottom-color: transparent; }
+    .terminal-page .terminal-device-tabs .oh-general__tab-link { padding: .4rem .85rem; border-radius: 999px; }
+
     @media (max-width: 767px) {
         .terminal-page .oh-wrapper { width: calc(100% - 2rem); }
     }
 </style>
+{% if not device_tab %}
 <nav class="oh-wrapper terminal-nav" aria-label="{% trans 'Terminal navigation' %}">
     <ul class="oh-general__tabs oh-general__tabs--no-grow">
         {% if perms.device_gateway.view_terminaldevice %}
@@ -176,3 +197,23 @@
         {% endif %}
     </ul>
 </nav>
+{% endif %}
+
+{% if device_tab and device %}
+<nav class="oh-wrapper terminal-device-tabs" aria-label="{% trans 'Device sections' %}">
+    <ul class="oh-general__tabs oh-general__tabs--no-grow">
+        <li class="oh-general__tab"><a href="{% url 'terminal-device-detail' device.pk %}" class="oh-general__tab-link{% if device_tab == 'overview' %} oh-general__tab-link--active{% endif %}"><ion-icon name="grid-outline" class="me-1"></ion-icon>{% trans "Overview" %}</a></li>
+        <li class="oh-general__tab"><a href="{% url 'terminal-device-detail' device.pk %}#mappings-section" class="oh-general__tab-link{% if device_tab == 'people' %} oh-general__tab-link--active{% endif %}"><ion-icon name="people-outline" class="me-1"></ion-icon>{% trans "People" %}</a></li>
+        <li class="oh-general__tab"><a href="{% url 'terminal-device-activity' device.pk %}" class="oh-general__tab-link{% if device_tab == 'activity' %} oh-general__tab-link--active{% endif %}"><ion-icon name="pulse-outline" class="me-1"></ion-icon>{% trans "Activity" %}</a></li>
+        {% if perms.device_gateway.change_terminaldevice %}
+        <li class="oh-general__tab"><a href="{% url 'terminal-device-parameters' device.pk %}" class="oh-general__tab-link{% if device_tab == 'parameters' %} oh-general__tab-link--active{% endif %}"><ion-icon name="options-outline" class="me-1"></ion-icon>{% trans "Parameters" %}</a></li>
+        {% endif %}
+        {% if perms.device_gateway.view_terminalpunchlog %}
+        <li class="oh-general__tab"><a href="{% url 'terminal-punch-logs' %}?device={{ device.pk }}" class="oh-general__tab-link"><ion-icon name="finger-print-outline" class="me-1"></ion-icon>{% trans "Punches" %}</a></li>
+        {% endif %}
+        {% if perms.device_gateway.view_terminalsynctask %}
+        <li class="oh-general__tab"><a href="{% url 'terminal-sync-tasks' %}?device={{ device.pk }}" class="oh-general__tab-link"><ion-icon name="sync-outline" class="me-1"></ion-icon>{% trans "Sync Tasks" %}</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}

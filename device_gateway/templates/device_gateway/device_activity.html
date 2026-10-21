@@ -1,0 +1,138 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% block content %}
+<div class="terminal-page">
+    <section class="oh-wrapper oh-main__topbar">
+        <div class="oh-main__titlebar oh-main__titlebar--left">
+            <h1 class="oh-main__titlebar-title fw-bold">
+                <ion-icon name="pulse-outline" class="me-2"></ion-icon>
+                {% trans "Device activity" %} — {{ device.name|default:device.sn }}
+            </h1>
+        </div>
+        <div class="oh-main__titlebar oh-main__titlebar--right">
+            <a href="{% url 'terminal-device-detail' device.pk %}" class="oh-btn oh-btn--small">
+                <ion-icon name="arrow-back-outline" class="me-1"></ion-icon>{% trans "Back to device" %}
+            </a>
+        </div>
+    </section>
+    {% include 'device_gateway/_ui.html' with active='devices' device_tab='activity' %}
+    <div class="oh-wrapper">
+        <section class="oh-card p-4 mb-4">
+            <h2 class="oh-card__title--lg mb-3">{% trans "Remote commands" %}</h2>
+            <div class="oh-sticky-table"><table class="oh-sticky-table__table">
+                <thead><tr>
+                    <th class="oh-sticky-table__th">{% trans "Queued" %}</th>
+                    <th class="oh-sticky-table__th">{% trans "Command" %}</th>
+                    <th class="oh-sticky-table__th">{% trans "Status" %}</th>
+                    <th class="oh-sticky-table__th">{% trans "Result" %}</th>
+                    <th class="oh-sticky-table__th"></th>
+                </tr></thead>
+                <tbody>
+                {% for command in commands %}
+                    <tr>
+                        <td class="oh-sticky-table__td">{{ command.created_at|date:"Y-m-d H:i:s" }}</td>
+                        <td class="oh-sticky-table__td"><code>{{ command.summary }}</code></td>
+                        <td class="oh-sticky-table__td"><span class="oh-badge oh-badge--small oh-badge--round {% if command.status == 'acked' %}oh-badge--secondary{% elif command.status == 'sent' %}oh-badge--info{% else %}oh-badge--warning{% endif %}">{{ command.get_status_display }}</span></td>
+                        <td class="oh-sticky-table__td">{{ command.result_label|default:"-" }}</td>
+                        <td class="oh-sticky-table__td">
+                            {% if command.status == 'pending' and perms.device_gateway.change_terminaldevice %}
+                                <form method="post" action="{% url 'terminal-command-cancel' device.pk command.pk %}">
+                                    {% csrf_token %}
+                                    <button class="oh-btn oh-btn--small oh-btn--danger-outline">{% trans "Cancel" %}</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td class="oh-sticky-table__td" colspan="5">{% trans "No commands yet." %}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table></div>
+        </section>
+
+        <section class="oh-card p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="oh-card__title--lg mb-0">{% trans "Door sensor & system events" %}</h2>
+                <form method="get">
+                    <select name="category" class="oh-select oh-select--sm" onchange="this.form.submit()">
+                        <option value="">{% trans "All events" %}</option>
+                        <option value="1" {% if selected_category == '1' %}selected{% endif %}>{% trans "Door sensor" %}</option>
+                        <option value="2" {% if selected_category == '2' %}selected{% endif %}>{% trans "System" %}</option>
+                    </select>
+                </form>
+            </div>
+            <div class="oh-sticky-table"><table class="oh-sticky-table__table">
+                <thead><tr>
+                    <th class="oh-sticky-table__th">{% trans "Time" %}</th>
+                    <th class="oh-sticky-table__th">{% trans "Category" %}</th>
+                    <th class="oh-sticky-table__th">{% trans "Event" %}</th>
+                </tr></thead>
+                <tbody>
+                {% for event in events %}
+                    <tr>
+                        <td class="oh-sticky-table__td">{{ event.record_date|date:"Y-m-d H:i:s" }}</td>
+                        <td class="oh-sticky-table__td">{{ event.get_category_display }}</td>
+                        <td class="oh-sticky-table__td {% if event.is_alarm %}text-danger fw-bold{% endif %}">{{ event.name }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td class="oh-sticky-table__td" colspan="3">{% trans "No events recorded." %}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table></div>
+            {% if events.paginator.num_pages > 1 %}
+                <div class="oh-pagination"><nav class="oh-pagination__nav">
+                    {% if events.has_previous %}<a href="?page={{ events.previous_page_number }}&category={{ selected_category }}" class="oh-pagination__item oh-pagination__item--wide">{% trans "Previous" %}</a>{% endif %}
+                    <span class="oh-pagination__label mx-3">{% blocktrans with num=events.number total=events.paginator.num_pages %}Page {{ num }} of {{ total }}{% endblocktrans %}</span>
+                    {% if events.has_next %}<a href="?page={{ events.next_page_number }}&category={{ selected_category }}" class="oh-pagination__item oh-pagination__item--wide">{% trans "Next" %}</a>{% endif %}
+                </nav></div>
+            {% endif %}
+        </section>
+
+        <section class="oh-card p-4 mb-4">
+            <h2 class="oh-card__title--lg mb-3">{% trans "Snapshots" %}</h2>
+            <div class="d-flex flex-wrap gap-3">
+                {% for snap in snapshots %}
+                    <a href="{{ snap.photo.url }}" target="_blank" rel="noopener">
+                        <img src="{{ snap.photo.url }}" alt="{% trans 'Snapshot' %}" style="height:120px;border-radius:8px">
+                        <div class="oh-text--xs oh-text--light">{{ snap.created_at|date:"Y-m-d H:i" }}</div>
+                    </a>
+                {% empty %}
+                    <span class="oh-text--light">{% trans "No snapshots yet." %}</span>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="oh-card p-4 mb-4">
+            <h2 class="oh-card__title--lg mb-3">{% trans "People stored on the device" %}</h2>
+            <div class="oh-sticky-table"><table class="oh-sticky-table__table">
+                <thead><tr>
+                    <th class="oh-sticky-table__th">{% trans "UserID" %}</th>
+                    <th class="oh-sticky-table__th">{% trans "Name" %}</th>
+                    <th class="oh-sticky-table__th">{% trans "Credentials" %}</th>
+                    <th class="oh-sticky-table__th">{% trans "Employee" %}</th>
+                </tr></thead>
+                <tbody>
+                {% for person in roster %}
+                    <tr>
+                        <td class="oh-sticky-table__td">{{ person.user_id }}</td>
+                        <td class="oh-sticky-table__td">{{ person.name|default:"-" }}</td>
+                        <td class="oh-sticky-table__td">
+                            {% if person.has_face or person.has_photo %}{% trans "Face" %} {% endif %}
+                            {% if person.card_num %}{% trans "Card" %} {% endif %}
+                            {% if person.fingerprint_count %}{% trans "FP" %}×{{ person.fingerprint_count }} {% endif %}
+                            {% if person.palmvein_count %}{% trans "Palm" %}×{{ person.palmvein_count }}{% endif %}
+                        </td>
+                        <td class="oh-sticky-table__td">
+                            {% if person.user_id in mapped_ids %}{% trans "Mapped" %}
+                            {% else %}<a href="{% url 'terminal-device-detail' device.pk %}?uid={{ person.user_id }}#mappings-section">{% trans "Link to employee" %}</a>{% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td class="oh-sticky-table__td" colspan="4">{% trans "No roster yet. Use “Pull people from device” on the device page." %}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table></div>
+        </section>
+    </div>
+</div>
+{% endblock %}

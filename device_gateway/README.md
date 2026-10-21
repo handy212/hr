@@ -81,3 +81,26 @@ TerminalCommand.objects.create(device=dev, payload={"Opendoor": 1})
 `device_gateway.scheduler.mark_offline_devices` runs in the central
 `run_scheduler` process and flips `is_online` off after 3 missed heartbeat
 cycles (3 minutes).
+
+## Full device management (HTTP V2 spec v6.0)
+
+Apply the schema first: `python manage.py migrate device_gateway`.
+
+- **Parameters** – the device reports its settings via `UploadWorkParameter`; the
+  *Parameters* page edits them and queues a `SyncParameter` on the next keepalive.
+  Read-only keys are never sent back, and network/server/`ConnectPassword` keys are
+  not editable remotely so a device can't be locked out. *Refresh* asks the device to
+  re-upload its parameters.
+- **Remote commands** – open / keep-open / close / lock / unlock door, reboot, snapshot,
+  close alarm, re-post records, pull people, clear records, factory reset, push
+  firmware/file, query people, register credential (face/card/fingerprint/…), elevator.
+  Clear records, factory reset, delete-all and push firmware need the
+  `delete_terminaldevice` permission. Queued commands can be cancelled.
+- **People** – per-employee access rules (card number, access type, expiry, open times,
+  time group), sync/remove per mapping, and a roster of people actually stored on the
+  device (from `PushPeople` / `RegisterIdentifyTicketResult`) with a one-click map for
+  unmapped entries. Device error codes are translated into readable messages.
+- **Activity page** – command history, door-sensor and system events (category from the
+  top-level `RecordType`: 1 = door sensor, 2 = system), snapshots and the roster.
+- **Reliability** – sent commands are acked after 60 s (registration commands wait for
+  their result callback, 10 min timeout); unacknowledged people batches are retried.

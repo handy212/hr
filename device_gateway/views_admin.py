@@ -8,6 +8,7 @@ inspecting punch logs.
 
 import json
 import logging
+import re
 
 from django.contrib import messages
 from django.db.models import Count, Q
@@ -21,13 +22,28 @@ from horilla.decorators import login_required, permission_required
 from horilla.filters import HorillaPaginator
 
 from .attendance_sync import PASSING_RECORD_TYPES
-from .forms import TerminalDeviceForm, TerminalEmployeeForm
+from .forms import (
+    TerminalDeviceForm,
+    TerminalEmployeeAccessForm,
+    TerminalEmployeeForm,
+    TerminalParametersForm,
+)
 from .models import (
     TerminalCommand,
     TerminalDevice,
+    TerminalDevicePerson,
     TerminalEmployee,
     TerminalPunchLog,
+    TerminalSnapshot,
     TerminalSyncTask,
+    TerminalSystemRecord,
+)
+from .protocol import (
+    ALARM_EVENT_TYPES,
+    READ_ONLY_PARAMETERS,
+    REGISTER_RESULTS,
+    REGISTER_TYPES,
+    system_event_name,
 )
 
 logger = logging.getLogger(__name__)
@@ -70,7 +86,12 @@ def decorate_punch(punch):
     return punch
 
 
-def device_detail_context(device, mapping_form=None):
+def unmapped_roster(device):
+    mapped = device.terminal_employees.values_list("device_user_id", flat=True)
+    return device.roster.exclude(user_id__in=mapped)
+
+
+def device_detail_context(device, mapping_form=None, initial_mapping=None):
     punches = list(device.punch_logs.all()[:15])
     for punch in punches:
         decorate_punch(punch)
@@ -106,12 +127,33 @@ def device_detail_context(device, mapping_form=None):
         "pending_tasks": device.sync_tasks.filter(status="pending").count(),
         "failed_tasks": device.sync_tasks.filter(status="failed").count(),
         "pending_commands": device.commands.filter(status="pending").count(),
+        "recent_commands": device.commands.order_by("-created_at")[:5],
         "employee_mappings": (
             device.terminal_employees
             .select_related("employee", "employee__employee_work_info", "employee__employee_work_info__department_id")
             .order_by("device_user_id")
         ),
-        "mapping_form": mapping_form if mapping_form is not None else TerminalEmployeeForm(device=device),
+        "mapping_form": mapping_form if mapping_form is not None else TerminalEmployeeForm(
+            device=device, initial=initial_mapping or None
+        ),
+        "storage": device.storage_info,
+        "active_alarms": device.active_alarms,
+        "roster_total": device.roster.count(),
+        "roster_unmapped": unmapped_roster(device)[:20],
+        "register_types": REGISTER_TYPES.items(),
+        "door_actions": [
+            ("keep-open", _("Keep open")),
+            ("close-door", _("Exit keep-open")),
+            ("lock-door", _("Lock")),
+            ("unlock-door", _("Unlock")),
+            ("close-alarm", _("Silence alarms")),
+        ],
+        "data_actions": [
+            ("pull-people", _("Pull people from device")),
+            ("repost-records", _("Re-upload records")),
+            ("refresh-parameters", _("Refresh parameters")),
+            ("sync-time", _("Sync time")),
+        ],
         "unmapped_punches": unmapped_punches_qs.count(),
         "unmapped_user_ids": unmapped_user_ids,
     }
@@ -201,7 +243,10 @@ def device_edit(request, pk):
 def device_detail(request, pk):
     """Show device state and the queueable remote actions."""
     device = get_object_or_404(TerminalDevice, pk=pk)
-    context = device_detail_context(device)
+    initial = {}
+    if request.GET.get("uid", "").isdigit():
+        initial["device_user_id"] = int(request.GET["uid"])
+    context = device_detail_context(device, initial_mapping=initial)
     return render(request, "device_gateway/device_detail.html", context)
 
 
@@ -270,13 +315,149 @@ def punch_retry(request, pk, log_id):
     return redirect("terminal-device-detail", pk=pk)
 
 
-DEVICE_ACTIONS = {
-    "sync-all": _("Employee sync queued for %(count)d employees."),
-    "delete-all": _("Delete-all personnel task queued."),
-    "open-door": _("Remote open-door command queued."),
-    "reboot": _("Reboot command queued."),
-    "snapshot": _("Snapshot command queued."),
+# Remote commands that map 1:1 onto a Device/RemoteCommand payload.
+SIMPLE_COMMANDS = {
+    "open-door": ({"Opendoor": 1}, _("Remote open-door command queued.")),
+    "keep-open": ({"Opendoor": 2}, _("Keep-door-open command queued.")),
+    "close-door": ({"Opendoor": 3}, _("Close-door command queued.")),
+    "lock-door": ({"Opendoor": 4}, _("Lock-door command queued.")),
+    "unlock-door": ({"Opendoor": 5}, _("Unlock-door command queued.")),
+    "reboot": ({"Restart": 1}, _("Reboot command queued.")),
+    "snapshot": ({"Snapshoot": 1}, _("Snapshot command queued.")),
+    "close-alarm": ({"Closealarm": 1}, _("Close-alarm command queued.")),
+    "repost-records": ({"RepostRecord": 1}, _("Record re-upload requested.")),
+    "pull-people": ({"PushAllPeople": 1}, _("Personnel list upload requested.")),
+    "clear-records": ({"ClearRecord": 1}, _("Clear-records command queued.")),
+    "factory-reset": ({"Recover": 1}, _("Factory reset command queued.")),
 }
+
+ELEVATOR_COMMANDS = {
+    "open": "OpenElevatorPort",
+    "keep-open": "KeepOpenElevatorPort",
+    "close": "CloseElevatorPort",
+    "lock": "LockElevatorPort",
+    "unlock": "UnlockElevatorPort",
+}
+
+URL_MAX = 1024
+
+
+def queue_command(device, payload):
+    return TerminalCommand.objects.create(device=device, payload=payload)
+
+
+def sync_all_people(device):
+    employees = Employee.objects.filter(is_active=True)
+    if device.company_id_id:
+        employees = employees.filter(employee_work_info__company_id=device.company_id)
+    already_queued = set(
+        TerminalSyncTask.objects.filter(
+            device=device, action="add", status__in=("pending", "sent")
+        ).values_list("employee_id", flat=True)
+    )
+    tasks = [
+        TerminalSyncTask(device=device, employee=employee, action="add")
+        for employee in employees
+        if employee.pk not in already_queued
+    ]
+    TerminalSyncTask.objects.bulk_create(tasks)
+    return len(tasks)
+
+
+def _csv_ports(raw):
+    ports = [p.strip() for p in (raw or "").split(",") if p.strip()]
+    if not ports or not all(p.isdigit() and 1 <= int(p) <= 64 for p in ports):
+        return None
+    return ",".join(ports)
+
+
+def _build_extended_command(request, action):
+    """Commands that need user input. Returns (payload, error)."""
+    post = request.POST
+    if action == "register-credential":
+        try:
+            register_type = int(post.get("register_type"))
+            user_id = int(post.get("user_id"))
+        except (TypeError, ValueError):
+            return None, _("Choose a credential type and a terminal UserID.")
+        if register_type not in REGISTER_TYPES:
+            return None, _("Unknown credential type.")
+        ticket = {"RegisterType": register_type, "UserID": user_id}
+        index = post.get("register_index", "").strip()
+        if register_type in (3, 5):
+            limit = 9 if register_type == 3 else 2
+            low = 0 if register_type == 3 else 1
+            if not index.isdigit() or not low <= int(index) <= limit:
+                return None, _("Credential index must be %(low)d-%(high)d.") % {
+                    "low": low, "high": limit}
+            ticket["RegisterIndex"] = int(index)
+        return {"RegisterIdentifyTicket": ticket}, None
+    if action == "query-people":
+        ids = [p.strip() for p in post.get("user_ids", "").split(",") if p.strip()]
+        if not ids or not all(i.isdigit() and int(i) <= 4294967295 for i in ids):
+            return None, _("Enter comma-separated numeric UserIDs.")
+        return {"QueryPeople": [int(i) for i in ids]}, None
+    if action == "push-firmware":
+        url = post.get("url", "").strip()
+        md5 = post.get("md5", "").strip().upper()
+        version = post.get("version", "").strip()
+        if not url.lower().startswith(("http://", "https://")) or len(url) > URL_MAX:
+            return None, _("Enter a valid http(s) firmware URL.")
+        if not re.fullmatch(r"[0-9A-F]{32}", md5):
+            return None, _("MD5 must be 32 hexadecimal characters.")
+        if not version:
+            return None, _("Firmware version is required.")
+        return {
+            "PushSoftware": {
+                "SoftwareURL": url, "SoftwareMD5": md5, "SoftwareVer": version
+            }
+        }, None
+    if action == "push-file":
+        url = post.get("url", "").strip()
+        md5 = post.get("md5", "").strip().upper()
+        try:
+            file_type = int(post.get("file_type"))
+            index = int(post.get("file_index") or 1)
+        except (TypeError, ValueError):
+            return None, _("Invalid file type or index.")
+        delete = post.get("delete") == "1"
+        if file_type not in (1, 2) or not 1 <= index <= (8 if file_type == 1 else 1):
+            return None, _("Standby images use index 1-8; the boot image index 1.")
+        if not delete:
+            if not url.lower().startswith(("http://", "https://")) or len(url) > URL_MAX:
+                return None, _("Enter a valid http(s) file URL.")
+            if not re.fullmatch(r"[0-9A-F]{32}", md5):
+                return None, _("MD5 must be 32 hexadecimal characters.")
+        return {
+            "PushSystemFile": [
+                {
+                    "FileURL": url,
+                    "FileMD5": md5,
+                    "FileType": file_type,
+                    "FileIndex": index,
+                    "IsDelete": int(delete),
+                }
+            ]
+        }, None
+    if action == "elevator":
+        key = ELEVATOR_COMMANDS.get(post.get("operation"))
+        ports = _csv_ports(post.get("ports"))
+        if not key or not ports:
+            return None, _("Choose an operation and ports 1-64, comma separated.")
+        return {key: ports}, None
+    return None, _("Unknown action.")
+
+
+EXTENDED_COMMAND_MESSAGES = {
+    "register-credential": _("Credential registration queued. Complete it on the terminal."),
+    "query-people": _("Personnel query queued."),
+    "push-firmware": _("Firmware upgrade queued."),
+    "push-file": _("System file update queued."),
+    "elevator": _("Elevator command queued."),
+}
+
+# Actions that can wipe data or brick a device need the delete permission.
+DESTRUCTIVE_ACTIONS = {"delete-all", "clear-records", "factory-reset", "push-firmware"}
 
 
 @login_required
@@ -287,39 +468,227 @@ def device_action(request, pk, action):
     if request.method != "POST":
         return redirect("terminal-device-detail", pk=device.pk)
 
+    if action in DESTRUCTIVE_ACTIONS and not request.user.has_perm(
+        "device_gateway.delete_terminaldevice"
+    ):
+        messages.error(request, _("You do not have permission to run this action."))
+        return redirect("terminal-device-detail", pk=device.pk)
+
     if action == "sync-all":
-        employees = Employee.objects.filter(is_active=True)
-        if device.company_id_id:
-            employees = employees.filter(employee_work_info__company_id=device.company_id)
-        already_queued = set(
-            TerminalSyncTask.objects.filter(
-                device=device, action="add", status__in=("pending", "sent")
-            ).values_list("employee_id", flat=True)
-        )
-        tasks = [
-            TerminalSyncTask(device=device, employee=employee, action="add")
-            for employee in employees
-            if employee.pk not in already_queued
-        ]
-        TerminalSyncTask.objects.bulk_create(tasks)
+        count = sync_all_people(device)
         messages.success(
-            request, DEVICE_ACTIONS[action] % {"count": len(tasks)}
+            request, _("Employee sync queued for %(count)d employees.") % {"count": count}
         )
     elif action == "delete-all":
         TerminalSyncTask.objects.create(device=device, action="delete_all")
-        messages.success(request, DEVICE_ACTIONS[action])
-    elif action in ("open-door", "reboot", "snapshot"):
-        payload = {
-            "open-door": {"Opendoor": 1},
-            "reboot": {"Restart": 1},
-            "snapshot": {"Snapshoot": 1},
-        }[action]
-        TerminalCommand.objects.create(device=device, payload=payload)
-        messages.success(request, DEVICE_ACTIONS[action])
+        messages.success(request, _("Delete-all personnel task queued."))
+    elif action in SIMPLE_COMMANDS:
+        payload, message = SIMPLE_COMMANDS[action]
+        queue_command(device, payload)
+        messages.success(request, message)
+    elif action in EXTENDED_COMMAND_MESSAGES:
+        payload, error = _build_extended_command(request, action)
+        if error:
+            messages.error(request, error)
+        else:
+            queue_command(device, payload)
+            messages.success(request, EXTENDED_COMMAND_MESSAGES[action])
+    elif action == "refresh-parameters":
+        device.params_refresh_requested = True
+        device.save(update_fields=["params_refresh_requested"])
+        messages.success(request, _("Parameter refresh requested."))
+    elif action == "sync-time":
+        device.work_parameters = {
+            **(device.work_parameters or {}),
+            "SystemTime": int(timezone.now().timestamp()),
+        }
+        device.params_dirty = True
+        device.save(update_fields=["work_parameters", "params_dirty"])
+        messages.success(request, _("Time synchronisation queued."))
     else:
         messages.error(request, _("Unknown action."))
 
     return redirect("terminal-device-detail", pk=device.pk)
+
+
+@login_required
+@permission_required("device_gateway.delete_terminaldevice")
+def device_delete(request, pk):
+    """Remove a terminal registration (its logs and mappings go with it)."""
+    device = get_object_or_404(TerminalDevice, pk=pk)
+    if request.method == "POST":
+        label = str(device)
+        device.delete()
+        messages.success(
+            request, _("Terminal %(device)s deleted.") % {"device": label}
+        )
+        return redirect("terminal-device-list")
+    return redirect("terminal-device-detail", pk=pk)
+
+
+@login_required
+@permission_required("device_gateway.change_terminaldevice")
+def device_parameters(request, pk):
+    """Edit the working parameters pushed to the device on its next heartbeat."""
+    device = get_object_or_404(TerminalDevice, pk=pk)
+    form = TerminalParametersForm(request.POST or None, device=device)
+    if request.method == "POST" and form.is_valid():
+        changes = form.changed_parameters()
+        if changes:
+            device.work_parameters = {**device.work_parameters, **changes}
+            device.params_dirty = True
+            device.save(update_fields=["work_parameters", "params_dirty"])
+            messages.success(
+                request,
+                _("%(count)d parameter(s) queued for the device.") % {"count": len(changes)},
+            )
+        else:
+            messages.info(request, _("No parameter changed."))
+        return redirect("terminal-device-parameters", pk=pk)
+    readonly = {
+        k: v
+        for k, v in (device.work_parameters or {}).items()
+        if k not in form.fields and k not in READ_ONLY_PARAMETERS
+        and not isinstance(v, (dict, list))
+    }
+    return render(
+        request,
+        "device_gateway/device_parameters.html",
+        {
+            "device": device,
+            "form": form,
+            "grouped_fields": [
+                (title, [form[name] for name in names]) for title, names in form.groups
+            ],
+            "other_parameters": sorted(readonly.items()),
+            "no_parameters": not device.work_parameters,
+        },
+    )
+
+
+@login_required
+@permission_required("device_gateway.change_terminaldevice")
+def employee_mapping_edit(request, pk, mapping_id):
+    """Edit the access rules sent with an employee to this terminal."""
+    device = get_object_or_404(TerminalDevice, pk=pk)
+    mapping = get_object_or_404(TerminalEmployee, pk=mapping_id, device=device)
+    form = TerminalEmployeeAccessForm(request.POST or None, instance=mapping)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        TerminalSyncTask.objects.get_or_create(
+            device=device,
+            employee=mapping.employee,
+            action="add",
+            status="pending",
+            defaults={"device_user_id": mapping.device_user_id},
+        )
+        messages.success(request, _("Access rules saved and queued for the terminal."))
+        return redirect("terminal-device-detail", pk=pk)
+    return render(
+        request,
+        "device_gateway/mapping_form.html",
+        {"device": device, "mapping": mapping, "form": form},
+    )
+
+
+@login_required
+@permission_required("device_gateway.change_terminaldevice")
+def employee_mapping_action(request, pk, mapping_id, action):
+    """Queue a push (re-sync) or removal for one mapped employee."""
+    device = get_object_or_404(TerminalDevice, pk=pk)
+    mapping = get_object_or_404(TerminalEmployee, pk=mapping_id, device=device)
+    if request.method != "POST":
+        return redirect("terminal-device-detail", pk=pk)
+    if action == "sync":
+        TerminalSyncTask.objects.get_or_create(
+            device=device,
+            employee=mapping.employee,
+            action="add",
+            status="pending",
+            defaults={"device_user_id": mapping.device_user_id},
+        )
+        messages.success(request, _("Employee queued for the terminal."))
+    elif action == "remove":
+        TerminalSyncTask.objects.get_or_create(
+            device=device,
+            employee=mapping.employee,
+            action="delete",
+            status="pending",
+            device_user_id=mapping.device_user_id,
+        )
+        messages.success(request, _("Removal from the terminal queued."))
+    else:
+        messages.error(request, _("Unknown action."))
+    return redirect("terminal-device-detail", pk=pk)
+
+
+@login_required
+@permission_required("device_gateway.change_terminaldevice")
+def roster_remove(request, pk, user_id):
+    """Queue deletion of a device-side user that has no mapped employee."""
+    device = get_object_or_404(TerminalDevice, pk=pk)
+    if request.method == "POST":
+        TerminalSyncTask.objects.get_or_create(
+            device=device,
+            action="delete",
+            status="pending",
+            device_user_id=user_id,
+        )
+        messages.success(request, _("Removal from the terminal queued."))
+    return redirect("terminal-device-detail", pk=pk)
+
+
+@login_required
+@permission_required("device_gateway.view_terminaldevice")
+def device_activity(request, pk):
+    """Commands, door/system events, snapshots and the on-device roster."""
+    device = get_object_or_404(TerminalDevice, pk=pk)
+    category = request.GET.get("category")
+    events = device.system_records.all()
+    if category in ("1", "2"):
+        events = events.filter(category=int(category))
+    page = paginate(request, events)
+    for event in page:
+        event.name = system_event_name(event.category, event.record_type)
+        event.is_alarm = (
+            event.category == TerminalSystemRecord.CATEGORY_SYSTEM
+            and event.record_type in ALARM_EVENT_TYPES
+        )
+    commands = list(device.commands.order_by("-id")[:20])
+    for command in commands:
+        ticket = command.payload.get("RegisterIdentifyTicket")
+        outcome = command.result.get("Result") if isinstance(command.result, dict) else None
+        command.result_label = (
+            REGISTER_RESULTS.get(outcome, outcome) if ticket else ""
+        )
+    return render(
+        request,
+        "device_gateway/device_activity.html",
+        {
+            "device": device,
+            "events": page,
+            "selected_category": category or "",
+            "commands": commands,
+            "snapshots": device.snapshots.all()[:12],
+            "roster": device.roster.all()[:200],
+            "mapped_ids": set(
+                device.terminal_employees.values_list("device_user_id", flat=True)
+            ),
+            "pd": request.GET.urlencode(),
+        },
+    )
+
+
+@login_required
+@permission_required("device_gateway.change_terminaldevice")
+def command_cancel(request, pk, command_id):
+    """Withdraw a command the device has not picked up yet."""
+    device = get_object_or_404(TerminalDevice, pk=pk)
+    command = get_object_or_404(TerminalCommand, pk=command_id, device=device)
+    if request.method == "POST" and command.status == "pending":
+        command.delete()
+        messages.success(request, _("Pending command cancelled."))
+    return redirect("terminal-device-activity", pk=pk)
 
 
 @login_required
