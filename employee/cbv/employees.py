@@ -27,6 +27,7 @@ from employee.models import Employee, EmployeeBankDetails, EmployeeWorkInformati
 from employee.templatetags.employee_filter import edit_accessibility
 from employee.views import _check_reporting_manager
 from horilla.horilla_middlewares import _thread_locals
+from saas.scope import effective_company_ids
 from horilla.signals import post_generic_delete, post_generic_import
 from horilla_auth.models import HorillaUser
 from horilla_views.cbv_methods import hx_request_required, login_required
@@ -355,6 +356,15 @@ class EmployeesList(HorillaListView):
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.search_url = reverse("employees-list")
+
+    def get_import_related_queryset(self, mapping, related_model):
+        queryset = super().get_import_related_queryset(mapping, related_model)
+        if mapping == "employee_work_info__company_id":
+            return queryset.filter(pk__in=effective_company_ids())
+        return queryset
+
+    def can_create_import_related_objects(self, mapping, related_model):
+        return mapping != "employee_work_info__company_id"
 
     def get_queryset(self, *args, **kwargs):
         return (

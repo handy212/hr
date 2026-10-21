@@ -19,7 +19,14 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db import transaction
 from django.db.models import Case, CharField, F, When
 from django.db.models.functions import Cast
-from django.http import Http404, HttpRequest, HttpResponse, JsonResponse, QueryDict
+from django.http import (
+    Http404,
+    HttpRequest,
+    HttpResponse,
+    HttpResponseForbidden,
+    JsonResponse,
+    QueryDict,
+)
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import resolve, reverse
@@ -619,19 +626,44 @@ class HorillaListView(ListView):
         context["import_accessibility"] = self.import_accessibility()
         return context
 
-    def bulk_update_accessibility(self) -> bool:
-        """
-        Accessibility method for bulk update
-        """
-        return self.request.user.has_perm(
+    def _has_change_permission(self, user) -> bool:
+        return user.has_perm(
             f"{self.model._meta.app_label}.change_{self.model.__name__.lower()}"
         )
 
-    def import_accessibility(self) -> bool:
+    def bulk_update_accessibility(self) -> bool:
         """
-        Accessibility method for bulk importz
+        Accessibility method for bulk update.
         """
-        return self.request.user.has_perm(
+        return self._has_change_permission(self.request.user)
+
+    def get_import_related_queryset(self, mapping, related_model):
+        return related_model.objects.all()
+
+    def can_create_import_related_objects(self, mapping, related_model):
+        return True
+
+    def _validate_import_related_values(self, record, reverse_field, resolved_values):
+        related_record = record.get(reverse_field)
+        if not isinstance(related_record, dict):
+            return
+        for field, value in related_record.items():
+            mapping = f"{reverse_field}__{field}"
+            if (
+                mapping in self.primary_key_mapping
+                and value not in (None, "")
+                and not resolved_values.get(field)
+            ):
+                raise ValueError(
+                    _("Related value is unavailable or outside the current scope.")
+                )
+
+    def import_accessibility(self, request: HttpRequest | None = None) -> bool:
+        """
+        Accessibility method for bulk imports.
+        """
+        user = (request or self.request).user
+        return user.has_perm(
             f"{self.model._meta.app_label}.add_{self.model.__name__.lower()}"
         )
 
@@ -703,9 +735,8 @@ class HorillaListView(ListView):
         """
         Method to serve bulk import sheet
         """
-        if not self.import_accessibility():
-            messages.info(request, _("You don't have permission"))
-            return HorillaFormView.HttpResponse()
+        if not self.import_accessibility(request):
+            return HttpResponseForbidden(_("You don't have permission"))
         ids = eval_validate(request.POST["selected_ids"])
 
         wb = generate_import_excel(
@@ -728,9 +759,9 @@ class HorillaListView(ListView):
         """
         Method to import records
         """
+        if not self.import_accessibility(request):
+            return HttpResponseForbidden(_("You don't have permission"))
         try:
-            if not self.import_accessibility():
-                messages.info(request, _("You don't have permission"))
             field_column_mapping = {
                 field: get_verbose_name_from_field_path(
                     self.model, field, self.import_related_model_column_mapping
@@ -778,6 +809,8 @@ class HorillaListView(ListView):
                         current[parts[-1]] = value
                 serialized.append(record)
             with_ref, without_ref = split_by_import_reference(serialized)
+            if with_ref and not self._has_change_permission(request.user):
+                return HttpResponseForbidden(_("You don't have permission"))
 
             error_records = []
 
@@ -789,26 +822,25 @@ class HorillaListView(ListView):
                 related_model = self.import_related_model_column_mapping[mapping]
                 if mapping in self.primary_key_mapping:
                     field = self.primary_key_mapping[mapping]
-                    if hasattr(related_model.objects, "entire"):
-                        existing_objects = (
-                            related_model.objects.entire()
-                            .filter(**{f"{field}__in": list(values)})
-                            .only("pk", field)
-                        )
-                    else:
-                        existing_objects = related_model.objects.filter(
-                            **{f"{field}__in": list(values)}
-                        ).only("pk", field)
+                    existing_objects = (
+                        self.get_import_related_queryset(mapping, related_model)
+                        .filter(**{f"{field}__in": list(values)})
+                        .only("pk", field)
+                    )
 
                     existing_values = existing_objects.annotate(
                         field_as_str=Cast(F(field), CharField())
                     ).values_list("field_as_str", flat=True)
 
-                    to_create = [
-                        related_model(**{field: value})
-                        for value in values
-                        if str(value) not in existing_values
-                    ]
+                    to_create = (
+                        [
+                            related_model(**{field: value})
+                            for value in values
+                            if str(value) not in existing_values
+                        ]
+                        if self.can_create_import_related_objects(mapping, related_model)
+                        else []
+                    )
 
                     if to_create:
                         pre_generic_import.send(
@@ -828,15 +860,21 @@ class HorillaListView(ListView):
                 elif mapping in self.fk_mapping:
                     field = self.fk_mapping[mapping]
                     related_model = self.import_related_model_column_mapping[mapping]
-                    existing_objects = related_model.objects.filter(
-                        **{f"{field}__in": list(values)}
-                    ).only("pk", field)
+                    existing_objects = (
+                        self.get_import_related_queryset(mapping, related_model)
+                        .filter(**{f"{field}__in": list(values)})
+                        .only("pk", field)
+                    )
                     existing_values = existing_objects.values_list(field, flat=True)
-                    to_create = [
-                        related_model(**{field: value})
-                        for value in values
-                        if value not in existing_values
-                    ]
+                    to_create = (
+                        [
+                            related_model(**{field: value})
+                            for value in values
+                            if value not in existing_values
+                        ]
+                        if self.can_create_import_related_objects(mapping, related_model)
+                        else []
+                    )
                     if to_create:
                         pre_generic_import.send(
                             sender=related_model,
@@ -871,6 +909,9 @@ class HorillaListView(ListView):
                                         reverse_field,
                                         pk_values_mapping,
                                         self.primary_key_mapping,
+                                    )
+                                    self._validate_import_related_values(
+                                        record, reverse_field, result
                                     )
                                     record[reverse_field] = result
                                 elif reverse_field in self.fk_mapping:
@@ -1054,6 +1095,9 @@ class HorillaListView(ListView):
                                         pk_values_mapping,
                                         self.primary_key_mapping,
                                     )
+                                    self._validate_import_related_values(
+                                        record, reverse_field, result
+                                    )
                                     if list(result.keys())[0] not in self.fk_mapping:
                                         if (
                                             reverse_field
@@ -1082,6 +1126,13 @@ class HorillaListView(ListView):
                                     )
                             records_to_update.append(record)
 
+                        except ValueError as e:
+                            error_records.append(
+                                {
+                                    "record": record[list(record.keys())[0]],
+                                    "error": str(e),
+                                }
+                            )
                         except Exception as e:
                             logger.error(traceback.format_exc())
                             error_records.append(

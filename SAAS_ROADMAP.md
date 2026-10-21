@@ -24,6 +24,14 @@ See [TENANT_MANAGEMENT.md](TENANT_MANAGEMENT.md) for operation, migration and ve
 - Verification: `saas.tests` passed **61 tests**, including `saas.tests.test_report_isolation` and `saas.tests.test_mail_ownership`. The fresh manager audit reports **244 scoped / 0 unscoped / 42 global / 286 total**.
 - These results do not satisfy Phase 1 exit criteria. Remaining work includes request-path bypasses, nullable/shared-row ownership, global history/notification access paths, broader cache namespacing, and media/template isolation.
 
+## Import isolation checkpoint — 2026-10-22
+
+- **Employee imports now enforce tenant boundaries.** Generic related-record resolution uses each model's normal manager instead of `.entire()`. Employee company references are additionally limited to `effective_company_ids()`; unavailable or out-of-scope references reject the row, and imports cannot create Company records.
+- Import endpoints check add permission against the current request and require change permission for rows with update references; denied requests receive `403`.
+- Regression coverage verifies that imports reject another company's assignment on create and update, accept an allowed company, and deny callers without add/change permission.
+- Verification: the three focused employee import tests, `saas.tests`, and `horilla_views.tests` passed together (**72 tests**) with SQLite and `LocMemCache`. A broader 87-test run including all `employee.tests` reported six failures/errors in archive, company-work-info, and last-superuser-delete tests; those remain open.
+- This closes one confirmed request-path bypass; the remaining Phase 1 isolation audit and exit criteria are still outstanding.
+
 ## Review checkpoint — 2026-10-19
 
 The conversion remains in Phases 0–1. Tenant provisioning, billing, and self-service signup are still pending. The counts below supersede the older progress snapshots in this document; manager coverage alone does not prove isolation.
