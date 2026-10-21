@@ -1,0 +1,11 @@
+{% extends 'saas/tenants/layout.html' %}
+{% block tenant_content %}
+<section class="tenant-console" aria-labelledby="plans-heading">
+  <div class="tenant-header"><div><h1 id="plans-heading">Billing plans</h1><p class="text-muted">Configure prices, then publish each plan to Paystack.</p></div><a class="oh-btn oh-btn--secondary" href="{% url 'plan-create' %}">Create plan</a></div>
+  <div class="tenant-table"><table><caption>Plan catalog</caption><thead><tr><th scope="col">Plan</th><th scope="col">Price</th><th scope="col">Interval</th><th scope="col">Publication</th><th scope="col">Availability</th><th scope="col">Manage</th></tr></thead><tbody>
+  {% for plan in plans %}<tr><th scope="row">{{ plan.name }}</th><td>{{ plan.currency }} {{ plan.price|floatformat:2 }}</td><td>{{ plan.get_interval_display }}</td><td>{{ plan.get_publication_state_display }}{% if plan.provider_domain %} ({{ plan.provider_domain }}){% endif %}</td><td>{{ plan.active|yesno:'Available,Archived' }}</td><td><a href="{% url 'plan-edit' plan.pk %}">Manage<span class="visually-hidden"> {{ plan.name }}</span></a></td></tr>
+  {% empty %}<tr><td colspan="6">No plans yet. Create your first plan to set your pricing.</td></tr>{% endfor %}
+  </tbody></table></div>
+  <p class="tenant-note">Plans are a pricing catalog. Subscriptions and payment collection are not enabled yet. Currency availability depends on your Paystack account.</p>
+</section>
+{% endblock %}

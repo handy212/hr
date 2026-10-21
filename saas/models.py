@@ -82,3 +82,51 @@ class ResourceOwnership(models.Model):
             models.UniqueConstraint(fields=['company', 'encashment_settings'], name='saas_owner_encashment'),
             models.UniqueConstraint(fields=['company', 'mail_automation'], name='saas_owner_automation'),
         ]
+
+
+class BillingPlan(models.Model):
+    """Global commercial catalog; accessible only through platform authorization."""
+    class Interval(models.TextChoices):
+        MONTHLY = 'monthly', 'Monthly'
+        ANNUALLY = 'annually', 'Annually'
+
+    CURRENCIES = [(code, code) for code in ('NGN', 'GHS', 'ZAR', 'KES', 'USD', 'XOF')]
+    name = models.CharField(max_length=100)
+    amount = models.PositiveBigIntegerField(help_text='Amount in minor currency units.')
+    currency = models.CharField(max_length=3, choices=CURRENCIES)
+    interval = models.CharField(max_length=10, choices=Interval.choices)
+    active = models.BooleanField(default=True)
+    provider_code = models.CharField(max_length=100, blank=True, unique=True, null=True)
+    provider_domain = models.CharField(max_length=4, blank=True)
+    publication_state = models.CharField(max_length=10, default='draft', choices=[
+        ('draft', 'Draft'), ('pending', 'Publishing'), ('published', 'Published'),
+        ('uncertain', 'Needs reconciliation')])
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        default_permissions = ()
+        ordering = ('-created_at', '-pk')
+        constraints = [
+            models.CheckConstraint(condition=models.Q(amount__gt=0), name='saas_plan_positive_price'),
+            models.CheckConstraint(condition=models.Q(interval__in=['monthly', 'annually']), name='saas_plan_interval'),
+        ]
+
+    @property
+    def price(self):
+        from decimal import Decimal
+        return Decimal(self.amount) / 100
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.pk:
+            original = type(self).objects.get(pk=self.pk)
+            if original.publication_state != 'draft' and any(
+                getattr(self, field) != getattr(original, field)
+                for field in ('name', 'amount', 'currency', 'interval')
+            ):
+                raise ValidationError('Published or pending plan terms are frozen. Create a new plan.')
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)

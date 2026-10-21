@@ -361,7 +361,7 @@ class CompanyMiddleware:
 
         if request.user.is_superuser and (
             request.path_info.rstrip("/") in ("", "/login", "/logout", "/two-factor", "/send-otp")
-            or request.path_info.startswith("/settings/tenants/")
+            or request.path_info.startswith(("/settings/tenants/", "/settings/plans/"))
         ):
             # Platform operators are not HR employees and need no company session.
             set_selected_company(None)

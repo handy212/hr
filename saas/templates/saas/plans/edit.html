@@ -1,0 +1,18 @@
+{% extends 'saas/tenants/layout.html' %}
+{% block tenant_content %}
+<section class="tenant-console tenant-form-panel" aria-labelledby="plan-heading">
+<a href="{% url 'plan-list' %}">Back to plans</a>
+<h1 id="plan-heading">{% if plan.pk %}Manage {{ plan.name }}{% else %}Create billing plan{% endif %}</h1>
+<p class="text-muted">Set your own price and billing interval. Creating a draft does not charge anyone.</p>
+{% if plan.pk %}<p>Publication: <strong>{{ plan.get_publication_state_display }}</strong>{% if plan.provider_domain %} · {{ plan.provider_domain }}{% endif %}</p>{% endif %}
+{% if plan.publication_state != 'draft' %}<p class="tenant-alert">Commercial terms are frozen. Create a new plan for a different name, price, currency or interval.</p>{% endif %}
+<form method="post">{% csrf_token %}{% include 'saas/tenants/_form_fields.html' %}<button type="submit" class="oh-btn oh-btn--secondary">Save plan</button></form>
+{% if plan.pk %}<div class="tenant-actions" style="margin-top: 1.5rem">
+{% if plan.publication_state == 'draft' and plan.active %}<form method="post" action="{% url 'plan-publish' plan.pk %}">{% csrf_token %}<button class="oh-btn" type="submit">Publish to Paystack</button></form>{% endif %}
+{% if plan.active %}<form method="post" action="{% url 'plan-archive' plan.pk %}">{% csrf_token %}<button class="oh-btn" type="submit">Archive plan</button></form>{% endif %}</div>{% endif %}
+{% if plan.publication_state == 'uncertain' or plan.publication_state == 'pending' %}<p class="tenant-alert">The provider may already have created this plan. Find it in your Paystack dashboard and enter its code below to verify and link it.</p>{% endif %}
+{% if plan.publication_state == 'uncertain' or plan.publication_state == 'pending' %}
+<form method="post" action="{% url 'plan-reconcile' plan.pk %}">{% csrf_token %}<label for="provider-code">Existing Paystack plan code</label><input id="provider-code" name="provider_code" required maxlength="100" placeholder="PLN_…"><button class="oh-btn" type="submit">Verify and link existing plan</button></form>
+{% endif %}
+</section>
+{% endblock %}

@@ -18,6 +18,7 @@ from django.core.checks import register
 
 # "<app_label>.<ModelName>": why it is intentionally not company-scoped.
 EXEMPT = {
+    "saas.BillingPlan": "Global pricing catalog; explicit platform-only routes and no model permissions.",
     "base.Company": "It is the tenant root; scoping it by itself is circular.",
     "saas.ResourceOwnership": "Private platform ownership registry; no customer CRUD permissions or endpoints.",
     "saas.Tenant": "Platform control plane, protected by explicit superuser checks.",

@@ -8,7 +8,7 @@ from django.test import TransactionTestCase
 class TenantOwnershipMigrationTests(TransactionTestCase):
     def test_upgrade_and_rollback_preserve_existing_tenant_and_content_type(self):
         before = [("base", "0018_tenant_deleted_at"), ("saas", None)]
-        after = [("saas", "0002_resourceownership")]
+        after = MigrationExecutor(connection).loader.graph.leaf_nodes("saas")
         executor = MigrationExecutor(connection)
         executor.migrate(before)
         try:

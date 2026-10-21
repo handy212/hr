@@ -73,3 +73,8 @@ button, a, input, select { -webkit-tap-highlight-color: transparent; }
   .tenant-form-grid, .tenant-details { grid-template-columns: minmax(0, 1fr); }
   .tenant-filters > div, .tenant-filters input, .tenant-filters select { width: 100%; }
 }
+
+.platform-header nav { display: flex; flex-wrap: wrap; gap: .5rem; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+.tenant-console input[type="checkbox"] { width: 20px; height: 20px; min-height: 20px; margin: 0; accent-color: #2563eb; }

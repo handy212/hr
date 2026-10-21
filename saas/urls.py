@@ -1,8 +1,22 @@
 from django.urls import path
-from saas import views
+from saas import views, plan_views
 
 # Preserve public URLs and reverse names across the ownership move.
 urlpatterns = [
+    path(
+        "settings/plans/<int:pk>/reconcile/",
+        plan_views.plan_reconcile,
+        name="plan-reconcile",
+    ),
+    path("settings/plans/", plan_views.plan_list, name="plan-list"),
+    path("settings/plans/create/", plan_views.plan_edit, name="plan-create"),
+    path("settings/plans/<int:pk>/", plan_views.plan_edit, name="plan-edit"),
+    path(
+        "settings/plans/<int:pk>/publish/", plan_views.plan_publish, name="plan-publish"
+    ),
+    path(
+        "settings/plans/<int:pk>/archive/", plan_views.plan_archive, name="plan-archive"
+    ),
     path(
         "settings/tenants/impersonation/stop/",
         views.tenant_impersonation_stop,

@@ -23,12 +23,12 @@ All future tenant schema migrations belong to `saas`. The legacy table name is d
 | Integration | Reason to retain | Review after upstream updates |
 | --- | --- | --- |
 | `horilla/settings/base.py` | Register SaaS app, platform template engine and middleware | Middleware order: session/auth → impersonation → company scope → tenant access |
-| `horilla/urls.py` | Include `saas.urls` | Public names and `/settings/tenants/` URLs must remain stable |
+| `horilla/urls.py` | Include `saas.urls` | Public names and `/settings/tenants/` URLs must remain stable; SaaS also owns `/settings/plans/` |
 | `base/views.py` | Root login/home routing, platform OTP rendering, employee-free operator login | Tenant users retain normal HR landing and authentication |
 | `base/middleware.py` | Skip company context for platform routes; support-session password gate integration | Scope cleanup and customer password-change behavior |
 | Both `templates/index.html` and `horilla_theme/templates/index.html` | Include platform-owned return banner | Visible return action in both HR layouts |
 | `horilla_api/authentication.py` | Call SaaS lifecycle policy after resolving JWT company scope | Suspended/deleted tenants remain blocked |
-| `base/checks.py`, `base/company_scoping.py` | Classify `saas.Tenant` as platform-global metadata | No blanket exclusions of other tenant data |
+| `base/checks.py`, `base/company_scoping.py` | Classify SaaS tenant/plan metadata as platform-global with explicit authorization | No blanket exclusions of other tenant data |
 | `base/backends.py` | Email sender fallback for operators without an employee record | OTP email still works for operators |
 | `horilla_theme/templates/settings.html` | Full-page settings-menu extension hook | Tenant console does not become an embedded HR page |
 | Historical `base` tenant migrations | Preserve deployed migration history | Never rewrite or delete applied migrations |
