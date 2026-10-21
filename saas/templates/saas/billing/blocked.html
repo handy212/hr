@@ -1,0 +1,2 @@
+{% extends 'saas/tenants/layout.html' %}
+{% block tenant_content %}<section class="tenant-console"><h1>Tenant access is unavailable</h1><p>Your tenant is suspended or its billing period has expired. Contact your company administrator.</p><p>If you are the tenant's primary administrator, open Billing to review the account. Payment does not remove a manual suspension.</p><a class="oh-btn oh-btn--secondary" href="{% url 'billing-home' %}">Open billing</a></section>{% endblock %}

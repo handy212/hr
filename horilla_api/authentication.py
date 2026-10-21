@@ -111,7 +111,7 @@ class TenantScopedJWTAuthentication(JWTAuthentication):
             from saas.access import scope_is_suspended
 
             if scope_is_suspended([company_id]):
-                raise PermissionDenied(_("This tenant is suspended. Contact your platform administrator."))
+                raise PermissionDenied(_("Tenant access is suspended or has expired. Contact your administrator or open /billing/."))
             set_selected_company(company_id)
         elif not user.is_superuser:
             # None means "cannot place this user", never "no restriction".

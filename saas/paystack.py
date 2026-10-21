@@ -28,7 +28,7 @@ def secret_key():
     return key
 
 
-def api_request(method, path, *, payload=None, key=None):
+def api_request(method, path, *, payload=None, key=None, allow_empty=False):
     key = key or secret_key()
     try:
         response = requests.request(
@@ -43,10 +43,10 @@ def api_request(method, path, *, payload=None, key=None):
         if (
             response.status_code != 200
             or body.get("status") is not True
-            or not isinstance(body.get("data"), dict)
+            or (not allow_empty and not isinstance(body.get("data"), dict))
         ):
             raise PaystackError("Paystack could not confirm the operation.")
-        return body["data"]
+        return body.get("data", {})
     except (requests.RequestException, ValueError, AttributeError) as error:
         raise PaystackError("Paystack could not confirm the operation.") from error
 

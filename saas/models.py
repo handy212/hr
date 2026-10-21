@@ -112,6 +112,9 @@ class BillingPlan(models.Model):
             models.CheckConstraint(condition=models.Q(interval__in=['monthly', 'annually']), name='saas_plan_interval'),
         ]
 
+    def __str__(self):
+        return f'{self.name} · {self.currency} {self.price:.2f} / {self.get_interval_display()}'
+
     @property
     def price(self):
         from decimal import Decimal
@@ -130,3 +133,79 @@ class BillingPlan(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
+
+
+class TenantSubscription(models.Model):
+    """Explicit enrollment. Absence preserves the legacy tenant lifecycle."""
+    tenant = models.OneToOneField(Tenant, on_delete=models.PROTECT, related_name='subscription')
+    plan = models.ForeignKey(BillingPlan, on_delete=models.PROTECT)
+    trial_until = models.DateTimeField()
+    paid_until = models.DateTimeField(null=True, blank=True)
+    renewal_started_at = models.DateTimeField(null=True, blank=True)
+    customer_code = models.CharField(max_length=100, blank=True)
+    customer_id = models.PositiveBigIntegerField(null=True, blank=True)
+    provider_code = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    provider_token = models.CharField(max_length=200, blank=True)
+    renewal_state = models.CharField(max_length=12, default='none', choices=[
+        ('none', 'Manual renewal'), ('pending', 'Setting up automatic renewal'),
+        ('active', 'Automatic renewal'), ('off', 'Automatic renewal canceled'),
+        ('unavailable', 'Payment method does not support automatic renewal'),
+        ('uncertain', 'Renewal setup needs reconciliation'), ('canceling', 'Cancellation pending')])
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        default_permissions = ()
+
+    @property
+    def access_until(self):
+        return max(value for value in (self.trial_until, self.paid_until) if value is not None)
+
+    @property
+    def has_access(self):
+        from django.utils import timezone
+        return self.access_until > timezone.now()
+
+
+class BillingPayment(models.Model):
+    """Immutable checkout snapshot; references are credited exactly once."""
+    subscription = models.ForeignKey(TenantSubscription, on_delete=models.PROTECT, related_name='payments')
+    plan = models.ForeignKey(BillingPlan, on_delete=models.PROTECT)
+    reference = models.CharField(max_length=100, unique=True)
+    amount = models.PositiveBigIntegerField()
+    currency = models.CharField(max_length=3)
+    domain = models.CharField(max_length=4)
+    email = models.EmailField()
+    auto_renew = models.BooleanField(default=False)
+    status = models.CharField(max_length=12, default='pending', choices=[
+        ('pending', 'Pending'), ('ready', 'Checkout ready'), ('uncertain', 'Needs verification'),
+        ('paid', 'Paid'), ('failed', 'Failed'), ('closed', 'Closed after review')])
+    checkout_url = models.URLField(max_length=300, blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+    credited_until = models.DateTimeField(null=True, blank=True)
+    period_start = models.DateTimeField(null=True, blank=True)
+    period_end = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        default_permissions = ()
+        ordering = ('-created_at', '-pk')
+        constraints = [models.CheckConstraint(condition=models.Q(amount__gt=0), name='saas_payment_positive_amount')]
+
+
+    @property
+    def price(self):
+        from decimal import Decimal
+        return Decimal(self.amount) / 100
+
+
+class BillingNotice(models.Model):
+    subscription = models.ForeignKey(TenantSubscription, on_delete=models.CASCADE, related_name='notices')
+    key = models.CharField(max_length=150, unique=True)
+    kind = models.CharField(max_length=30)
+    message = models.CharField(max_length=300)
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        default_permissions = ()
+        ordering = ('-created_at', '-pk')

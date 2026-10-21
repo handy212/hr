@@ -10,8 +10,8 @@
 <body class="platform-shell">
   <a class="platform-skip" href="#platform-main">{% trans "Skip to content" %}</a>
   <header class="platform-header">
-    <a class="platform-brand" href="{% url 'tenant-list' %}"><span class="platform-mark" aria-hidden="true">H</span><span>HRDeck <small>{% trans "Platform" %}</small></span></a>
-    <nav aria-label="{% trans 'Platform navigation' %}"><a class="platform-nav-link" href="{% url 'tenant-list' %}"{% if "/settings/tenants/" in request.path %} aria-current="page"{% endif %}>{% trans "Tenants" %}</a><a class="platform-nav-link" href="{% url 'plan-list' %}"{% if "/settings/plans/" in request.path %} aria-current="page"{% endif %}>Plans</a></nav>
+    <a class="platform-brand" href="{% if user.is_superuser %}{% url 'tenant-list' %}{% else %}{% url 'billing-home' %}{% endif %}"><span class="platform-mark" aria-hidden="true">H</span><span>HRDeck <small>{% if user.is_superuser %}{% trans "Platform" %}{% else %}Billing{% endif %}</small></span></a>
+    {% if user.is_superuser %}<nav aria-label="{% trans 'Platform navigation' %}"><a class="platform-nav-link" href="{% url 'tenant-list' %}"{% if "/settings/tenants/" in request.path %} aria-current="page"{% endif %}>{% trans "Tenants" %}</a><a class="platform-nav-link" href="{% url 'plan-list' %}"{% if "/settings/plans/" in request.path %} aria-current="page"{% endif %}>Plans</a></nav>{% else %}<nav aria-label="Billing navigation"><a class="platform-nav-link" href="{% url 'billing-home' %}">Billing</a></nav>{% endif %}
     <div class="platform-account"><span>{{ user.get_full_name|default:user.username }}</span><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">{% trans "Sign out" %}</button></form></div>
   </header>
   <main class="platform-main" id="platform-main">

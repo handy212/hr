@@ -8,10 +8,20 @@ from saas.models import Tenant
 from horilla.horilla_middlewares import get_selected_company
 
 
+def blocked_tenant_predicate():
+    from django.utils import timezone
+
+    now = timezone.now()
+    expired = Q(subscription__trial_until__lte=now) & (
+        Q(subscription__paid_until__isnull=True) | Q(subscription__paid_until__lte=now)
+    )
+    return Q(status=Tenant.Status.SUSPENDED) | Q(deleted_at__isnull=False) | expired
+
+
 def scope_is_suspended(company_ids):
     return (
         Tenant.objects.filter(company_id__in=company_ids)
-        .filter(Q(status=Tenant.Status.SUSPENDED) | Q(deleted_at__isnull=False))
+        .filter(blocked_tenant_predicate())
         .exists()
     )
 
@@ -24,19 +34,32 @@ class TenantAccessMiddleware:
         # Legacy HR mail endpoints expose server credentials. Mail transport
         # administration is platform-only, regardless of HR model permissions.
         protected = {
-            "mail-server-conf", "mail-server-list", "mail-server-nav",
-            "create-mail-server", "update-mail-server", "mail-server-create-update",
-            "mail-server-test-email", "mail-server-delete", "replace-primary-mail",
+            "mail-server-conf",
+            "mail-server-list",
+            "mail-server-nav",
+            "create-mail-server",
+            "update-mail-server",
+            "mail-server-create-update",
+            "mail-server-test-email",
+            "mail-server-delete",
+            "replace-primary-mail",
         }
         match = request.resolver_match
         module = getattr(getattr(view_func, "view_class", view_func), "__module__", "")
-        if (match and match.url_name in protected) or module.startswith("horilla_dbtemplate."):
+        if (match and match.url_name in protected) or module.startswith(
+            "horilla_dbtemplate."
+        ):
             from django.conf import settings
             from django.shortcuts import redirect
+
             user = request.user
             if not (user.is_authenticated and user.is_active and user.is_superuser):
-                return HttpResponseForbidden("Mail server administration requires platform access.")
-            if settings.TWO_FACTORS_AUTHENTICATION and not request.session.get("otp_code_verified"):
+                return HttpResponseForbidden(
+                    "Mail server administration requires platform access."
+                )
+            if settings.TWO_FACTORS_AUTHENTICATION and not request.session.get(
+                "otp_code_verified"
+            ):
                 return redirect("two-factor")
         return None
 
@@ -45,9 +68,13 @@ class TenantAccessMiddleware:
         if (
             user.is_authenticated
             and not user.is_superuser
+            and not request.path_info.startswith("/billing/")
             and request.path_info.rstrip("/")
             not in (
                 "/logout",
+                "/change-password",
+                "/two-factor",
+                "/send-otp",
                 "/update-selected-company",
                 "/settings/tenants/impersonation/stop",
             )
@@ -58,25 +85,28 @@ class TenantAccessMiddleware:
                 if company_ids is None:
                     # Legacy mode lacks a bounded all-company scope.
                     company_ids = Tenant.objects.filter(
-                        status=Tenant.Status.SUSPENDED
+                        blocked_tenant_predicate()
                     ).values_list("company_id", flat=True)
             else:
                 company_ids = [selected] if selected else []
             if scope_is_suspended(company_ids):
-                return HttpResponseForbidden(
-                    _("This tenant is suspended. Contact your platform administrator.")
+                from django.shortcuts import render
+
+                return render(
+                    request, "saas/billing/blocked.html", status=403, using="platform"
                 )
         return self.get_response(request)
 
 
 def blocked_company_ids():
-    return Tenant.objects.filter(
-        Q(status=Tenant.Status.SUSPENDED) | Q(deleted_at__isnull=False)
-    ).values_list('company_id', flat=True)
+    return Tenant.objects.filter(blocked_tenant_predicate()).values_list(
+        "company_id", flat=True
+    )
 
 
 def active_company_ids(company_ids=None):
     from base.models import Company
+
     companies = Company.objects.exclude(pk__in=blocked_company_ids())
     if company_ids is not None:
         companies = companies.filter(pk__in=company_ids)

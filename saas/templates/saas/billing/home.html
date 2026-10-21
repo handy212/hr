@@ -1,0 +1,2 @@
+{% extends 'saas/tenants/layout.html' %}
+{% block tenant_content %}<section class="tenant-console"><h1>Your billing accounts</h1>{% for tenant in tenants %}<p><a href="{% url 'tenant-billing' tenant.pk %}">{{ tenant.company.company }}</a></p>{% empty %}<p>Your account is not a tenant billing administrator. Contact your company administrator.</p>{% endfor %}</section>{% endblock %}

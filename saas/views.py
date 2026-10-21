@@ -217,6 +217,12 @@ def tenant_delete(request, pk):
                     status=400,
                     using="platform",
                 )
+            from saas.models import TenantSubscription
+            subscription=TenantSubscription.objects.select_for_update().filter(tenant=tenant).first()
+            if subscription and (subscription.renewal_state in ('active','pending','uncertain','canceling')
+                    or subscription.payments.filter(status__in=['pending','ready','uncertain']).exists()):
+                messages.error(request,'Cancel or reconcile automatic renewal and open checkouts before deleting this tenant.')
+                return redirect('tenant-billing',pk=tenant.pk)
             tenant.status = Tenant.Status.SUSPENDED
             tenant.deleted_at = timezone.now()
             tenant.save(update_fields=["status", "deleted_at", "updated_at"])
