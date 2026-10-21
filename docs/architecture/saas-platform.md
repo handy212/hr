@@ -35,6 +35,8 @@ All future tenant schema migrations belong to `saas`. The legacy table name is d
 
 Existing company managers, scoped permissions, JWT context bootstrap, attendance default creation and offboarding stage isolation remain core tenancy/security integration. They predate this ownership move and cannot safely be removed merely to reduce the diff. Further isolation work must preserve these protections. This extraction does not resolve the remaining scoping gaps recorded in `SAAS_ROADMAP.md`.
 
+Generic history views are also a tenancy boundary: they resolve base objects through company-scoped managers, require model-level view/change permissions, and bind history reverts to the authorized object.
+
 ## Upstream update procedure
 
 The configured `upstream` remote is `https://github.com/horilla/horilla-hr.git`; `origin` is this product's fork. Fetch and inspect the intended release before merging on a temporary integration branch. Never pull upstream directly into a running environment. Resolve core changes with the register above; retain the platform app and migration graph. Do not blindly replace local authentication or tenancy code with upstream versions.

@@ -4,6 +4,7 @@ horilla_views/generic/cbv/history.py
 
 from django.apps import apps
 from django.contrib import messages
+from django.http import Http404, HttpResponseForbidden
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.generic import DetailView
@@ -62,32 +63,29 @@ class HorillaHistoryView(DetailView):
         self.request = request
 
     def get_queryset(self):
-        """
-        Bypass company-scoped managers so history opens for any row visible
-        in multi-company / All Companies list views.
-        """
+        """Limit history lookups to objects visible in the current company scope."""
         if self.model is not None:
-            return self.model._base_manager.all()
+            return self.model.objects.all()
         return super().get_queryset()
 
     def get(self, request, *args, **kwargs):
-        """
-        Resolve the model dynamically when a subclass hasn't set one, so a
-        single URL/view can serve the history sidebar for any model.
-        """
+        """Resolve and authorize a model before loading its history target."""
         if not self.model:
             model_param = request.GET.get("model")
             if model_param:
-                app_label, model_name = model_param.split(".")
-                self.model = apps.get_model(app_label, model_name)
+                try:
+                    app_label, model_name = model_param.split(".", 1)
+                    self.model = apps.get_model(app_label, model_name)
+                except (LookupError, ValueError) as exc:
+                    raise Http404("Invalid history model.") from exc
         if not self.model:
-            # No ?model=app.Model on the request and no subclass default --
-            # get_queryset() has nothing to query, and Django's own
-            # fallback raises ImproperlyConfigured (an unhandled 500)
-            # rather than a normal response.
             messages.error(request, _("Invalid model parameter format."))
             return HorillaFormView.HttpResponse()
-        # Prefer HistoryManager when present; history_set is only the reverse FK.
+
+        opts = self.model._meta
+        if not request.user.has_perm(f"{opts.app_label}.view_{opts.model_name}"):
+            return HttpResponseForbidden()
+
         if hasattr(self.model, "history") and hasattr(
             getattr(self.model, "history"), "model"
         ):
@@ -101,23 +99,29 @@ class HorillaHistoryView(DetailView):
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        """
-        Revert
-        """
+        """Revert a history entry only for an authorized, in-scope object."""
         history_id = kwargs.get("history_id")
         model_param = request.GET.get("model")
         if not model_param:
             messages.error(request, _("Missing model parameter."))
             return HorillaRedirect(request)
-        app, model = model_param.split(".")
-        self.model = apps.get_model(app, model)
+        try:
+            app_label, model_name = model_param.split(".", 1)
+            self.model = apps.get_model(app_label, model_name)
+        except (LookupError, ValueError) as exc:
+            raise Http404("Invalid history model.") from exc
 
+        opts = self.model._meta
+        if not request.user.has_perm(f"{opts.app_label}.change_{opts.model_name}"):
+            return HttpResponseForbidden()
+
+        instance = self.get_object()
         history = (
             get_history_model_for_model(self.model)
             .objects.filter(history_id=history_id)
             .first()
         )
-        if not history:
+        if not history or history.instance.pk != instance.pk:
             messages.error(request, _("History record not found."))
             return HorillaRedirect(request)
         history.instance.save()
