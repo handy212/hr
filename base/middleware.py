@@ -359,6 +359,14 @@ class CompanyMiddleware:
             set_selected_company(None)
             return self.get_response(request)
 
+        if request.user.is_superuser and (
+            request.path_info.rstrip("/") in ("", "/login", "/logout", "/two-factor", "/send-otp")
+            or request.path_info.startswith("/settings/tenants/")
+        ):
+            # Platform operators are not HR employees and need no company session.
+            set_selected_company(None)
+            return self.get_response(request)
+
         selected_company = request.session.get("selected_company")
 
         # --- Determine company ---
@@ -428,7 +436,9 @@ class ForcePasswordChangeMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        excluded_paths = ["/change-password", "/login", "/logout"]
+        if getattr(request, "impersonation_tenant", None):
+            return self.get_response(request)
+        excluded_paths = ["/change-password", "/login", "/logout", "/settings/tenants/impersonation/stop"]
         if request.path.rstrip("/") in excluded_paths:
             return self.get_response(request)
 

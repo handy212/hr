@@ -1,0 +1,7 @@
+{% extends 'saas/tenants/layout.html' %}{% load i18n %}
+{% block tenant_content %}
+<section class="tenant-console tenant-form-panel" aria-labelledby="verification-heading">
+  <h1 id="verification-heading">{% trans "Verify your account" %}</h1><p>{% trans "Enter the verification code sent to your email to open the tenant workspace." %}</p>
+  <form method="post">{% csrf_token %}<label for="platform-otp">{% trans "Verification code" %}</label><input id="platform-otp" name="otp" inputmode="numeric" autocomplete="one-time-code" required maxlength="6"><div class="tenant-actions" style="margin-top:1.5rem"><button class="oh-btn oh-btn--secondary" type="submit">{% trans "Verify" %}</button><a href="{% url 'send-otp' %}">{% trans "Send a new code" %}</a></div></form>
+</section>
+{% endblock %}

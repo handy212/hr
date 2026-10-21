@@ -19,6 +19,7 @@ from attendance.views.clock_in_out import clock_in, clock_out
 from employee.models import Employee
 
 from .models import TerminalEmployee, TerminalPunchLog
+from saas.device_access import tenant_device_operation
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,8 @@ def resolve_employee(device, user_id, code=None):
             uid = None
         if uid is not None:
             mapping = TerminalEmployee.objects.filter(
-                device=device, device_user_id=uid
+                device=device, device_user_id=uid,
+                employee__employee_work_info__company_id=device.company_id_id
             ).select_related("employee", "employee__employee_user_id").first()
             if mapping:
                 return mapping.employee
@@ -48,6 +50,7 @@ def resolve_employee(device, user_id, code=None):
     return None
 
 
+@tenant_device_operation
 @transaction.atomic
 def process_punch(device, record, photo=None, retry=False):
     """

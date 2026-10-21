@@ -297,6 +297,7 @@
     </head>
 
     <body class="bg-[{{theme_obj.primary_50}}] font-[Inter,_sans-serif] overflow-hidden {% if request.session.theme == 'dark' %}dark{% endif %}">
+        {% include 'saas/tenants/impersonation_banner.html' %}
         {% get_current_language_bidi as LANGUAGE_BIDI %}
         {% get_current_language as LANGUAGE_CODE %}
         <div hidden id="statiUrl" data-url='{% static "" %}'></div>

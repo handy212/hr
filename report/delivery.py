@@ -116,6 +116,11 @@ def deliver_subscription(
 
     Re-checks view permission and export access at send time.
     """
+    from saas.access import scope_is_suspended
+
+    if subscription.company_id_id and scope_is_suspended([subscription.company_id_id]):
+        return DeliveryResult(False, "tenant_blocked", "Tenant access is disabled")
+
     import report.metrics  # noqa: F401
 
     if not subscription.is_active and not force:

@@ -1,3 +1,4 @@
+from base.horilla_company_manager import HorillaCompanyManager
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -25,6 +26,8 @@ class MailAutomation(HorillaModel):
     """
     MailAutoMation
     """
+    objects = HorillaCompanyManager("saas_owners__company_id")
+
 
     choices = [
         ("on_create", _("On Create")),

@@ -124,10 +124,9 @@ class StrictMailConfigTests(CompanyFilterTestMixin, TestCase):
         with override_settings(COMPANY_SCOPING_STRICT=True):
             found = ConfiguredEmailBackend.get_dynamic_email_config()
 
-        # No request in context, so the backend looks up company_id=None and
-        # falls back to the global primary; the tenant row must at least be
-        # reachable through the scoped manager.
-        self.assertEqual(found.username, "primary")
+        # Background workers carry an explicit company context without a
+        # browser request; that company must select its own transport.
+        self.assertEqual(found.pk, tenant.pk)
         with override_settings(COMPANY_SCOPING_STRICT=True):
             self.assertEqual(
                 DynamicEmailConfiguration.objects.filter(
@@ -166,7 +165,7 @@ class StrictMailConfigTests(CompanyFilterTestMixin, TestCase):
             DynamicEmailConfiguration.objects.unscoped().get(pk=config.pk).is_primary
         )
 
-    def test_replace_primary_mail_view_is_null_safe_when_strict(self):
+    def test_replace_primary_mail_refuses_company_configuration_when_strict(self):
         user = HorillaUser.objects.create_user(
             username="mailadmin", password="pass", is_superuser=True
         )
@@ -191,10 +190,10 @@ class StrictMailConfigTests(CompanyFilterTestMixin, TestCase):
                 pk=config.pk
             ).exists()
         )
-        self.assertTrue(
+        self.assertFalse(
             DynamicEmailConfiguration.objects.unscoped().get(pk=config.pk).is_primary
         )
-        self.assertFalse(
+        self.assertTrue(
             DynamicEmailConfiguration.objects.unscoped().get(pk=previous.pk).is_primary
         )
 
@@ -222,128 +221,21 @@ class StrictMailConfigTests(CompanyFilterTestMixin, TestCase):
         )
 
 
+# Remaining ownership audits; only remove entries after implementing and testing scope.
 KNOWN_UNSCOPED = {
-    "accessibility.defaultaccessibility",
-    "asset.assetdocuments",
-    "asset.assetreport",
-    "asset.assetrequestcomment",
-    "asset.assetservicerequestnote",
     "asset.returnimages",
-    "attendance.attendancerequestcomment",
-    "attendance.attendancerequestfile",
-    "attendance.batchattendance",
-    "attendance.historicalattendance",
-    "attendance.historicalattendanceactivity",
-    "auditlog.logentry",
-    "axes.accessattemptexpiration",
-    "base.announcementcomment",
-    "base.announcementview",
-    "base.attachment",
     "base.baserequestfile",
-    # Kept unscoped intentionally: base.auth_backends.CompanyScopedBackend
-    # resolves a user's company assignments across all companies (including
-    # "all"/missing context); filtering here would break permission checks.
     "base.companygroupassignment",
-    "base.dashboardemployeecharts",
-    "base.driverviewed",
-    "base.historicalrotatingshiftassign",
-    "base.historicalrotatingworktypeassign",
-    "base.historicalshiftrequest",
-    "base.historicalworktyperequest",
-    "base.notificationsound",
-    "base.penaltyaccounts",
-    "base.rosterpublishlog",
-    "base.shiftrequestcomment",
-    "base.worktyperequestcomment",
-    "biometric.biometricemployees",
-    "biometric.cosecattendancearguments",
-    "device_gateway.terminalcommand",
-    "device_gateway.terminalemployee",
-    "device_gateway.terminalpunchlog",
-    "device_gateway.terminalsnapshot",
-    "device_gateway.terminalsynctask",
-    "device_gateway.terminalsystemrecord",
     "employee.actiontype",
     "employee.employeetag",
-    "employee.historicalbonuspoint",
-    "employee.historicalemployeeworkinformation",
-    "employee.notefiles",
-    "employee.policymultiplefile",
     "employee.profileeditfeature",
-    "facedetection.employeefacedetection",
-    "helpdesk.attachment",
-    "helpdesk.claimrequest",
-    "helpdesk.comment",
-    "helpdesk.historicalticket",
-    "horilla_audit.accountblockunblock",
-    "horilla_audit.auditmodelconfig",
-    "horilla_audit.audittag",
-    "horilla_auth.authusergroups",
-    "horilla_auth.authuseruserpermissions",
-    "horilla_auth.legacyuser",
     "horilla_automations.mailautomation",
-    "horilla_backup.googledrivebackup",
-    "horilla_backup.localbackup",
     "horilla_dbtemplate.template",
     "horilla_dbtemplate.templateversion",
-    "horilla_ldap.ldapsettings",
-    "horilla_meet.googlecredential",
-    "horilla_meet.googlemeeting",
-    "horilla_meet.interviewmeetinglink",
-    "horilla_meet.pmsmeetinglink",
-    "horilla_theme.horillacolortheme",
-    "horilla_views.activegroup",
-    "horilla_views.activetab",
-    "horilla_views.activeview",
-    "horilla_views.columnorder",
-    "horilla_views.savedfilter",
-    "horilla_views.togglecolumn",
-    "leave.compensatoryleaverequestcomment",
-    "leave.historicalavailableleave",
-    "leave.historicalcompensatoryleaverequest",
-    "leave.historicalleaveallocationrequest",
-    "leave.historicalleaverequest",
-    "leave.leaveallocationrequestcomment",
-    "leave.leaverequestcomment",
-    "leave.leaverequestconditionapproval",
     "leave.leaverequestfile",
-    "leave.leavetypecondition",
-    "notifications.notification",
-    "offboarding.employeetask",
-    "offboarding.exitreason",
-    "offboarding.historicalemployeetask",
-    "offboarding.historicalresignationletter",
-    "offboarding.offboardingnote",
-    "offboarding.offboardingstage",
     "offboarding.offboardingstagemultiplefile",
-    "offboarding.offboardingtask",
-    "onboarding.historicalcandidatetask",
     "payroll.encashmentgeneralsettings",
-    "payroll.historicalcontract",
-    "payroll.historicalpayslip",
     "payroll.multiplecondition",
-    "payroll.reimbursementfile",
-    "payroll.reimbursementmultipleattachment",
-    "payroll.reimbursementrequestcomment",
-    "payroll.taxbracket",
     "pms.anonymousfeedback",
-    "pms.historicalcomment",
-    "pms.historicalemployeekeyresult",
-    "pms.historicalemployeeobjective",
-    # Historical tables deferred to Phase 1 — scoped via parent model
-    # (written by simple-history middleware without request company context).
-    "pms.historicalkeyresult",
-    "pms.historicalobjective",
-    "recruitment.candidatedocument",
-    "recruitment.candidaterating",
-    "recruitment.historicalcandidate",
-    "recruitment.historicalrejectedcandidate",
-    "recruitment.historicalstage",
-    "recruitment.questionordering",
-    "recruitment.resume",
     "recruitment.skill",
-    "recruitment.stagefiles",
-    "token_blacklist.blacklistedtoken",
-    "token_blacklist.outstandingtoken",
-    "whatsapp.whatsappflowdetails",
 }

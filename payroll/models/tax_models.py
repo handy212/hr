@@ -61,7 +61,7 @@ class TaxBracket(HorillaModel):
     tax_rate = models.FloatField(
         null=False, blank=False, default=0.0, verbose_name=_("Tax Rate")
     )
-    objects = models.Manager()
+    objects = HorillaCompanyManager("filing_status_id__company_id")
 
     def __str__(self):
         if self.max_income != math.inf:

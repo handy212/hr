@@ -47,6 +47,8 @@ class FaceDetection(models.Model):
 
 
 class EmployeeFaceDetection(models.Model):
+    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+
     employee_id = models.OneToOneField(
         "employee.Employee", related_name="face_detection", on_delete=models.CASCADE
     )

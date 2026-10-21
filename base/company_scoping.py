@@ -29,6 +29,12 @@ GLOBAL_MODELS = {
     ("axes", "accessfailurelog"),
     ("horilla_auth", "horillauser"),
     ("base", "company"),
+    ("saas", "resourceownership"),  # private ownership registry; no customer CRUD
+    ("base", "companygroupassignment"),  # bounded auth bootstrap queries
+    ("employee", "profileeditfeature"),  # platform default; writes protected by SaaS policy
+    ("horilla_dbtemplate", "template"),  # platform template editor; no customer access
+    ("horilla_dbtemplate", "templateversion"),  # same editor boundary
+    ("saas", "tenant"),  # platform control plane; superuser-only management
     ("django_apscheduler", "djangojob"),
     ("django_apscheduler", "djangojobexecution"),
     # Auth/token internals — per-user credentials, no company dimension.

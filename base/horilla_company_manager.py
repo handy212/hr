@@ -7,7 +7,7 @@ import logging
 from django.apps import apps
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
-from django.db.models import Q
+from django.db.models import Exists, Q
 from django.db.models.query import QuerySet
 
 from horilla.horilla_middlewares import _thread_locals, get_selected_company
@@ -127,7 +127,15 @@ class HorillaCompanyManager(models.Manager):
 
     def get_company_filter_path(self):
         if self.company_filter_path and self._field_exists(self.company_filter_path):
-            return self.company_filter_path
+            # Reverse accessor names (e.g. policy_set) differ from SQL query
+            # names (policy). Resolve each step before constructing predicates.
+            model = self.model
+            names = []
+            for part in self.company_filter_path.split("__"):
+                relation = self._resolve_related_field(model, part)
+                names.append(relation.name)
+                model = relation.related_model if relation.is_relation else model
+            return "__".join(names)
 
         if self._has_company_id_fk_or_m2m():
             return "company_id"
@@ -149,6 +157,15 @@ class HorillaCompanyManager(models.Manager):
 
         if not filter_path:
             return qs
+
+        include_shared = True
+        if apps.is_installed("saas"):
+            from saas.access import active_company_ids, filter_active_tenants
+            from saas.scope import permits_shared_rows
+            include_shared = permits_shared_rows(self.model)
+            qs = filter_active_tenants(qs, filter_path, include_shared)
+            if company and company != "all":
+                qs = qs.filter(Exists(active_company_ids([company])))
 
         if not company:
             if self._strict_mode():
@@ -183,10 +200,13 @@ class HorillaCompanyManager(models.Manager):
             if not filter_ids:
                 return qs.none()
             try:
-                return qs.filter(
-                    Q(**{f"{filter_path}__in": list(filter_ids)})
-                    | Q(**{f"{filter_path}__isnull": True})
-                ).distinct()
+                if apps.is_installed("saas"):
+                    filter_ids = active_company_ids(filter_ids)
+                    qs = qs.filter(Exists(filter_ids))
+                predicate = Q(**{f"{filter_path}__in": filter_ids})
+                if include_shared:
+                    predicate |= Q(**{f"{filter_path}__isnull": True})
+                return qs.filter(predicate).distinct()
             except Exception as e:
                 logger.exception(
                     f"Company filter (all-my-companies) failed for model "
@@ -195,9 +215,10 @@ class HorillaCompanyManager(models.Manager):
                 return qs.none()
 
         try:
-            return qs.filter(
-                Q(**{filter_path: company}) | Q(**{f"{filter_path}__isnull": True})
-            ).distinct()
+            predicate = Q(**{filter_path: company})
+            if include_shared:
+                predicate |= Q(**{f"{filter_path}__isnull": True})
+            return qs.filter(predicate).distinct()
         except Exception as e:
             logger.exception(
                 f"Company filter failed for model {self.model.__name__} "

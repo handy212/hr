@@ -1,3 +1,4 @@
+from saas.scope import scoped_cache_key
 """
 email_backend.py
 
@@ -63,38 +64,28 @@ class DefaultHorillaMailBackend(EmailBackend):
     @staticmethod
     def get_dynamic_email_config():
         request = getattr(_thread_locals, "request", None)
-        company = None
+        employee = None
         if request and not request.user.is_anonymous:
-            company = request.user.employee_get.get_company()
-        configuration = DynamicEmailConfiguration.objects.filter(
-            company_id=company
-        ).first()
-        if configuration is None:
-            # Fallback is intentionally unscoped: scheduler mail runs without
-            # a request/company context, and "primary" is a global setting.
-            configuration = DynamicEmailConfiguration.objects.unscoped().filter(
-                is_primary=True
-            ).first()
+            employee = getattr(request.user, "employee_get", None)
+        from saas.mail import resolve_mail_configuration
+
+        configuration = resolve_mail_configuration()
         if configuration:
             display_email_name = (
                 f"{configuration.display_name} <{configuration.from_email}>"
             )
 
             user_id = ""
-            if request:
-                if (
-                    configuration.use_dynamic_display_name
-                    and request.user.is_authenticated
-                ):
-                    display_email_name = f"{request.user.employee_get.get_full_name()} <{request.user.employee_get.get_email()}>"
-                if request.user.is_authenticated:
-                    user_id = request.user.pk
-                    reply_to = [
-                        f"{request.user.employee_get.get_full_name()} <{request.user.employee_get.get_email()}>",
-                    ]
-                    cache.set(f"reply_to{request.user.pk}", reply_to)
+            if request and request.user.is_authenticated:
+                display_name = employee.get_full_name() if employee else (request.user.get_full_name() or request.user.get_username())
+                sender_email = employee.get_email() if employee else request.user.email
+                if configuration.use_dynamic_display_name:
+                    display_email_name = f"{display_name} <{sender_email}>"
+                user_id = request.user.pk
+                reply_to = [f"{display_name} <{sender_email}>"]
+                cache.set(scoped_cache_key("mail:reply_to", str(request.user.pk)), reply_to)
 
-            cache.set(f"dynamic_display_name{user_id}", display_email_name)
+            cache.set(scoped_cache_key("mail:display_name", str(user_id)), display_email_name)
 
         return configuration
 
@@ -253,10 +244,10 @@ def new_init(
     user_id = ""
     if request and request.user and request.user.is_authenticated:
         user_id = request.user.pk
-        reply_to = cache.get(f"reply_to{user_id}") if not reply_to else reply_to
+        reply_to = cache.get(scoped_cache_key("mail:reply_to", str(user_id))) if not reply_to else reply_to
 
     if not from_email:
-        from_email = cache.get(f"dynamic_display_name{user_id}")
+        from_email = cache.get(scoped_cache_key("mail:display_name", str(user_id)))
 
     message_init(
         self,

@@ -53,6 +53,8 @@ class BaseTerminalView(APIView):
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
         self.device = authenticate_device(request)
+        from horilla.horilla_middlewares import set_selected_company
+        set_selected_company(str(self.device.company_id_id))
 
 
 class KeepaliveView(BaseTerminalView):

@@ -135,6 +135,8 @@ class GoogleCredential(HorillaModel, NoPermissionModel):
     Model representing Google credentials for an employee, including
     token information, client ID, client secret, scopes, and expiration time.
     """
+    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+
 
     employee_id = models.OneToOneField(
         Employee, on_delete=models.CASCADE, related_name="google_credential"
@@ -217,6 +219,8 @@ class GoogleMeeting(HorillaModel):
     The model also includes methods for generating URLs for update/delete operations
     and handling attendees, as well as calculating the meeting's end time.
     """
+    objects = HorillaCompanyManager("employee_id__employee_work_info__company_id")
+
 
     employee_id = models.ForeignKey(
         Employee, on_delete=models.CASCADE, related_name="meetings"
@@ -391,6 +395,8 @@ if apps.is_installed("recruitment"):
     from recruitment.models import InterviewSchedule
 
     class InterviewMeetingLink(models.Model, NoPermissionModel):
+        objects = HorillaCompanyManager("meeting__employee_id__employee_work_info__company_id")
+
         interview = models.OneToOneField(
             InterviewSchedule,
             on_delete=models.CASCADE,
@@ -403,6 +409,8 @@ if apps.is_installed("pms"):
     from pms.models import Meetings
 
     class PmsMeetingLink(models.Model, NoPermissionModel):
+        objects = HorillaCompanyManager("google_meeting__employee_id__employee_work_info__company_id")
+
         meeting = models.OneToOneField(
             Meetings, on_delete=models.CASCADE, related_name="google_meeting"
         )

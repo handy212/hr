@@ -1,0 +1,15 @@
+{% extends 'saas/tenants/layout.html' %}
+{% load i18n static %}
+{% block tenant_content %}
+<section class="tenant-console tenant-form-panel" aria-labelledby="create-tenant-heading">
+  <a href="{% url 'tenant-list' %}" hx-boost="false">{% trans "Back to tenants" %}</a>
+  <h1 id="create-tenant-heading" class="h4 mt-3">{% trans "Create tenant" %}</h1>
+  <p class="text-muted">{% trans "Create a company account and its first HR administrator. The admin can manage employees and organization settings within this company." %}</p>
+  <form method="post" hx-boost="false" autocomplete="off">
+    {% csrf_token %}
+    {% include 'saas/tenants/_form_fields.html' %}
+    <p class="text-muted">{% trans "Required fields are marked *. No subscription or billing account is created." %}</p>
+    <button class="oh-btn oh-btn--secondary" type="submit">{% trans "Create tenant and admin" %}</button>
+  </form>
+</section>
+{% endblock %}

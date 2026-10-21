@@ -118,6 +118,8 @@ class WhatsappCredientials(HorillaModel):
 
 
 class WhatsappFlowDetails(models.Model):
+    objects = HorillaCompanyManager("whatsapp_id__company_id")
+
     template = models.CharField(max_length=50)
     flow_id = models.CharField(max_length=50)
     whatsapp_id = models.ForeignKey(WhatsappCredientials, on_delete=models.CASCADE)

@@ -12,13 +12,15 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from horilla.testkit import make_company, make_employee
+from horilla.testkit.company import CompanyFilterTestMixin
 from offboarding.dashboard import PIPELINE_STAGE_TYPES
 from offboarding.models import Offboarding, OffboardingEmployee, OffboardingStage
 
 
-class OffboardingPipelineWidgetTests(TestCase):
+class OffboardingPipelineWidgetTests(CompanyFilterTestMixin, TestCase):
     def setUp(self):
         self.company = make_company("Pipeline Co")
+        self.set_company_context(self.company.pk)
         User = get_user_model()
         self.admin = User.objects.create_superuser(
             username="pipeline-admin",
@@ -102,6 +104,8 @@ class OffboardingPipelineWidgetTests(TestCase):
         double-counted."""
         data = self._get_pipeline()
         total_from_tiles = sum(s["count"] for s in data["stages"])
+        # Request middleware clears the company context after responding.
+        self.set_company_context(self.company.pk)
         total_in_db = OffboardingEmployee.objects.filter(
             stage_id__in=OffboardingStage.objects.filter(
                 offboarding_id__in=[self.process_a, self.process_b]

@@ -28,6 +28,8 @@ import pymupdf  # type: ignore
 import spacy
 from dateutil import parser as dateutil_parser
 from django import template
+from saas.public_access import public_recruitment_scope
+
 from django.contrib import messages
 from django.core import serializers
 from django.core.cache import cache as CACHE
@@ -3148,9 +3150,11 @@ def open_recruitments(request):
     """
     This method is used to render the open recruitment page
     """
+    from saas.access import blocked_company_ids
+
     recruitments = Recruitment.default.filter(
         closed=False, is_published=True, is_active=True
-    )
+    ).exclude(company_id__in=blocked_company_ids())
     context = {
         "recruitments": recruitments,
     }
@@ -3160,6 +3164,7 @@ def open_recruitments(request):
     return response
 
 
+@public_recruitment_scope
 def recruitment_details(request, id):
     """
     This method is used to render the recruitment details page.
@@ -3175,7 +3180,8 @@ def recruitment_details(request, id):
     # real public page instead of a bare "Method Not Allowed" error.
     if request.headers.get("Sec-Fetch-Mode") == "navigate":
         return redirect(reverse("open-recruitments"))
-    recruitment = Recruitment.default.filter(id=id).first()
+    from saas.access import blocked_company_ids
+    recruitment = Recruitment.default.filter(id=id).exclude(company_id__in=blocked_company_ids()).first()
     if not recruitment:
         messages.error(request, _("Recruitment not found."))
         return HorillaRedirect(request)

@@ -14,6 +14,8 @@ the same rule GHSA-gc35-jfv9-r3cm established for leave allocations.
 import datetime
 
 from django.test import TestCase
+from rest_framework_simplejwt.tokens import RefreshToken
+from horilla.testkit.company import CompanyFilterTestMixin
 from rest_framework.test import APIClient
 
 from attendance.models import Attendance
@@ -32,12 +34,12 @@ DOC_BULK = "/api/v1/employee/document-bulk-approve-reject/"
 
 
 def _manage(employee, manager):
-    EmployeeWorkInformation.objects.filter(employee_id=employee).update(
+    EmployeeWorkInformation.objects.unscoped().filter(employee_id=employee).update(
         reporting_manager_id=manager
     )
 
 
-class WriteTargetScopingTests(TestCase):
+class WriteTargetScopingTests(CompanyFilterTestMixin, TestCase):
     def setUp(self):
         self.client = APIClient()
         self.company = make_company("Write Scope Co")
@@ -65,7 +67,7 @@ class WriteTargetScopingTests(TestCase):
             phone="3000004",
         )
         _manage(self.victim, self.boss)
-        self.client.force_authenticate(user=self.attacker_user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {RefreshToken.for_user(self.attacker_user).access_token}")
 
     def _rotating_assignment(self, employee, name):
         rotating = RotatingWorkType.objects.create(
@@ -78,6 +80,7 @@ class WriteTargetScopingTests(TestCase):
         )
 
     def _attendance(self, employee, validated=False, overtime=3600):
+        self.set_company_context(self.company.pk)
         return make_attendance(
             employee=employee,
             attendance_date=datetime.date(2026, 8, 3),
@@ -91,29 +94,29 @@ class WriteTargetScopingTests(TestCase):
         record = self._attendance(self.victim)
         response = self.client.put(VALIDATE.format(record.pk))
         self.assertEqual(response.status_code, 403)
-        self.assertFalse(Attendance.objects.get(pk=record.pk).attendance_validated)
+        self.assertFalse(Attendance.objects.unscoped().get(pk=record.pk).attendance_validated)
 
     def test_cannot_approve_own_overtime(self):
         """Overtime feeds payroll; self-approval is the GHSA-gc35 rule."""
         record = self._attendance(self.attacker)
-        Attendance.objects.filter(pk=record.pk).update(
+        Attendance.objects.unscoped().filter(pk=record.pk).update(
             attendance_overtime_approve=False
         )
         response = self.client.put(OVERTIME_APPROVE.format(record.pk))
         self.assertEqual(response.status_code, 403)
         self.assertFalse(
-            Attendance.objects.get(pk=record.pk).attendance_overtime_approve
+            Attendance.objects.unscoped().get(pk=record.pk).attendance_overtime_approve
         )
 
     def test_cannot_approve_a_stranger_overtime(self):
         record = self._attendance(self.victim)
-        Attendance.objects.filter(pk=record.pk).update(
+        Attendance.objects.unscoped().filter(pk=record.pk).update(
             attendance_overtime_approve=False
         )
         response = self.client.put(OVERTIME_APPROVE.format(record.pk))
         self.assertEqual(response.status_code, 403)
         self.assertFalse(
-            Attendance.objects.get(pk=record.pk).attendance_overtime_approve
+            Attendance.objects.unscoped().get(pk=record.pk).attendance_overtime_approve
         )
 
     def test_cannot_approve_a_stranger_attendance_request(self):
@@ -125,7 +128,7 @@ class WriteTargetScopingTests(TestCase):
         record = self._attendance(self.subordinate)
         response = self.client.put(VALIDATE.format(record.pk))
         self.assertEqual(response.status_code, 200, response.data)
-        self.assertTrue(Attendance.objects.get(pk=record.pk).attendance_validated)
+        self.assertTrue(Attendance.objects.unscoped().get(pk=record.pk).attendance_validated)
 
     # --- rotating work type assignment ------------------------------------
 
@@ -138,7 +141,7 @@ class WriteTargetScopingTests(TestCase):
             self.client.delete(ROTATING_ASSIGN.format(assignment.pk)).status_code, 403
         )
         self.assertTrue(
-            RotatingWorkTypeAssign.objects.filter(pk=assignment.pk).exists()
+            RotatingWorkTypeAssign.objects.unscoped().filter(pk=assignment.pk).exists()
         )
 
     def test_own_rotating_assignment_is_still_readable(self):
@@ -161,19 +164,19 @@ class WriteTargetScopingTests(TestCase):
         document = self._document(self.victim)
         response = self.client.post(DOC_APPROVE.format(document.pk, "approved"))
         self.assertEqual(response.status_code, 403)
-        self.assertNotEqual(Document.objects.get(pk=document.pk).status, "approved")
+        self.assertNotEqual(Document.objects.unscoped().get(pk=document.pk).status, "approved")
 
     def test_cannot_approve_own_document(self):
         document = self._document(self.attacker)
         response = self.client.post(DOC_APPROVE.format(document.pk, "approved"))
         self.assertEqual(response.status_code, 403)
-        self.assertNotEqual(Document.objects.get(pk=document.pk).status, "approved")
+        self.assertNotEqual(Document.objects.unscoped().get(pk=document.pk).status, "approved")
 
     def test_a_subordinate_document_can_still_be_approved(self):
         document = self._document(self.subordinate)
         response = self.client.post(DOC_APPROVE.format(document.pk, "approved"))
         self.assertEqual(response.status_code, 200, response.data)
-        self.assertEqual(Document.objects.get(pk=document.pk).status, "approved")
+        self.assertEqual(Document.objects.unscoped().get(pk=document.pk).status, "approved")
 
     def test_bulk_document_approval_skips_records_out_of_scope(self):
         """Scoping the by-id route alone would leave this as its unscoped twin."""
@@ -182,5 +185,5 @@ class WriteTargetScopingTests(TestCase):
         self.client.put(
             DOC_BULK, {"ids": [theirs.pk, own.pk], "status": "approved"}, format="json"
         )
-        self.assertNotEqual(Document.objects.get(pk=theirs.pk).status, "approved")
-        self.assertNotEqual(Document.objects.get(pk=own.pk).status, "approved")
+        self.assertNotEqual(Document.objects.unscoped().get(pk=theirs.pk).status, "approved")
+        self.assertNotEqual(Document.objects.unscoped().get(pk=own.pk).status, "approved")

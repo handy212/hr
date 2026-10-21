@@ -1304,7 +1304,7 @@ class AnonymousFeedback(models.Model):
         max_length=10, null=True, blank=False, editable=False
     )
     feedback_description = models.TextField(null=True, blank=True, max_length=255)
-    objects = models.Manager()
+    objects = HorillaCompanyManager("saas_owners__company_id")
 
     def __str__(self) -> str:
         return f"Feedback based on a {self.based_on}"

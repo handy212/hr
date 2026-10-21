@@ -145,6 +145,7 @@ urlpatterns = [
         name="accounts-login-redirect",
     ),
     path("accounts/", include("django.contrib.auth.urls")),
+    path("", include("saas.urls")),
     path("", include("base.urls")),
     path("", include("horilla_automations.urls")),
     path("", include("horilla_views.urls")),

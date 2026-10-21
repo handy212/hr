@@ -100,13 +100,16 @@ class HorillaAuditLog(HistoricalRecords):
     Model to store additional information for historical records.
     """
 
-    # def __init__(self, *args, bases=None, **kwargs):
-    #     super(HorillaAuditLog, self).__init__(*args, **kwargs)
-    #     self.is_horilla_audit_log = True
+    def __init__(self, *args, **kwargs):
+        from saas.history import TenantHistoryManager
+        kwargs.setdefault("history_manager", TenantHistoryManager)
+        super().__init__(*args, **kwargs)
 
-    pass
-
-    # history_comments = models.ManyToManyField("HistoryComment", blank=True)
+    def get_extra_fields(self, model, fields):
+        from saas.history import history_scope_fields
+        extra = super().get_extra_fields(model, fields)
+        extra.update(history_scope_fields(model, fields, extra))
+        return extra
 
 
 @receiver(pre_create_historical_record)

@@ -59,6 +59,7 @@
 <div hidden id="statiUrl" data-url='{% static "" %}'></div>
 
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+{% include 'saas/tenants/impersonation_banner.html' %}
     <span class="logged-in" data-user-id="{{request.user.id}}"></span>
     <div id="reloadMessages">
         {% include "generic/messages.html" %}

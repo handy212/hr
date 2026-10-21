@@ -5,6 +5,56 @@
 
 **Tenant unit:** `base.models.Company` is the de-facto tenant and stays that way; a new tenant/account layer is added on top of it.
 
+## Tenant management checkpoint — 2026-10-20
+
+Product correction: the operator console now uses a standalone platform layout, and superuser login/root requests lead directly to tenants. Its UI contains no HR sidebar or check-in controls. Tenant account CRUD now includes detail and edit pages plus a slug-confirmed retained-data delete operation (`base.0018_tenant_deleted_at`). Deleted accounts are hidden and blocked from authenticated access; company/employee/history records are retained. Ordinary customer users keep their HR workspace. See the management guide for the exact deletion and access boundaries.
+
+The first platform management slice is implemented. After applying `base.0017_tenant`, an active platform superuser can open **Settings → Organization → Tenants** (`/settings/tenants/`) to list/search accounts, create a company and its initial HR admin atomically, and change trial/active/suspended status. Existing companies are backfilled as active accounts without changing users or permissions. Tenant admins remain regular users with an explicit company-scoped HR role.
+
+Suspension is enforced on authenticated session and JWT requests; platform recovery and company switching remain available. Background jobs, devices and public pages are outside this first suspension policy. Repeated provisioning also fixes strict-mode attendance-default seeding, preserving existing duplicate configurations rather than deleting them.
+
+Current coverage: **187 scoped / 60 potential gaps / 37 classified global**, across 284 models. `Tenant` is intentionally global control-plane metadata with explicit platform-only access. The Phase 1 isolation tasks below still block shared-customer launch. Domain routing, plans, billing, self-service signup and deletion remain pending.
+
+See [TENANT_MANAGEMENT.md](TENANT_MANAGEMENT.md) for operation, migration and verification details, and [SPEC-tenants.md](SPEC-tenants.md) for the implemented acceptance contract. The configured application database has not been migrated during development.
+
+## Review checkpoint — 2026-10-19
+
+The conversion remains in Phases 0–1. Tenant provisioning, billing, and self-service signup are still pending. The counts below supersede the older progress snapshots in this document; manager coverage alone does not prove isolation.
+
+- Audit before this slice: **186 scoped / 61 potential gaps / 36 classified global**, across 283 installed models.
+- **Offboarding stage isolation:** reproduced a move from a selected-company employee into another company's stage. `OffboardingStage` now uses `HorillaCompanyManager("offboarding_id__company_id")`, protecting stage choices and request lookups. Removed its scoping allowlist entry. New two-company tests cover stage reads, missing context, and the stage-change request. Coverage after this slice: **187 scoped / 60 potential gaps / 36 classified global**.
+- **JWT strict-mode regression:** existing API isolation tests reproduced valid assigned users receiving 403 responses. Resolving the authenticated user's company used a scoped work-information query before company context existed. That bootstrap query now explicitly uses `.unscoped()` and restricts the lookup to the authenticated user's ID. Tests explicitly enable strict mode and also cover a conflicting pre-existing company context.
+- **Employee-view audit correction:** the legacy employee detail/update and profile lookups already use scoped managers and have cross-company regression coverage. The older bypass triage note below is historical.
+
+### Next isolation tasks, in priority order
+
+1. **Report filter cache (P1):** `report/filter_schema.py:build_filter_options` caches tenant-derived departments, roles, locations, and other options under `report:filter_options:<slug>`. The key omits company and allowed-company scope, so a second tenant can receive the first tenant's cached options for 60 seconds. Add two-company cache regression tests and namespace by effective authorization scope, including the `all` mode. Company options also need a visibility review because `Company` is intentionally global.
+2. **Platform versus tenant SMTP ownership (P1):** the mail-change permission still allows a tenant configuration to become the globally primary server, and scheduler fallback can then use it. Define platform ownership and tenant fallback behavior before exposing mail configuration to SaaS tenant admins.
+3. Continue the bypass audit and scope the remaining 60 potential gaps. Review nullable-company rows separately: the manager deliberately treats these as shared, which requires a model-specific ownership decision. Models classified global, especially notification/history and configuration tables, also require access-path review.
+4. After isolation acceptance criteria pass, start tenant provisioning and identity work in Phase 2.
+
+### Validation
+
+- Existing baseline: 17 company-scoping and SaaS-view tests passed before implementation.
+- Reproduction: all three new stage tests failed before the fix, including an actual cross-company stage mutation. Existing JWT isolation tests failed with three failures and one error before the resolver fix.
+- Combined regression run: **39 tests passed**, covering the full `offboarding` suite, `base.tests.test_company_scoping`, `base.tests.test_saas_view_isolation`, and `horilla_api.tests.test_tenant_scoping`.
+- `DATABASE_URL=sqlite:////tmp/hr-saas-audit.sqlite3 DJANGO_LOG_LEVEL=ERROR .venv/bin/python manage.py makemigrations --check --dry-run`: no changes detected. Syntax compilation and `git diff --check` passed. Ruff was unavailable in this environment.
+- Environment limits: the default-cache run had seven Redis connection errors because Docker hostname `redis:6379` is unavailable from this shell. The successful combined run explicitly used SQLite and `LocMemCache`; it does not validate PostgreSQL/Redis behavior or the full application suite. Existing startup-query and cache-key warnings remain.
+
+Reproduce the combined run from the repository root (the test database is isolated and retained to avoid repeating all migrations):
+
+```bash
+DATABASE_URL=sqlite:////tmp/hr-saas-validation-app.sqlite3 DJANGO_LOG_LEVEL=ERROR .venv/bin/python - <<'PY'
+import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'horilla.settings')
+from django.conf import settings
+settings.DATABASES['default']['TEST'] = {'NAME': '/tmp/hr-saas-validation-test.sqlite3'}
+settings.CACHES = {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}}
+from django.core.management import execute_from_command_line
+execute_from_command_line(['manage.py', 'test', 'offboarding', 'base.tests.test_company_scoping', 'base.tests.test_saas_view_isolation', 'horilla_api.tests.test_tenant_scoping', '--noinput', '--keepdb', '--verbosity=1'])
+PY
+```
+
 ---
 
 ## Phase 0 — Foundations & Audit (Weeks 1–3)
@@ -15,7 +65,7 @@
 - [x] **Fail-closed scoping.** `COMPANY_SCOPING_STRICT` env flag added (`horilla/settings/base.py`); when True, `HorillaCompanyManager` returns an empty queryset with no company context (and for "all" without request assignment) instead of unfiltered. Default changed to True on 2026-10-15; coverage remains incomplete. Explicit escape hatch: `.unscoped()` (alias of `.entire()`) on the manager.
 - [x] **Extend the testkit / CI gate.** `base/tests/test_company_scoping.py`: strict-mode behavior tests + `test_no_new_unscoped_models` fails CI when any model outside the `KNOWN_UNSCOPED` allowlist (127-entry snapshot) is unscoped. The allowlist must only shrink.
 - [ ] **Audit bypass paths.** Catalog uses of `.entire()`, `_base_manager`, `raw()`, and direct SQL; wrap or flag each.
-  - Initial runtime sweep (2026-10-18): direct SQL in `horilla_views/views.py` rechecks submitted IDs through `model.objects`; migration/demo SQL is operational. Scoped manager reads now replace bypasses in the employee profile, recruitment pipeline shell, and legacy offboarding dashboard/list views, with two-company regression tests for the profile, pipeline, and chart. Remaining request-path bypasses include `employee/views.py` profile/update paths; verify their authorization behavior before replacing them. This is a triage list, not a completed audit.
+  - Initial runtime sweep (2026-10-18): direct SQL in `horilla_views/views.py` rechecks submitted IDs through `model.objects`; migration/demo SQL is operational. Scoped manager reads now replace bypasses in the employee profile, recruitment pipeline shell, and legacy offboarding dashboard/list views, with two-company regression tests for the profile, pipeline, and chart. Follow-up 2026-10-19: the employee detail/update and profile paths already use scoped lookups and have cross-company tests. Continue cataloging other request-path bypasses; this remains a triage list, not a completed audit.
 - [ ] **Baseline threat model.** Document every place cross-tenant data could surface (API, exports, reports, mail previews, notifications, admin).
   - Mail configuration is a concrete control-plane risk: `base/views.py:replace_primary_mail` previously allowed any logged-in user to replace the global primary mail server; it now requires the change permission. `DynamicEmailConfiguration.save()` still clears the globally primary flag across companies. Define platform versus tenant mail ownership before SaaS rollout.
 
@@ -58,8 +108,8 @@ This is an entry-point inventory, not a completed security review. Phase 1 exit 
 
 **Objective:** Real tenant provisioning and a coherent multi-tenant login story.
 
-- [ ] **Tenant model.** Add slug/domain, status (trial/active/suspended), plan FK, created-at to `Company` (or a new `Tenant` 1:1 with `Company`). Support subdomain routing middleware (`<slug>.app.com`) alongside the existing session-based selection.
-- [ ] **Provisioning pipeline.** Command/service to create a tenant: company row, default settings, admin user, demo-data option. Must run migrations/seeds without manual steps.
+- [~] **Tenant model.** Implemented: `Tenant` 1:1 with `Company`, unique slug, trial/active/suspended status, primary admin and timestamps. Pending: domains, plan FK and subdomain routing alongside session selection.
+- [~] **Provisioning pipeline.** Implemented: atomic service and platform form create the company, default settings, initial admin and company-scoped HR role. Pending: demo-data option and broader provisioning automation.
 - [ ] **User identity.** Users stay global (`HorillaUser`), but define:
   - Login flow with tenant resolution (email + subdomain, or tenant picker post-login).
   - Username/email uniqueness policy (per-tenant vs global — recommend global email, per-tenant display).
@@ -79,8 +129,8 @@ This is an entry-point inventory, not a completed security review. Phase 1 exit 
 - [ ] **Plans & feature gating.** Plan ↔ module mapping (payroll, recruitment, biometric, API access, etc.); enforcement decorator/middleware; usage metering (employees, storage, API calls).
 - [ ] **Self-serve signup.** Registration → tenant provisioning → trial; email verification; onboarding checklist (leverage `horilla_tour`).
 - [ ] **Tenant admin console.** Manage users, plan, billing, domains, data export; suspend/reactivate.
-- [ ] **Platform admin console.** Cross-tenant operations view for the SaaS operator (uses the fail-closed bypass intentionally): tenant list, health, usage, MRR dashboard, impersonation-with-audit.
-- [ ] **Lifecycle ops.** Tenant suspension (read-only), deletion/export (GDPR), backup/restore per tenant (`horilla_backup` extension).
+- [~] **Platform admin console.** Implemented: superuser-only tenant directory, search, status filters, employee counts, provisioning and status changes. Pending: health, metered usage, MRR and impersonation with audit.
+- [~] **Lifecycle ops.** Implemented: suspension denies authenticated web/JWT access with platform recovery. Pending: background/device/public-route policy, deletion/export and per-tenant backup/restore (`horilla_backup` extension). Current suspension denies reads as well as writes.
 
 **Exit criteria:** A stranger can sign up, get a trial tenant, invite employees, hit a plan limit, upgrade via Stripe, and be billed — without staff involvement.
 
@@ -119,3 +169,8 @@ This is an entry-point inventory, not a completed security review. Phase 1 exit 
 ## Estimated effort
 
 ~5–6 months for a small team (2–3 engineers) to beta; Phases 0–1 are the non-negotiable foundation, Phases 2–3 can overlap with a second engineer on billing.
+
+
+### Platform extraction — 2026-10-20
+
+Tenant management and impersonation now belong to the `saas` app, including model ownership, migrations going forward, routes, templates, assets, menu and tests. Existing `base_tenant` data is adopted without table DDL. See `docs/architecture/saas-platform.md` for the retained core hooks and upstream merge process. Billing, plans, entitlements and platform notifications remain unimplemented; future platform work belongs here rather than in HR modules. The existing tenant-isolation gaps and production-readiness limitations above remain open.

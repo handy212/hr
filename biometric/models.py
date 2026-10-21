@@ -363,7 +363,7 @@ class BiometricEmployees(models.Model):
     device_id = models.ForeignKey(
         BiometricDevices, on_delete=models.CASCADE, null=True, blank=True
     )
-    objects = models.Manager()
+    objects = HorillaCompanyManager("device_id__company_id")
 
     def __str__(self):
         return f"{self.employee_id} - {self.user_id} - {self.device_id}"
@@ -393,7 +393,7 @@ class COSECAttendanceArguments(models.Model):
     device_id = models.ForeignKey(
         BiometricDevices, on_delete=models.CASCADE, null=True, blank=True
     )
-    objects = models.Manager()
+    objects = HorillaCompanyManager("device_id__company_id")
 
     class Meta:
         verbose_name = _("COSEC Attendance Arguments")

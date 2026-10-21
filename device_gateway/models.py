@@ -63,6 +63,8 @@ class TerminalDevice(HorillaModel):
 class TerminalEmployee(HorillaModel):
     """Maps a Horilla employee to the numeric user ID stored on a device."""
 
+    objects = HorillaCompanyManager("device__company_id")
+
     device = models.ForeignKey(
         TerminalDevice, on_delete=models.CASCADE, related_name="terminal_employees"
     )
@@ -88,6 +90,8 @@ class TerminalEmployee(HorillaModel):
 
 class TerminalSyncTask(HorillaModel):
     """Pending personnel add/update/delete work for a device."""
+
+    objects = HorillaCompanyManager("device__company_id")
 
     ACTION_CHOICES = [
         ("add", _("Add/Update")),
@@ -123,6 +127,8 @@ class TerminalSyncTask(HorillaModel):
 class TerminalCommand(HorillaModel):
     """Pending remote operation, handed to the device via Device/RemoteCommand."""
 
+    objects = HorillaCompanyManager("device__company_id")
+
     STATUS_CHOICES = [
         ("pending", _("Pending")),
         ("sent", _("Sent")),
@@ -142,6 +148,8 @@ class TerminalCommand(HorillaModel):
 
 class TerminalPunchLog(HorillaModel):
     """Raw punch-in records; unique (device, record_id) is the dedup key."""
+
+    objects = HorillaCompanyManager("device__company_id")
 
     device = models.ForeignKey(
         TerminalDevice, on_delete=models.CASCADE, related_name="punch_logs"
@@ -169,6 +177,8 @@ class TerminalPunchLog(HorillaModel):
 class TerminalSystemRecord(HorillaModel):
     """Door-sensor / system events from Record/UploadSystemRecord."""
 
+    objects = HorillaCompanyManager("device__company_id")
+
     device = models.ForeignKey(
         TerminalDevice, on_delete=models.CASCADE, related_name="system_records"
     )
@@ -187,6 +197,8 @@ class TerminalSystemRecord(HorillaModel):
 
 class TerminalSnapshot(HorillaModel):
     """Camera snapshot uploaded via Device/UploadSnapshoot."""
+
+    objects = HorillaCompanyManager("device__company_id")
 
     device = models.ForeignKey(
         TerminalDevice, on_delete=models.CASCADE, related_name="snapshots"

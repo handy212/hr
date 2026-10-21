@@ -9,6 +9,8 @@ import os
 from datetime import datetime
 from uuid import uuid4
 
+from saas.public_access import public_recruitment_scope
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core import serializers
@@ -154,6 +156,7 @@ def question_order_update(request):
     return JsonResponse({"error": "Invalid request method"}, status=405)
 
 
+@public_recruitment_scope
 def candidate_survey(request):
     """
     Used to render survey form to the candidate
@@ -174,7 +177,8 @@ def candidate_survey(request):
     # recruitment's own company and would raise DoesNotExist for a valid
     # recruitment. Use the unscoped manager, same as open_recruitments/
     # recruitment_details/application_form.
-    recruitment = Recruitment.default.get(id=rec_id)
+    from saas.access import blocked_company_ids
+    recruitment = Recruitment.default.exclude(company_id__in=blocked_company_ids()).get(id=rec_id)
     stage_id = candidate_dict[0]["fields"]["stage_id"]
     created_by = candidate_dict[0]["fields"].get("created_by")
     modified_by = candidate_dict[0]["fields"].get("modified_by")
@@ -539,6 +543,7 @@ def delete_survey_question(request, survey_id):
     return redirect("recruitment-survey-question-template-view")
 
 
+@public_recruitment_scope
 def application_form(request):
     """
     This method renders candidate form to create candidate
@@ -568,9 +573,10 @@ def application_form(request):
         # company", which has no relation to a public visitor's session --
         # scoping here would 404 valid recruitments from any company other
         # than whichever one happens to be selected.
+        from saas.access import blocked_company_ids
         recruitment = Recruitment.default.filter(
             id=recruitment_id, is_published=True
-        ).first()  # Only create applications for published recruitments.
+        ).exclude(company_id__in=blocked_company_ids()).first()  # Only create applications for published recruitments.
         if not recruitment:
             messages.error(request, _("Recruitment not found"))
             return redirect("open-recruitments")

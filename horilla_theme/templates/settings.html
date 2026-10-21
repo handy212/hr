@@ -104,6 +104,7 @@
                                             <li class="py-1" id="{{ item.label|slugify }}">
                                                 <a
                                                     href="{{ item.url }}"
+                                                    {% if item.full_page %}hx-boost="false"{% endif %}
                                                     class="hover:text-primary-600 transition duration-300 text-[13px]"
                                                 >{{ item.label }}</a>
                                             </li>

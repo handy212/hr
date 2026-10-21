@@ -817,6 +817,8 @@ class EmployeeTag(HorillaModel):
     """
     EmployeeTag Model
     """
+    objects = HorillaCompanyManager("saas_owners__company_id")
+
 
     title = models.CharField(max_length=50, null=True, verbose_name=_("Title"))
     color = models.CharField(max_length=30, null=True)
@@ -1275,6 +1277,8 @@ class Actiontype(HorillaModel):
     """
     Action type model
     """
+    objects = HorillaCompanyManager("saas_owners__company_id")
+
 
     choice_actions = [
         ("warning", _("Warning")),

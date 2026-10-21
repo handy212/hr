@@ -17,6 +17,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from base.horilla_company_manager import HorillaCompanyManager
+from saas.managers import MultiParentCompanyManager
 from horilla import horilla_middlewares
 from horilla.horilla_middlewares import _thread_locals
 from horilla.methods import get_horilla_model_class
@@ -1442,7 +1443,7 @@ class RosterPublishLog(models.Model):
 
 class BaserequestFile(models.Model):
     file = models.FileField(upload_to=upload_path)
-    objects = models.Manager()
+    objects = MultiParentCompanyManager('worktyperequestcomment__request_id__employee_id__employee_work_info__company_id', 'shiftrequestcomment__request_id__employee_id__employee_work_info__company_id')
 
 
 class WorkTypeRequest(HorillaModel):
@@ -2142,6 +2143,9 @@ class DynamicEmailConfiguration(HorillaModel):
                     "so only set one of those settings to True."
                 )
             )
+        from saas.mail import validate_mail_ownership
+
+        validate_mail_ownership(self)
         if not self.company_id and not self.is_primary:
             raise ValidationError({"company_id": _("This field is required")})
 
@@ -2149,14 +2153,16 @@ class DynamicEmailConfiguration(HorillaModel):
         return self.username
 
     def save(self, *args, **kwargs) -> None:
+        from saas.mail import validate_mail_ownership
+        validate_mail_ownership(self)
+        if not self.company_id_id and not DynamicEmailConfiguration.objects.unscoped().filter(company_id__isnull=True).exists():
+            self.is_primary = True
         # "Primary" is a global flag, so the bookkeeping must see all rows
         # regardless of company context (strict mode included).
         if self.is_primary:
             DynamicEmailConfiguration.objects.unscoped().filter(
                 is_primary=True
             ).update(is_primary=False)
-        if not DynamicEmailConfiguration.objects.unscoped().exists():
-            self.is_primary = True
 
         super().save(*args, **kwargs)
         servers_same_company = DynamicEmailConfiguration.objects.filter(

@@ -1,0 +1,12 @@
+{% extends 'saas/tenants/layout.html' %}{% load i18n %}
+{% block tenant_content %}
+<section class="tenant-console" aria-labelledby="tenant-detail-heading">
+  <div class="tenant-header"><div><h1 id="tenant-detail-heading">{{ tenant.company.company }}</h1><p class="text-muted">{{ tenant.slug }}</p></div><div class="tenant-actions"><form method="post" action="{% url 'tenant-impersonate' tenant.pk %}" hx-boost="false" style="display:inline">{% csrf_token %}<button type="submit" class="oh-btn">{% trans "Impersonate admin" %}</button></form><a class="oh-btn" href="{% url 'tenant-list' %}">{% trans "Back to tenants" %}</a><a class="oh-btn oh-btn--secondary" href="{% url 'tenant-edit' tenant.pk %}">{% trans "Edit tenant" %}</a><a class="oh-btn tenant-delete-link" href="{% url 'tenant-delete' tenant.pk %}">{% trans "Delete tenant" %}</a></div></div>
+  <div class="tenant-card"><dl class="tenant-details">
+    <div><dt>{% trans "Status" %}</dt><dd><span class="tenant-status tenant-status--{{ tenant.status }}">{{ tenant.get_status_display }}</span></dd></div>
+    <div><dt>{% trans "Administrator login" %}</dt><dd>{{ tenant.primary_admin.email|default:_('Not assigned') }}</dd></div>
+    <div><dt>{% trans "Address" %}</dt><dd>{{ tenant.company.address }}<br>{{ tenant.company.city }}, {{ tenant.company.state }} {{ tenant.company.zip }}<br>{{ tenant.company.country }}</dd></div>
+    <div><dt>{% trans "Created" %}</dt><dd>{{ tenant.created_at|date:"Y-m-d" }}</dd></div>
+  </dl></div>
+</section>
+{% endblock %}

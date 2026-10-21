@@ -24,6 +24,7 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required as django_login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.views import PasswordResetConfirmView, PasswordResetView
@@ -830,13 +831,13 @@ def login_user(request):
             return redirect("login")
 
         employee = getattr(user, "employee_get", None)
-        if employee is None:
+        if employee is None and not user.is_superuser:
             messages.error(
                 request,
                 _("An employee related to this user's credentials does not exist."),
             )
             return redirect("login")
-        if not employee.is_active:
+        if not user.is_superuser and not employee.is_active:
             messages.warning(
                 request,
                 _(
@@ -848,6 +849,9 @@ def login_user(request):
         login(request, user)
 
         messages.success(request, _("Login successful."))
+
+        if user.is_superuser:
+            return redirect("tenant-list")
 
         # Ensure `next_url` is a safe local URL
         if not url_has_allowed_host_and_scheme(
@@ -1063,7 +1067,8 @@ def two_factor_auth(request):
     """
     function to handle two-factor authentication for users.
     """
-    # request.session["otp_code"] = None
+    otp_template = "saas/tenants/two_factor.html" if request.user.is_authenticated and request.user.is_superuser else "base/auth/two_factor_auth.html"
+    otp_engine = "platform" if request.user.is_authenticated and request.user.is_superuser else None
     try:
         otp = get_otp(request)
     except Exception:
@@ -1082,7 +1087,7 @@ def two_factor_auth(request):
             return redirect("/")
         elif otp is None:
             messages.error(request, _("OTP expired. Please request a new one."))
-            return render(request, "base/auth/two_factor_auth.html")
+            return render(request, otp_template, using=otp_engine)
         else:
             # A six-digit code with a ten-minute life is guessable at network
             # speed; a handful of misses burns the code and forces a resend.
@@ -1098,14 +1103,14 @@ def two_factor_auth(request):
                 )
             else:
                 messages.error(request, _("Invalid OTP."))
-            return render(request, "base/auth/two_factor_auth.html")
+            return render(request, otp_template, using=otp_engine)
 
     if not settings.TWO_FACTORS_AUTHENTICATION:
         return redirect("/")
 
     if otp is None:
         send_otp(request)
-    return render(request, "base/auth/two_factor_auth.html")
+    return render(request, otp_template, using=otp_engine)
 
 
 def send_otp(request):
@@ -1114,10 +1119,10 @@ def send_otp(request):
     It generates a new OTP code, stores it in the session, and sends it via email.
     """
     employee = getattr(getattr(request, "user", None), "employee_get", None)
-    if not employee:
+    if not employee and not (request.user.is_authenticated and request.user.is_superuser):
         return redirect("/login/")
 
-    email = employee.get_mail()
+    email = employee.get_mail() if employee else request.user.email
     email_backend = ConfiguredEmailBackend()
     display_email_name = email_backend.dynamic_from_email_with_display_name
 
@@ -1203,11 +1208,14 @@ class Workinfo:
         pass
 
 
-@login_required
+@django_login_required
 def home(request):
     """
     Role-aware home: employees → ESS; managers/HR/leadership → analytics dashboard.
     """
+    if request.user.is_superuser:
+        return redirect("tenant-list")
+
     from base.dashboard_roles import can_see_analytics_home, resolve_home_role
 
     if can_see_analytics_home(resolve_home_role(request)):
@@ -2194,6 +2202,9 @@ def replace_primary_mail(request):
         messages.error(request, _("Mail server configuration not found"))
         return redirect("mail-server-conf")
 
+    if email_config.company_id_id:
+        messages.error(request, _("A company mail server cannot become the platform mail server."))
+        return redirect("mail-server-conf")
     email_config.is_primary = True
     email_config.save()
     messages.success(request, _("Primary Mail server configuration replaced"))

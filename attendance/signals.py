@@ -187,9 +187,14 @@ def create_attendance_setting(sender, instance, created, raw, **kwargs):
     whenever a new Company is created. This does NOT skip creation during
     loaddata, so the object will also be created when fixture data is loaded.
     """
-    AttendanceGeneralSetting.objects.get_or_create(company_id=None)
+    # Seeding must see existing defaults even before a company context exists.
+    # Older strict-mode seeders could create duplicate NULL-company rows.
+    # Preserve existing settings rather than making provisioning depend on
+    # choosing or deleting one of those configurations.
+    if not AttendanceGeneralSetting.objects.unscoped().filter(company_id=None).exists():
+        AttendanceGeneralSetting.objects.unscoped().create(company_id=None)
     if created:
-        AttendanceGeneralSetting.objects.get_or_create(company_id=instance)
+        AttendanceGeneralSetting.objects.unscoped().get_or_create(company_id=instance)
 
 
 # @receiver(post_migrate)

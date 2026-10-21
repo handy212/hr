@@ -133,18 +133,24 @@ def make_attendance(
         return f"{hours:02d}:{minutes:02d}"
 
     worked_seconds = _to_seconds(minimum_hour) + max(0, int(overtime_second))
-    return Attendance.objects.create(
-        employee_id=employee,
-        attendance_date=attendance_date,
-        attendance_clock_in_date=attendance_date,
-        attendance_clock_in=clock_in,
-        attendance_clock_out_date=attendance_date,
-        attendance_clock_out=clock_out,
-        attendance_worked_hour=_to_hhmm(worked_seconds),
-        minimum_hour=minimum_hour,
-        attendance_overtime_approve=bool(overtime_second),
-        attendance_validated=validated,
-    )
+    from horilla.horilla_middlewares import current_company_id
+    token = current_company_id.set(employee.employee_work_info.company_id_id)
+    try:
+        return Attendance.objects.create(
+            employee_id=employee,
+            attendance_date=attendance_date,
+            attendance_clock_in_date=attendance_date,
+            attendance_clock_in=clock_in,
+            attendance_clock_out_date=attendance_date,
+            attendance_clock_out=clock_out,
+            attendance_worked_hour=_to_hhmm(worked_seconds),
+            minimum_hour=minimum_hour,
+            attendance_overtime_approve=bool(overtime_second),
+            attendance_validated=validated,
+        )
+    finally:
+        current_company_id.reset(token)
+
 
 
 def make_leave_type(name: str = "Annual", total_days: float = 20):
@@ -287,7 +293,7 @@ def make_stage(*, recruitment, stage: str = "Initial", stage_type: str = "initia
     """
     from recruitment.models import Stage
 
-    obj, _created = Stage.objects.get_or_create(
+    obj, _created = Stage.objects.unscoped().get_or_create(
         recruitment_id=recruitment,
         stage=stage,
         defaults={"stage_type": stage_type},
@@ -299,7 +305,7 @@ def get_hired_stage(*, recruitment):
     """The hired stage the Recruitment signal creates, if present."""
     from recruitment.models import Stage
 
-    return Stage.objects.filter(recruitment_id=recruitment, stage_type="hired").first()
+    return Stage.objects.unscoped().filter(recruitment_id=recruitment, stage_type="hired").first()
 
 
 def make_candidate(
@@ -312,13 +318,19 @@ def make_candidate(
 ):
     from recruitment.models import Candidate
 
-    return Candidate.objects.create(
-        name=name,
-        email=email,
-        recruitment_id=recruitment,
-        stage_id=stage,
-        hired=hired,
-    )
+    from horilla.horilla_middlewares import current_company_id
+    token = current_company_id.set(recruitment.company_id_id)
+    try:
+        return Candidate.objects.create(
+            name=name,
+            email=email,
+            recruitment_id=recruitment,
+            stage_id=stage,
+            hired=hired,
+        )
+    finally:
+        current_company_id.reset(token)
+
 
 
 def make_resignation(

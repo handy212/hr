@@ -21,6 +21,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from base.horilla_company_manager import HorillaCompanyManager
+from saas.managers import MultiParentCompanyManager
 from base.methods import get_next_month_same_date
 from base.models import (
     Company,
@@ -853,6 +854,8 @@ class MultipleCondition(models.Model):
     """
     MultipleCondition Model
     """
+    objects = MultiParentCompanyManager('allowance__company_id', 'deduction__company_id')
+
 
     field = models.CharField(
         max_length=255,
@@ -2850,7 +2853,7 @@ class EncashmentGeneralSettings(models.Model):
         related_name="encashment_settings_filtered_employees",
         editable=False,
     )
-    objects = models.Manager()
+    objects = HorillaCompanyManager("saas_owners__company_id")
 
 
 DAYS = [

@@ -19,6 +19,7 @@ from django.apps import apps
 from django.test import TestCase
 
 from horilla.testkit.company import clear_selected_company
+from horilla.horilla_middlewares import set_selected_company
 from horilla.testkit.factories import (
     get_hired_stage,
     make_attendance,
@@ -185,7 +186,8 @@ class StandardReportExecutionTests(TestCase):
     def setUp(self):
         # Reports read the selected company from a ContextVar; leaving one set
         # would silently scope (or unscope) every assertion below.
-        clear_selected_company()
+        set_selected_company(self.company.pk if hasattr(self, "company") else None)
+        self.addCleanup(clear_selected_company)
 
     # -- helpers ---------------------------------------------------------
 
@@ -391,7 +393,8 @@ class ReportNumericAgreementTests(TestCase):
         cls.terminated.save(update_fields=["is_active"])
 
     def setUp(self):
-        clear_selected_company()
+        set_selected_company(self.company.pk if hasattr(self, "company") else None)
+        self.addCleanup(clear_selected_company)
 
     def _filters(self, employment_status="active"):
         from report.engine import ReportFilters, resolve_period_preset
@@ -475,7 +478,8 @@ class ReportQueryBudgetTests(TestCase):
         ]
 
     def setUp(self):
-        clear_selected_company()
+        set_selected_company(self.company.pk if hasattr(self, "company") else None)
+        self.addCleanup(clear_selected_company)
 
     def test_no_report_exceeds_its_query_budget(self):
         from django.db import connection
@@ -524,18 +528,24 @@ class SubscriptionClaimTests(TestCase):
         cls.owner = make_user("claim-owner", is_superuser=True)
 
     def setUp(self):
-        clear_selected_company()
+        set_selected_company(self.company.pk if hasattr(self, "company") else None)
+        self.addCleanup(clear_selected_company)
 
     def _mail_configured(self):
         """Delivery bails at mail_unconfigured before reaching the claim when
         no SMTP sender is set, which is the case in tests."""
         from unittest.mock import patch
 
-        return patch(
+        from contextlib import ExitStack
+        stack = ExitStack()
+        stack.enter_context(patch(
             "report.delivery.ConfiguredEmailBackend.dynamic_from_email_with_display_name",
             new_callable=lambda: property(lambda self: "reports@test.horilla"),
             create=True,
-        )
+        ))
+        stack.enter_context(patch("report.delivery.EmailMessage.send", return_value=1))
+        return stack
+
 
     def _subscription(self, recipients_employees=None, **overrides):
         from report.models import ReportSubscription
@@ -826,7 +836,8 @@ class PeriodNoteDisclosureTests(TestCase):
         make_employee(company=cls.company, email="note@test.horilla", first_name="Note")
 
     def setUp(self):
-        clear_selected_company()
+        set_selected_company(self.company.pk if hasattr(self, "company") else None)
+        self.addCleanup(clear_selected_company)
 
     def test_turnover_declares_its_own_window(self):
         from report.engine import ReportFilters, resolve_period_preset
@@ -910,7 +921,8 @@ class AuditActivityScopingTests(TestCase):
         )
 
     def setUp(self):
-        clear_selected_company()
+        set_selected_company(self.company.pk if hasattr(self, "company") else None)
+        self.addCleanup(clear_selected_company)
 
     def _entries(self):
         """One log entry per company, attributed to that company's user."""
@@ -1097,7 +1109,8 @@ class CohortActiveFilterTests(TestCase):
         cls.early_leaver.save(update_fields=["is_active"])
 
     def setUp(self):
-        clear_selected_company()
+        set_selected_company(self.company.pk if hasattr(self, "company") else None)
+        self.addCleanup(clear_selected_company)
 
     def _filters(self):
         from report.engine import ReportFilters, resolve_period_preset

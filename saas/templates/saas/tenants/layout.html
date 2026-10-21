@@ -1,0 +1,22 @@
+{% load i18n static %}{% get_current_language as LANGUAGE_CODE %}
+<!doctype html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% trans "Tenants" %} · HRDeck Platform</title>
+  <link rel="stylesheet" href="{% static 'cdn/googleapi/css/inter-font-style.css' %}">
+  <link rel="stylesheet" href="{% static 'saas/tenant_console.css' %}">
+</head>
+<body class="platform-shell">
+  <a class="platform-skip" href="#platform-main">{% trans "Skip to content" %}</a>
+  <header class="platform-header">
+    <a class="platform-brand" href="{% url 'tenant-list' %}"><span class="platform-mark" aria-hidden="true">H</span><span>HRDeck <small>{% trans "Platform" %}</small></span></a>
+    <nav aria-label="{% trans 'Platform navigation' %}"><a class="platform-nav-link" href="{% url 'tenant-list' %}" aria-current="page">{% trans "Tenants" %}</a></nav>
+    <div class="platform-account"><span>{{ user.get_full_name|default:user.username }}</span><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">{% trans "Sign out" %}</button></form></div>
+  </header>
+  <main class="platform-main" id="platform-main">
+    {% for message in messages %}<div class="platform-message" role="status">{{ message }}</div>{% endfor %}
+    {% block tenant_content %}{% endblock %}
+  </main>
+</body>
+</html>

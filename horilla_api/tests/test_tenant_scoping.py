@@ -12,7 +12,7 @@ scoping is applied, so each assertion below also checks that the *other*
 company's rows are absent, and does so symmetrically.
 """
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
 from horilla.horilla_middlewares import get_selected_company, set_selected_company
@@ -25,6 +25,10 @@ LOGIN_URL = "/api/v1/auth/login/"
 EMPLOYEE_LIST_URL = "/api/v1/employee/list/employees/"
 
 
+@override_settings(
+    COMPANY_SCOPING_STRICT=True,
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}},
+)
 class ApiTenantScopingTests(TestCase):
     """Two companies, two users; each must see only its own."""
 
@@ -82,6 +86,12 @@ class ApiTenantScopingTests(TestCase):
 
         self.assertEqual(resolve_company_id(self.user_a), self.company_a.id)
         self.assertEqual(resolve_company_id(self.user_b), self.company_b.id)
+
+    def test_resolver_uses_authenticated_user_despite_existing_company_context(self):
+        from horilla_api.authentication import resolve_company_id
+
+        set_selected_company(self.company_b.pk)
+        self.assertEqual(resolve_company_id(self.user_a), self.company_a.pk)
 
     def test_resolver_returns_none_for_anonymous(self):
         from django.contrib.auth.models import AnonymousUser

@@ -15,6 +15,7 @@ from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
 
 from base.horilla_company_manager import HorillaCompanyManager
+from saas.managers import MultiParentCompanyManager
 from base.models import Company
 from employee.models import Employee
 from horilla.models import HorillaModel, upload_path
@@ -493,6 +494,8 @@ class ReturnImages(HorillaModel):
     Attributes:
     - image: A FileField for uploading the image file (optional).
     """
+    objects = MultiParentCompanyManager('return_images__assigned_to_employee_id__employee_work_info__company_id', 'assign_images__assigned_to_employee_id__employee_work_info__company_id')
+
 
     image = models.FileField(upload_to=upload_path, blank=True, null=True)
 

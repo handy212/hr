@@ -541,6 +541,12 @@ class SubscriptionFormTests(TestCase):
             company=cls.company, email="c@d.com", first_name="B"
         )
 
+    def setUp(self):
+        from horilla.horilla_middlewares import set_selected_company
+        from horilla.testkit.company import clear_selected_company
+        set_selected_company(self.company.pk)
+        self.addCleanup(clear_selected_company)
+
     def _data(self, employee_ids):
         return MultiValueDict(
             {

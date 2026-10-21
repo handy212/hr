@@ -44,6 +44,7 @@ SITE_ID = 1
 THEME_APP = "horilla_theme"
 
 INSTALLED_APPS = [
+    "saas.apps.SaasConfig",
     # Default Django apps
     "django.contrib.admin",
     "django.contrib.auth",
@@ -209,7 +210,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # Horilla-specific middlewares
+    "saas.impersonation.TenantImpersonationMiddleware",
     "base.middleware.CompanyMiddleware",
+    "saas.access.TenantAccessMiddleware",
     "base.middleware.ForcePasswordChangeMiddleware",
     "base.middleware.TwoFactorAuthMiddleware",
     "accessibility.middlewares.AccessibilityMiddleware",
@@ -367,6 +370,10 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "horilla.wsgi.application"
+
+from saas.config import platform_template_engine
+
+TEMPLATES.append(platform_template_engine(BASE_DIR))
 
 # ========================================
 # INTERNATIONALIZATION

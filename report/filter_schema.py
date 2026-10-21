@@ -270,7 +270,9 @@ def build_filter_options(definition: ReportDefinition) -> dict[str, list]:
     """Load dropdown option lists only for filters this report uses."""
     from django.core.cache import cache
 
-    cache_key = f"report:filter_options:{definition.slug}"
+    from saas.scope import effective_company_ids, scoped_cache_key
+
+    cache_key = scoped_cache_key("report:filter_options", definition.slug)
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
@@ -327,7 +329,11 @@ def build_filter_options(definition: ReportDefinition) -> dict[str, list]:
         options["shifts"] = _safe_values("base.EmployeeShift", ("id", "employee_shift"))
 
     if "companies" in needed:
-        options["companies"] = _safe_values("base.Company", ("id", "company"))
+        Company = apps.get_model("base", "Company")
+        options["companies"] = list(
+            Company.objects.filter(pk__in=effective_company_ids())
+            .order_by("pk").values("id", "company")[:300]
+        )
 
     if "locations" in needed and apps.is_installed("employee"):
         options["locations"] = _employee_locations()

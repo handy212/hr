@@ -6,7 +6,7 @@ from django.urls import reverse
 from base.models import Company
 from horilla.testkit import make_employee
 from horilla_auth.models import HorillaUser
-from offboarding.models import Offboarding, OffboardingEmployee
+from offboarding.models import Offboarding, OffboardingEmployee, OffboardingStage
 from recruitment.models import Recruitment
 
 
@@ -69,7 +69,9 @@ class SaaSViewIsolationTests(TestCase):
         process = Offboarding.objects.unscoped().create(
             title="Other exit", description="Other tenant", company_id=self.other_company
         )
-        archived = process.offboardingstage_set.get(type="archived")
+        archived = OffboardingStage.objects.unscoped().get(
+            offboarding_id=process, type="archived"
+        )
         OffboardingEmployee.objects.unscoped().create(
             employee_id=self.other_employee, stage_id=archived
         )

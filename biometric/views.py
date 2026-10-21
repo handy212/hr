@@ -1,3 +1,4 @@
+from saas.device_access import tenant_biometric_scheduler
 """
 Module for managing biometric devices and employee attendance.
 
@@ -2280,6 +2281,7 @@ def zk_biometric_attendance_logs(device_or_devices):
     return len(combined_attendances), "; ".join(errors) if errors else None
 
 
+@tenant_biometric_scheduler
 def zk_biometric_attendance_scheduler(device_id):
     """
     Scheduler function used for attendance logs
@@ -2394,6 +2396,7 @@ def anviz_biometric_attendance_logs(device):
     return processed_count
 
 
+@tenant_biometric_scheduler
 def anviz_biometric_attendance_scheduler(device_id):
     """
     Schedules the attendance log retrieval for an Anviz biometric device.
@@ -2469,6 +2472,7 @@ def cosec_biometric_attendance_logs(device):
     return len(attendances)
 
 
+@tenant_biometric_scheduler
 def cosec_biometric_attendance_scheduler(device_id):
     """
     Retrieve and process attendance events from a COSEC biometric device.
@@ -2557,6 +2561,7 @@ def dahua_biometric_attendance_logs(device):
         return "error"
 
 
+@tenant_biometric_scheduler
 def dahua_biometric_attendance_scheduler(device_id):
     """
     Schedules the attendance log retrieval for a Dahua biometric device.
@@ -2636,6 +2641,7 @@ def etimeoffice_biometric_attendance_logs(device):
     return len(punch_data)
 
 
+@tenant_biometric_scheduler
 def etimeoffice_biometric_attendance_scheduler(device_id):
     """
     Schedules the attendance log retrieval for an eTimeOffice biometric device.

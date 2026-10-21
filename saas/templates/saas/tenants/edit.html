@@ -1,0 +1,10 @@
+{% extends 'saas/tenants/layout.html' %}{% load i18n %}
+{% block tenant_content %}
+<section class="tenant-console tenant-form-panel" aria-labelledby="edit-tenant-heading">
+  <a href="{% url 'tenant-detail' tenant.pk %}">{% trans "Back to tenant" %}</a>
+  <h1 id="edit-tenant-heading">{% trans "Edit tenant" %}</h1><p class="text-muted">{{ tenant.company.company }}</p>
+  <form method="post">{% csrf_token %}{% include 'saas/tenants/_form_fields.html' %}
+  <div class="tenant-actions"><button class="oh-btn oh-btn--secondary" type="submit">{% trans "Save changes" %}</button><a class="oh-btn" href="{% url 'tenant-detail' tenant.pk %}">{% trans "Cancel" %}</a></div>
+  </form>
+</section>
+{% endblock %}

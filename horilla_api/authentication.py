@@ -69,7 +69,9 @@ def resolve_company_id(user):
         from employee.models import EmployeeWorkInformation
 
         return (
-            EmployeeWorkInformation.objects.filter(
+            # Authentication establishes company scope, so this lookup cannot
+            # depend on it. The authenticated user's ID bounds the bypass.
+            EmployeeWorkInformation.objects.unscoped().filter(
                 employee_id__employee_user_id=user.pk
             )
             .values_list("company_id", flat=True)
@@ -106,6 +108,10 @@ class TenantScopedJWTAuthentication(JWTAuthentication):
         user, validated_token = result
         company_id = resolve_company_id(user)
         if company_id is not None:
+            from saas.access import scope_is_suspended
+
+            if scope_is_suspended([company_id]):
+                raise PermissionDenied(_("This tenant is suspended. Contact your platform administrator."))
             set_selected_company(company_id)
         elif not user.is_superuser:
             # None means "cannot place this user", never "no restriction".

@@ -1,0 +1,39 @@
+{% extends 'saas/tenants/layout.html' %}
+{% load i18n static %}
+{% block tenant_content %}
+<section class="oh-inner-sidebar-content tenant-console" aria-labelledby="tenant-heading">
+  <div class="tenant-header">
+    <div><h1 id="tenant-heading" class="h4">{% trans "Tenants" %}</h1><p class="text-muted mb-0">{% trans "Manage company accounts and access across the platform." %}</p></div>
+    <div class="tenant-actions"><a href="{% url 'tenant-create' %}" class="oh-btn oh-btn--secondary" hx-boost="false">{% trans "Create tenant" %}</a></div>
+  </div>
+  <dl class="tenant-metrics">
+    <div><dt>{% trans "Total" %}</dt><dd class="h4">{{ total }}</dd></div>
+    <div><dt>{% trans "Trial" %}</dt><dd class="h4">{{ trial_count }}</dd></div>
+    <div><dt>{% trans "Active" %}</dt><dd class="h4">{{ active_count }}</dd></div>
+    <div><dt>{% trans "Suspended" %}</dt><dd class="h4">{{ suspended_count }}</dd></div>
+  </dl>
+  <form method="get" class="tenant-filters" hx-boost="false">
+    <div><label for="tenant-search">{% trans "Search tenants" %}</label><input id="tenant-search" name="q" value="{{ query }}" class="oh-input" placeholder="{% trans 'Company or slug' %}"></div>
+    <div><label for="tenant-status-filter">{% trans "Status" %}</label><select id="tenant-status-filter" name="status" class="oh-select"><option value="">{% trans "All statuses" %}</option>{% for value,label in statuses %}<option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <button type="submit" class="oh-btn oh-btn--light align-self-end">{% trans "Filter" %}</button>
+  </form>
+  <div class="tenant-table" role="region" aria-label="{% trans 'Tenant accounts' %}" tabindex="0">
+    <table class="table">
+      <caption class="text-muted">{% trans "Tenant account directory" %}</caption>
+      <thead><tr><th scope="col">{% trans "Company" %}</th><th scope="col">{% trans "Admin login" %}</th><th scope="col">{% trans "Employees" %}</th><th scope="col">{% trans "Created" %}</th><th scope="col">{% trans "Status" %}</th><th scope="col">{% trans "Actions" %}</th></tr></thead>
+      <tbody>
+      {% for tenant in page_obj %}
+        <tr>
+          <th scope="row"><a href="{% url 'tenant-detail' tenant.pk %}">{{ tenant.company.company }}</a><div class="text-muted fw-normal">{{ tenant.slug }}</div></th>
+          <td>{{ tenant.primary_admin.email|default:_('Not assigned') }}</td><td>{{ tenant.employee_count }}</td><td>{{ tenant.created_at|date:"Y-m-d" }}</td>
+          <td><span class="tenant-status tenant-status--{{ tenant.status }}">{{ tenant.get_status_display }}</span></td>
+          <td><div class="tenant-row-actions"><form method="post" action="{% url 'tenant-impersonate' tenant.pk %}" hx-boost="false" style="display:inline">{% csrf_token %}<button type="submit" class="oh-btn">{% trans "Impersonate admin" %}</button></form><a href="{% url 'tenant-detail' tenant.pk %}">{% trans "View" %}</a><a href="{% url 'tenant-edit' tenant.pk %}">{% trans "Edit" %}</a><a class="tenant-delete-link" href="{% url 'tenant-delete' tenant.pk %}">{% trans "Delete" %}</a></div></td>
+        </tr>
+      {% empty %}<tr><td colspan="6">{% trans "No tenants found. Create a tenant or adjust your filters." %}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj.has_other_pages %}<nav aria-label="{% trans 'Tenant pagination' %}" class="tenant-pagination">{% if page_obj.has_previous %}<a hx-boost="false" href="?q={{ query|urlencode }}&amp;status={{ selected_status|urlencode }}&amp;page={{ page_obj.previous_page_number }}">{% trans "Previous" %}</a>{% endif %}<span>{% blocktrans with current=page_obj.number total=page_obj.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktrans %}</span>{% if page_obj.has_next %}<a hx-boost="false" href="?q={{ query|urlencode }}&amp;status={{ selected_status|urlencode }}&amp;page={{ page_obj.next_page_number }}">{% trans "Next" %}</a>{% endif %}</nav>{% endif %}
+  <p class="tenant-note">{% trans "Suspension blocks authenticated web and API access. Background jobs, device integrations and public pages are managed separately." %}</p>
+</section>
+{% endblock %}

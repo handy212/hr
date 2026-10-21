@@ -1,0 +1,14 @@
+{% extends 'saas/tenants/layout.html' %}{% load i18n %}
+{% block tenant_content %}
+<section class="tenant-console tenant-form-panel" aria-labelledby="delete-tenant-heading">
+  <a href="{% url 'tenant-detail' tenant.pk %}">{% trans "Back to tenant" %}</a>
+  <h1 id="delete-tenant-heading">{% trans "Delete tenant" %}</h1><p>{{ tenant.company.company }}</p>
+  <div class="tenant-alert"><strong>{% trans "This account will be removed from the tenant directory and its access will be blocked." %}</strong><p>{% trans "HR records will be retained. This action does not permanently erase company, employee or audit data." %}</p></div>
+  <form method="post">{% csrf_token %}
+    <label for="confirm-slug">{% blocktrans with slug=tenant.slug %}Type {{ slug }} to confirm{% endblocktrans %}</label>
+    <input id="confirm-slug" name="confirm_slug" autocomplete="off" required {% if confirmation_error %}aria-invalid="true" aria-describedby="confirmation-error"{% endif %}>
+    {% if confirmation_error %}<p id="confirmation-error" class="tenant-error" role="alert">{% trans "The slug does not match. Nothing has been deleted." %}</p>{% endif %}
+    <div class="tenant-actions" style="margin-top:1.5rem"><button class="oh-btn oh-btn--danger" type="submit">{% trans "Delete tenant" %}</button><a class="oh-btn" href="{% url 'tenant-detail' tenant.pk %}">{% trans "Cancel" %}</a></div>
+  </form>
+</section>
+{% endblock %}

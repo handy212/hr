@@ -15,6 +15,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext_noop
 
 from base.horilla_company_manager import HorillaCompanyManager
+from saas.managers import MultiParentCompanyManager
 from base.models import Company
 from employee.models import Employee
 from horilla import horilla_middlewares
@@ -89,6 +90,7 @@ class OffboardingStage(HorillaModel):
     offboarding_id = models.ForeignKey(Offboarding, on_delete=models.CASCADE)
     managers = models.ManyToManyField(Employee)
     sequence = models.IntegerField(default=0, editable=False)
+    objects = HorillaCompanyManager("offboarding_id__company_id")
 
     def __str__(self) -> str:
         return str(self.title)
@@ -144,6 +146,8 @@ class OffboardingStageMultipleFile(HorillaModel):
     """
     OffboardingStageMultipleFile
     """
+    objects = MultiParentCompanyManager('exitreason__offboarding_employee_id__employee_id__employee_work_info__company_id', 'offboardingnote__stage_id__offboarding_id__company_id')
+
 
     attachment = models.FileField(upload_to=upload_path)
 
@@ -585,6 +589,8 @@ class OffboardingTask(HorillaModel):
     """
     OffboardingTask model
     """
+    objects = HorillaCompanyManager("stage_id__offboarding_id__company_id")
+
 
     title = models.CharField(max_length=30)
     managers = models.ManyToManyField(Employee)
@@ -608,6 +614,8 @@ class EmployeeTask(HorillaModel):
     """
     EmployeeTask model
     """
+    objects = HorillaCompanyManager("employee_id__employee_id__employee_work_info__company_id")
+
 
     statuses = [
         ("todo", _("Todo")),
@@ -637,8 +645,11 @@ class EmployeeTask(HorillaModel):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         request = getattr(_thread_locals, "request", None)
+        if not self.employee_id or not self.employee_id.employee_id.employee_user_id_id:
+            return
+        actor = getattr(request.user, "employee_get", None) if request else None
         notify.send(
-            request.user.employee_get,
+            actor or self.task_id,
             recipient=self.employee_id.employee_id.employee_user_id,
             verb=gettext_noop('Offboarding task "%(title)s" has been assigned'),
             verb_params={"title": str(self.task_id.title)},
@@ -651,6 +662,8 @@ class ExitReason(HorillaModel):
     """
     ExitReason model
     """
+    objects = HorillaCompanyManager("offboarding_employee_id__employee_id__employee_work_info__company_id")
+
 
     title = models.CharField(max_length=50)
     description = models.TextField(max_length=255)
@@ -664,6 +677,8 @@ class OffboardingNote(HorillaModel):
     """
     OffboardingNote
     """
+    objects = HorillaCompanyManager("stage_id__offboarding_id__company_id")
+
 
     attachments = models.ManyToManyField(
         OffboardingStageMultipleFile, blank=True, editable=False

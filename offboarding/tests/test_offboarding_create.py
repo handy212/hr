@@ -3,12 +3,14 @@
 from django.test import TestCase
 
 from horilla.testkit import make_company
+from horilla.testkit.company import CompanyFilterTestMixin
 from offboarding.models import Offboarding, OffboardingGeneralSetting
 
 
-class OffboardingCreateTests(TestCase):
+class OffboardingCreateTests(CompanyFilterTestMixin, TestCase):
     def test_create_seeds_stages(self):
         company = make_company("Offboard Co")
+        self.set_company_context(company.pk)
         process = Offboarding.objects.create(
             title="Exit Wave",
             description="Unit smoke offboarding",

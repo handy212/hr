@@ -18,6 +18,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from base.horilla_company_manager import HorillaCompanyManager
+from saas.managers import MultiParentCompanyManager
 from base.models import (
     Company,
     CompanyLeaves,
@@ -2099,6 +2100,8 @@ class LeaveRequest(HorillaModel):
 
 
 class LeaverequestFile(models.Model):
+    objects = MultiParentCompanyManager('leaverequestcomment__request_id__employee_id__employee_work_info__company_id', 'leaveallocationrequestcomment__request_id__employee_id__employee_work_info__company_id', 'compensatoryleaverequestcomment__request_id__employee_id__employee_work_info__company_id')
+
     file = models.FileField(upload_to=upload_path)
 
 
