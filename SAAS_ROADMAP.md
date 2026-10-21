@@ -13,9 +13,16 @@ The first platform management slice is implemented. After applying `base.0017_te
 
 Suspension is enforced on authenticated session and JWT requests; platform recovery and company switching remain available. Background jobs, devices and public pages are outside this first suspension policy. Repeated provisioning also fixes strict-mode attendance-default seeding, preserving existing duplicate configurations rather than deleting them.
 
-Current coverage: **187 scoped / 60 potential gaps / 37 classified global**, across 284 models. `Tenant` is intentionally global control-plane metadata with explicit platform-only access. The Phase 1 isolation tasks below still block shared-customer launch. Domain routing, plans, billing, self-service signup and deletion remain pending.
+Current model-manager inventory (2026-10-21): **244 scoped / 0 unscoped / 42 classified global**, across 286 models. This manager-level count does not cover `.unscoped()`/`_base_manager`/raw-query bypasses or prove every global model is safe to expose. `Tenant` is intentionally global control-plane metadata with explicit platform-only access. The Phase 1 isolation tasks below still block shared-customer launch. Domain routing, plans, billing, self-service signup and deletion remain pending.
 
 See [TENANT_MANAGEMENT.md](TENANT_MANAGEMENT.md) for operation, migration and verification details, and [SPEC-tenants.md](SPEC-tenants.md) for the implemented acceptance contract. The configured application database has not been migrated during development.
+
+## SaaS review checkpoint — 2026-10-21
+
+- **Report-filter cache isolation is implemented.** `build_filter_options` uses an authorization-scoped cache key; regression tests cover selected-company scope, `all` scope with distinct assignments, and missing context. Company filter options are limited to the effective company scope.
+- **SMTP ownership is implemented.** Tenant-owned configurations cannot become globally primary. Mail resolution prefers the selected company's configuration and otherwise falls back only to a platform-owned configuration; tenant users cannot access the legacy SMTP management endpoints.
+- Verification: `saas.tests` passed **61 tests**, including `saas.tests.test_report_isolation` and `saas.tests.test_mail_ownership`. The fresh manager audit reports **244 scoped / 0 unscoped / 42 global / 286 total**.
+- These results do not satisfy Phase 1 exit criteria. Remaining work includes request-path bypasses, nullable/shared-row ownership, global history/notification access paths, broader cache namespacing, and media/template isolation.
 
 ## Review checkpoint — 2026-10-19
 
@@ -28,10 +35,10 @@ The conversion remains in Phases 0–1. Tenant provisioning, billing, and self-s
 
 ### Next isolation tasks, in priority order
 
-1. **Report filter cache (P1):** `report/filter_schema.py:build_filter_options` caches tenant-derived departments, roles, locations, and other options under `report:filter_options:<slug>`. The key omits company and allowed-company scope, so a second tenant can receive the first tenant's cached options for 60 seconds. Add two-company cache regression tests and namespace by effective authorization scope, including the `all` mode. Company options also need a visibility review because `Company` is intentionally global.
-2. **Platform versus tenant SMTP ownership (P1):** the mail-change permission still allows a tenant configuration to become the globally primary server, and scheduler fallback can then use it. Define platform ownership and tenant fallback behavior before exposing mail configuration to SaaS tenant admins.
-3. Continue the bypass audit and scope the remaining 60 potential gaps. Review nullable-company rows separately: the manager deliberately treats these as shared, which requires a model-specific ownership decision. Models classified global, especially notification/history and configuration tables, also require access-path review.
-4. After isolation acceptance criteria pass, start tenant provisioning and identity work in Phase 2.
+1. **Audit request-path bypasses.** Catalog `.unscoped()`/`.entire()`, `_base_manager`, raw SQL, and direct SQL access. For each runtime path, confirm ownership and add cross-company regression coverage, prioritizing APIs, exports, and reports.
+2. **Review nullable/shared rows and global models.** The manager deliberately treats some nullable-company rows as shared. Make model-specific ownership decisions and review access paths for notification, history, and configuration tables.
+3. **Complete the broader isolation work.** Audit cache keys beyond report filters, media paths, DB-template ownership, uniqueness constraints, and third-party history/notification behavior.
+4. After Phase 1 isolation acceptance criteria pass, continue the remaining Phase 2 identity and per-tenant configuration work.
 
 ### Validation
 
