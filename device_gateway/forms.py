@@ -20,6 +20,7 @@ class TerminalDeviceForm(ModelForm):
         fields = [
             "sn",
             "name",
+            "protocol",
             "company_id",
             "connect_password",
             "direction",

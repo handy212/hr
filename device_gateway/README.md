@@ -104,3 +104,46 @@ Apply the schema first: `python manage.py migrate device_gateway`.
   top-level `RecordType`: 1 = door sensor, 2 = system), snapshots and the roster.
 - **Reliability** – sent commands are acked after 60 s (registration commands wait for
   their result callback, 10 min timeout); unacknowledged people batches are retried.
+
+## Multiple protocols, one gateway
+
+Each device has a **Protocol** (set when registering it). All three share the
+same models, attendance mapping, command queue and UI; only the transport
+differs. Shared behaviour lives in `services.py`; each transport is a thin
+adapter in `transports/`.
+
+| Protocol | Who connects | Run |
+|---|---|---|
+| `http_v2` | Device polls Django (`/api/terminal/...`) | the web app |
+| `mqtt` | Device connects to a broker; this bridge subscribes | `manage.py run_mqtt_gateway` |
+| `ws_json` | Device connects to this server (ws://, port 7788) | `manage.py run_ws_gateway` |
+
+Register the device with its SN **and the matching protocol**; unknown SNs or
+a protocol mismatch are refused.
+
+### MQTT (face terminal, MQTT doc v1.0)
+
+    manage.py run_mqtt_gateway --host broker --port 1883 [--username u --password p --tls]
+
+Also configurable with `DEVICE_GATEWAY_MQTT_*` environment variables (HOST,
+PORT, USERNAME, PASSWORD, TLS, UPLOAD_TOPIC, PUBLISH_TOPIC, BYTE_ORDER). Point
+the terminal at the same broker (default topics `/iot_hub/upload/<SN>` and
+`/iot_hub/publish/<SN>`). The bridge uses the same record/person JSON as
+HTTP v2, so punches, rosters, parameters, door/restart/clear/re-upload
+commands and personnel push/delete work unchanged; photos are sent as the
+binary attachment segment. Snapshot, elevator, firmware/file push and remote
+registration have no MQTT equivalent and are marked unsupported. The document
+does not state the frame byte order: inbound frames are accepted in either
+order, outbound defaults to little endian (`--byte-order big` to change) —
+verify against a real unit.
+
+### WebSocket + JSON (cloud protocol v2.4)
+
+    manage.py run_ws_gateway [--host 0.0.0.0 --port 7788]
+
+Terminals send `reg`, then `sendlog` (punches → attendance, deduplicated on
+user+time since the protocol has no record id) and `senduser` (roster).
+Supported pushes: open door, reboot, factory reset (`initsys`), clear log,
+pull roster/logs, time sync, personnel add (name, card, photo) and delete.
+This protocol has no credentials and is plaintext; expose the port only to the
+device network.

@@ -168,6 +168,11 @@
                         </div>
 
                         <div class="col-12 col-sm-6 col-md-4 mb-3">
+                            <span class="terminal-field-label">{% trans "Protocol" %}</span>
+                            <span class="terminal-field-value">{{ device.get_protocol_display }}</span>
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-md-4 mb-3">
                             <span class="terminal-field-label">{% trans "Device Name" %}</span>
                             <span class="terminal-field-value">{{ device.name|default:"-" }}</span>
                         </div>
@@ -266,6 +271,12 @@
                 {% endif %}
             </div>
 
+            {% if device.protocol != 'http_v2' %}
+                <div class="oh-text--sm oh-text--light mb-3">
+                    <ion-icon name="information-circle-outline" class="me-1"></ion-icon>
+                    {% trans "This terminal connects over a push protocol. Door open, restart, factory reset, clear records, personnel upload/delete and record re-upload are supported; snapshot, elevator, firmware and file pushes, and remote registration are HTTP v2 only and are skipped." %}
+                </div>
+            {% endif %}
             {% if perms.device_gateway.change_terminaldevice %}
                 <div class="row g-3">
                     <div class="col-12 col-md-6 col-xl-3">

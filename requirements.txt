@@ -77,6 +77,10 @@ PyMuPDF>=1.28.2,<2
 reportlab==4.0.9
 xhtml2pdf==0.2.17
 
+# Device gateway transports (MQTT and WebSocket terminals)
+paho-mqtt==2.1.0
+websockets==17.3
+
 # Web scraping & HTML
 beautifulsoup4==4.15.0
 requests==2.34.2

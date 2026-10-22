@@ -19,9 +19,21 @@ class TerminalDevice(HorillaModel):
         ("system", _("System (use IsEntry flag)")),
     ]
 
+    PROTOCOL_CHOICES = [
+        ("http_v2", _("HTTP v2 (device polls the server)")),
+        ("mqtt", _("MQTT (device connects to a broker)")),
+        ("ws_json", _("WebSocket + JSON (device connects to the server)")),
+    ]
+
     objects = HorillaCompanyManager()
     all_objects = models.Manager()
 
+    protocol = models.CharField(
+        max_length=10,
+        choices=PROTOCOL_CHOICES,
+        default="http_v2",
+        verbose_name=_("Protocol"),
+    )
     sn = models.CharField(max_length=30, unique=True, verbose_name=_("Device SN"))
     name = models.CharField(max_length=100, blank=True, verbose_name=_("Name"))
     company_id = models.ForeignKey(

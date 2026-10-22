@@ -86,7 +86,9 @@
                                         <span class="oh-badge oh-badge--small oh-badge--round oh-badge--danger ms-2">{% trans "Inactive" %}</span>
                                     {% endif %}
                                 </div>
-                                <div class="oh-sticky-table__td">{{ device.sn }}</div>
+                                <div class="oh-sticky-table__td">{{ device.sn }}
+                                    <span class="oh-badge oh-badge--small oh-badge--round ms-1">{{ device.get_protocol_display|truncatechars:12 }}</span>
+                                </div>
                                 <div class="oh-sticky-table__td">
                                     {% if device.is_online %}
                                         <span class="oh-badge oh-badge--small oh-badge--round oh-badge--secondary">
