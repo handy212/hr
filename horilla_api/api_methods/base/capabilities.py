@@ -73,21 +73,50 @@ class _FakeRequest:
 
 
 def build_capabilities(user):
-    """Return the capability payload for ``user``."""
+    """Resolve login-time hints under the same bounded scope as JWT requests."""
+    from horilla_api.authentication import resolve_company_id
+    from horilla.horilla_middlewares import current_company_id
+
+    company_id = resolve_company_id(user)
+    token = current_company_id.set(str(company_id) if company_id else None)
+    try:
+        return _build_capabilities(user, company_id)
+    finally:
+        current_company_id.reset(token)
+
+
+def _build_capabilities(user, company_id):
     profile_edit = apps.get_model("employee", "ProfileEditFeature")
     edit_own_profile = profile_edit.objects.filter(is_enabled=True).exists()
 
+    from saas.features import APP_FEATURES, scope_has_features
+
+    features = {
+        label: apps.is_installed(label)
+        and (
+            label not in APP_FEATURES
+            or scope_has_features(
+                (APP_FEATURES[label],), company_ids=[company_id] if company_id else []
+            )
+        )
+        for label in OPTIONAL_APPS
+    }
+    if user.is_superuser:
+        features = {label: apps.is_installed(label) for label in OPTIONAL_APPS}
     return {
         "version": __version__,
         "role": _resolve_role(user),
         "permissions": {
-            "approve_leave": user.has_perm("leave.change_leaverequest"),
-            "approve_attendance": user.has_perm("attendance.change_attendance"),
+            "approve_leave": features["leave"]
+            and user.has_perm("leave.change_leaverequest"),
+            "approve_attendance": features["attendance"]
+            and user.has_perm("attendance.change_attendance"),
             "approve_shift_request": user.has_perm("base.change_shiftrequest"),
             "view_team": is_reportingmanager(_FakeRequest(user)),
             "edit_employee": user.has_perm("employee.change_employee"),
-            "view_payslip": user.has_perm("payroll.view_payslip"),
+            "view_payslip": features["payroll"]
+            and user.has_perm("payroll.view_payslip"),
             "edit_own_profile": edit_own_profile,
         },
-        "features": {label: apps.is_installed(label) for label in OPTIONAL_APPS},
+        "features": features,
     }

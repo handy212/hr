@@ -10,3 +10,5 @@ class SaasConfig(AppConfig):
         from saas import menu  # noqa: F401
         from saas.ownership import register_ownership_signals
         register_ownership_signals()
+        from saas.features import register_feature_defaults
+        register_feature_defaults()

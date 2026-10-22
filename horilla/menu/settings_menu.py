@@ -65,6 +65,9 @@ class SettingsRegistry(MenuRegistry):
         - bool      → used directly
         - absent    → True (visible by default)
         """
+        from saas.features import url_feature_allowed
+        if item.get('url') and not url_feature_allowed(request,item['url']):
+            return False
         accessibility = item.get("accessibility", True)
         if callable(accessibility):
             return bool(accessibility(request, item, PermWrapper(request.user)))

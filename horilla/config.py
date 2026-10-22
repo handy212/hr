@@ -37,6 +37,9 @@ def sidebar(request):
         MENUS = request.MENUS
 
         for app in base_dir_apps:
+            from saas.features import APP_FEATURES,request_feature_allowed
+            if not request_feature_allowed(request,APP_FEATURES.get(app)):
+                continue
             if apps.is_installed(app):
                 try:
                     sidebar = importlib.import_module(app + ".sidebar")
@@ -65,7 +68,9 @@ def sidebar(request):
                         MENU["submenu"] = []
                         MENUS.append(MENU)
                         for submenu in sidebar.SUBMENUS:
-
+                            from saas.features import url_feature_allowed
+                            if not url_feature_allowed(request,submenu['redirect']):
+                                continue
                             accessibility = None
 
                             if submenu.get("accessibility"):

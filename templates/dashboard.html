@@ -1,5 +1,5 @@
 ﻿{% extends "index.html" %}
-{% load static i18n %}
+{% load static i18n saas_features %}
 
 {% block content %}
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
@@ -1936,6 +1936,10 @@
             };
 
             // Permission flags — server-rendered; control chart click/drill-down behaviour
+            const FEATURE = {
+                attendance: {{ request|has_plan_feature:'attendance'|yesno:'true,false' }},
+                leave: {{ request|has_plan_feature:'leave'|yesno:'true,false' }}
+            };
             const PERM = {
                 employee:    {% if perms.employee.view_employee    or request.user.is_superuser %}true{% else %}false{% endif %},
                 attendance:  {% if perms.attendance.view_attendance or request.user.is_superuser %}true{% else %}false{% endif %},
@@ -2446,9 +2450,9 @@
                         const offlineSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>';
                         document.getElementById('md-kpi-grid').innerHTML =
                             kpiCard("{% url 'employee-view' %}?is_active=True&filter_applied=on",   PERM.employee,    'md-kpi-card__icon--indigo', empSvg,   '{% trans "Total Employees"|escapejs %}',   data.total_employees,   data.new_joiners > 0 ? '<span class="md-badge md-badge--green">+' + data.new_joiners + ' {% trans "This Month"|escapejs %}</span>' : '<span class="md-badge md-badge--blue">{% trans "No New Joiners"|escapejs %}</span>') +
-                            kpiCard("{% url 'employee-view' %}?present_on={% now 'Y-m-d' %}&is_active=True&filter_applied=on",  PERM.employee,    'md-kpi-card__icon--green',  attSvg,   '{% trans "Checked In Today"|escapejs %}',     data.present_today,     '<span class="md-badge ' + (data.attendance_rate >= 80 ? 'md-badge--green' : 'md-badge--amber') + '">' + data.attendance_rate + '% {% trans "Of Expected"|escapejs %}</span>', kpiBreakdown(data.present_by_work_type)) +
-                            kpiCard("{% url 'employee-view' %}?expected_to_check_in={% now 'Y-m-d' %}&is_active=True&filter_applied=on", PERM.employee, 'md-kpi-card__icon--red', offlineSvg, '{% trans "Absent"|escapejs %}', data.not_checked_in, data.not_checked_in > 0 ? '<span class="md-badge md-badge--amber">{% trans "Yet To Check In"|escapejs %}</span>' : '<span class="md-badge md-badge--green">{% trans "Everyone Checked In"|escapejs %}</span>') +
-                            kpiCard(`{% url 'request-view' %}?status=approved&today_leave=true&filter_applied=on`,     PERM.leave,       'md-kpi-card__icon--amber',  leaveSvg, '{% trans "On Leave"|escapejs %}',           data.on_leave,          (data.pending_leaves > 0 ? '<a href="{% url "request-view" %}?status=requested&filter_applied=on" class="md-badge md-badge--amber">' + data.pending_leaves + ' {% trans "Pending"|escapejs %}</a>' : '<span class="md-badge md-badge--green">{% trans "No Pending"|escapejs %}</span>') + (data.half_day_today > 0 ? ' <span class="md-badge md-badge--amber">' + data.half_day_today + ' {% trans "Half Day"|escapejs %}</span>' : '')) +
+                            (FEATURE.attendance ? kpiCard("{% url 'employee-view' %}?present_on={% now 'Y-m-d' %}&is_active=True&filter_applied=on",  PERM.employee,    'md-kpi-card__icon--green',  attSvg,   '{% trans "Checked In Today"|escapejs %}',     data.present_today,     '<span class="md-badge ' + (data.attendance_rate >= 80 ? 'md-badge--green' : 'md-badge--amber') + '">' + data.attendance_rate + '% {% trans "Of Expected"|escapejs %}</span>', kpiBreakdown(data.present_by_work_type)) : '') +
+                            (FEATURE.attendance ? kpiCard("{% url 'employee-view' %}?expected_to_check_in={% now 'Y-m-d' %}&is_active=True&filter_applied=on", PERM.employee, 'md-kpi-card__icon--red', offlineSvg, '{% trans "Absent"|escapejs %}', data.not_checked_in, data.not_checked_in > 0 ? '<span class="md-badge md-badge--amber">{% trans "Yet To Check In"|escapejs %}</span>' : '<span class="md-badge md-badge--green">{% trans "Everyone Checked In"|escapejs %}</span>') : '') +
+                            (FEATURE.leave ? kpiCard(`{% url 'request-view' %}?status=approved&today_leave=true&filter_applied=on`,     PERM.leave,       'md-kpi-card__icon--amber',  leaveSvg, '{% trans "On Leave"|escapejs %}',           data.on_leave,          (data.pending_leaves > 0 ? '<a href="{% url "request-view" %}?status=requested&filter_applied=on" class="md-badge md-badge--amber">' + data.pending_leaves + ' {% trans "Pending"|escapejs %}</a>' : '<span class="md-badge md-badge--green">{% trans "No Pending"|escapejs %}</span>') + (data.half_day_today > 0 ? ' <span class="md-badge md-badge--amber">' + data.half_day_today + ' {% trans "Half Day"|escapejs %}</span>' : '')) : '') +
                             (PERM.recruitment ? kpiCard("{% url 'recruitment-view' %}?closed=false&filter_applied=on", true, 'md-kpi-card__icon--purple', recruSvg, '{% trans "Open Recruitments"|escapejs %}', data.open_recruitments, '<span class="md-badge md-badge--blue">{% trans "Active Hiring"|escapejs %}</span>') : '');
                     });
             }

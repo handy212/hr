@@ -87,9 +87,9 @@ def authenticate_device(request):
         )
         if sent != device.connect_password:
             raise DeviceRejected("Bad ConnectPassword", code=UNAUTHORIZED)
-    from saas.access import scope_is_suspended
+    from saas.features import company_has_feature
 
-    if not device.company_id_id or scope_is_suspended([device.company_id_id]):
+    if not device.company_id_id or not company_has_feature(device.company_id_id,'devices'):
         raise DeviceRejected("Tenant access is disabled", code=UNAUTHORIZED)
     device.last_seen = timezone.now()
     device.is_online = True

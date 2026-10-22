@@ -1,6 +1,6 @@
 # SaaS platform
 
-This app owns tenant administration and future platform features. HR business logic remains in Horilla's existing apps.
+This app owns tenant administration, billing and plan feature access. HR business logic remains in Horilla's existing apps.
 
 - `models.py`, `migrations/`: platform data and schema ownership
 - `services.py`: tenant provisioning through HR adapters
@@ -38,7 +38,12 @@ Use **Check payment** to verify a callback manually, or let the signed webhook v
 it. Gateway errors do not grant access. An uncertain setup must be reconciled using
 the existing provider code, rather than creating a duplicate subscription.
 
-Plan switching/proration, restarting canceled automatic renewal, feature entitlements,
+Plans select optional HR modules in **Included modules**. Employee records, organization,
+authentication and billing remain available. Existing plans and unenrolled tenants
+keep all current modules. Publication freezes the selected modules; create a new
+plan version to change them. See [the feature contract](../docs/architecture/saas-entitlements.md).
+
+Plan switching/proration, restarting canceled automatic renewal,
 email/SMS billing notices and automatic refund/dispute adjustments are not implemented.
 Canceled accounts can renew manually. Creating or publishing a catalog plan does not
 charge or enroll a tenant. Validate test-mode end-to-end payments with your own Paystack

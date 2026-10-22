@@ -178,7 +178,7 @@ def candidate_survey(request):
     # recruitment. Use the unscoped manager, same as open_recruitments/
     # recruitment_details/application_form.
     from saas.access import blocked_company_ids
-    recruitment = Recruitment.default.exclude(company_id__in=blocked_company_ids()).get(id=rec_id)
+    recruitment = Recruitment.default.exclude(company_id__in=blocked_company_ids(feature='recruitment')).get(id=rec_id)
     stage_id = candidate_dict[0]["fields"]["stage_id"]
     created_by = candidate_dict[0]["fields"].get("created_by")
     modified_by = candidate_dict[0]["fields"].get("modified_by")
@@ -576,7 +576,7 @@ def application_form(request):
         from saas.access import blocked_company_ids
         recruitment = Recruitment.default.filter(
             id=recruitment_id, is_published=True
-        ).exclude(company_id__in=blocked_company_ids()).first()  # Only create applications for published recruitments.
+        ).exclude(company_id__in=blocked_company_ids(feature='recruitment')).first()  # Only create applications for published recruitments.
         if not recruitment:
             messages.error(request, _("Recruitment not found"))
             return redirect("open-recruitments")

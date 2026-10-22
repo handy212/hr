@@ -102,6 +102,14 @@ def user_can_view_report(
         return False
     if user.is_superuser:
         return True
+    from saas.features import report_features_allowed
+    from saas.scope import effective_company_ids
+
+    ids = [company_id] if company_id is not None else effective_company_ids()
+    # Permission-only metadata checks have no tenant scope. Execution enforces
+    # commercial access separately once the owning company is established.
+    if ids and not report_features_allowed(definition, company_ids=ids):
+        return False
     decision = _matrix_allows(
         matching_access_rules(user, definition, company_id), "can_view"
     )

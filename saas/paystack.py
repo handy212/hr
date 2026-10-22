@@ -64,6 +64,15 @@ def publish_plan(plan_id, *, actor):
             )
         if not plan.active:
             raise PaystackError("Activate this draft before publishing it.")
+        from saas.features import validate_features
+        from django.core.exceptions import ValidationError
+
+        try:
+            validate_features(plan.entitlements.values_list("feature", flat=True))
+        except ValidationError:
+            raise PaystackError(
+                "This plan has invalid feature dependencies. Edit the draft before publishing."
+            ) from None
         BillingPlan.objects.filter(pk=plan.pk).update(
             publication_state="pending", updated_at=timezone.now()
         )

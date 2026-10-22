@@ -46,6 +46,10 @@ def generate_payslip(date, companies, all):
             )
 
     # Filter out employees who don't have a contract_set or whose contract status is not active
+    from saas.access import active_company_ids
+    employees = employees.filter(
+        employee_work_info__company_id__in=active_company_ids(feature="payroll")
+    )
     active_employees = employees.filter(
         contract_set__isnull=False, contract_set__contract_status="active"
     )

@@ -18,6 +18,7 @@ from base.horilla_company_manager import HorillaCompanyManager
 # Apps/models that are intentionally global (platform-level, auth internals,
 # Django/contrib tables). These are excluded from the "gap" report.
 GLOBAL_MODELS = {
+    ("saas", "billingplanfeature"),  # private immutable commercial catalog
     ("saas", "tenantsubscription"),  # private billing registry; explicitly authorized routes
     ("saas", "billingpayment"),  # private payment ledger; no customer model CRUD
     ("saas", "billingnotice"),  # primary-admin/operator billing notices only

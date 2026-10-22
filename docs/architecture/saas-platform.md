@@ -8,9 +8,9 @@ Tenant administration previously lived inside Horilla's `base` app. That made ev
 
 `saas/models.py` owns tenant metadata; `services.py` provisions company accounts; `forms.py` and `views.py` implement tenant CRUD. `access.py` owns account lifecycle enforcement and `impersonation.py` owns support sessions. URLs, settings menu registration, platform template-engine configuration, templates, namespaced static assets and platform tests also live in this app.
 
-Billing, plans, subscriptions, feature entitlements, platform notifications and onboarding must be implemented inside this app (or dedicated platform sub-apps), with their own migrations and tests. They are not implemented by this move. HR notifications and platform billing notifications have separate ownership. Do not insert provider callbacks, plan fields or payment rules into payroll, attendance, employee models or the HR navigation.
+Billing, plans, subscriptions, feature entitlements, platform notifications and onboarding must be implemented inside this app (or dedicated platform sub-apps), with their own migrations and tests. Billing and plan feature access now live here; the original ownership move did not implement them. HR notifications and platform billing notifications have separate ownership. Do not insert provider callbacks, plan fields or payment rules into payroll, attendance, employee models or the HR navigation.
 
-The platform can call HR operations through services. Platform rules must not be enforced merely by hiding UI. If a plan eventually restricts HR functionality, introduce a tested authorization hook at that operation's boundary. Do not scatter billing checks across HR views. Do not monkey-patch upstream classes or rely on startup-time model mutation.
+The platform can call HR operations through services. Platform rules must not be enforced merely by hiding UI. Plan restrictions use tested SaaS authorization hooks at operation boundaries (see [entitlements](saas-entitlements.md)). Do not scatter billing checks across HR views. Do not monkey-patch upstream classes or rely on startup-time model mutation.
 
 ## Database adoption
 
@@ -27,7 +27,9 @@ All future tenant schema migrations belong to `saas`. The legacy table name is d
 | `base/views.py` | Root login/home routing, platform OTP rendering, employee-free operator login | Tenant users retain normal HR landing and authentication |
 | `base/middleware.py` | Skip company context for platform routes; support-session password gate integration | Scope cleanup and customer password-change behavior |
 | Both `templates/index.html` and `horilla_theme/templates/index.html` | Include platform-owned return banner | Visible return action in both HR layouts |
-| `horilla_api/authentication.py` | Call SaaS lifecycle policy after resolving JWT company scope | Suspended/deleted/expired tenants remain blocked |
+| `horilla_api/authentication.py`, mobile capabilities | Call SaaS lifecycle/feature policy after resolving JWT company scope | Lifecycle and module denial; login-time capabilities resolve own company |
+| Navigation, dashboard template, check-in filter | Call SaaS feature helpers | Hidden modules must also deny direct URLs and API calls |
+| Recruitment public routes, device ingress, report execution/delivery, employee-based scheduler loops | Gate integration entry points using SaaS helpers | New upstream entry points must enforce the same policy |
 | `base/checks.py`, `base/company_scoping.py` | Classify SaaS tenant/plan metadata as platform-global with explicit authorization | No blanket exclusions of other tenant data |
 | `base/backends.py` | Email sender fallback for operators without an employee record | OTP email still works for operators |
 | `horilla_theme/templates/settings.html` | Full-page settings-menu extension hook | Tenant console does not become an embedded HR page |

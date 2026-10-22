@@ -142,6 +142,15 @@ def deliver_subscription(
         )
         return DeliveryResult(False, "missing_report", "Report definition unavailable")
 
+    from saas.features import report_features_allowed
+
+    if subscription.company_id_id and not report_features_allowed(
+        definition, company_ids=[subscription.company_id_id]
+    ):
+        return DeliveryResult(
+            False, "feature_disabled", "Report features are not included in this tenant plan"
+        )
+
     if not _can_view_report(subscription, definition):
         logger.info(
             "Skipping subscription %s — owner lacks view permission",

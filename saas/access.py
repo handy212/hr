@@ -61,6 +61,34 @@ class TenantAccessMiddleware:
                 "otp_code_verified"
             ):
                 return redirect("two-factor")
+        if request.user.is_authenticated and not request.user.is_superuser:
+            from saas.features import feature_for_view, request_feature_allowed
+
+            feature = feature_for_view(view_func, request, view_kwargs)
+            if not request_feature_allowed(request, feature):
+                from django.shortcuts import render
+
+                if (
+                    "/api/" in request.path_info
+                    or "application/json" in request.headers.get("Accept", "")
+                ):
+                    from django.http import JsonResponse
+
+                    return JsonResponse(
+                        {
+                            "detail": "This feature is not included in your tenant plan.",
+                            "no_permission": True,
+                            "feature_disabled": True,
+                        },
+                        status=403,
+                    )
+                return render(
+                    request,
+                    "saas/billing/feature_unavailable.html",
+                    {"feature": feature},
+                    status=403,
+                    using="platform",
+                )
         return None
 
     def __call__(self, request):
@@ -98,24 +126,44 @@ class TenantAccessMiddleware:
         return self.get_response(request)
 
 
-def blocked_company_ids():
+def blocked_company_ids(feature=None):
+    if feature is not None:
+        from base.models import Company
+
+        return Company.objects.exclude(
+            pk__in=active_company_ids(feature=feature)
+        ).values_list("pk", flat=True)
     return Tenant.objects.filter(blocked_tenant_predicate()).values_list(
         "company_id", flat=True
     )
 
 
-def active_company_ids(company_ids=None):
+def active_company_ids(company_ids=None, feature=None):
     from base.models import Company
 
     companies = Company.objects.exclude(pk__in=blocked_company_ids())
     if company_ids is not None:
         companies = companies.filter(pk__in=company_ids)
+    if feature is not None:
+        from saas.features import restrict_feature_companies
+
+        companies = restrict_feature_companies(companies, feature)
     return companies.values_list("pk", flat=True)
 
 
 def filter_active_tenants(queryset, company_path, include_shared=True):
     """Normal worker reads exclude inactive owners; explicit bypasses stay explicit."""
-    predicate = Q(**{f"{company_path}__in": active_company_ids()})
+    from saas.features import feature_for_model
+    from saas.scope import effective_company_ids
+    from django.db.models import Exists
+
+    feature = feature_for_model(queryset.model)
+    companies = active_company_ids(feature=feature)
+    if feature and get_selected_company():
+        queryset = queryset.filter(
+            Exists(active_company_ids(effective_company_ids(), feature=feature))
+        )
+    predicate = Q(**{f"{company_path}__in": companies})
     if include_shared:
         predicate |= Q(**{f"{company_path}__isnull": True})
     return queryset.filter(predicate).distinct()

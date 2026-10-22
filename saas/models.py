@@ -116,6 +116,12 @@ class BillingPlan(models.Model):
         return f'{self.name} · {self.currency} {self.price:.2f} / {self.get_interval_display()}'
 
     @property
+    def feature_labels(self):
+        from saas.features import FEATURE_CHOICES
+        labels=dict(FEATURE_CHOICES)
+        return [labels[key] for key in self.entitlements.values_list('feature',flat=True) if key in labels]
+
+    @property
     def price(self):
         from decimal import Decimal
         return Decimal(self.amount) / 100
@@ -131,8 +137,10 @@ class BillingPlan(models.Model):
                 raise ValidationError('Published or pending plan terms are frozen. Create a new plan.')
 
     def save(self, *args, **kwargs):
-        self.full_clean()
-        return super().save(*args, **kwargs)
+        from django.db import transaction
+        with transaction.atomic():
+            self.full_clean()
+            return super().save(*args, **kwargs)
 
 
 class TenantSubscription(models.Model):
@@ -209,3 +217,21 @@ class BillingNotice(models.Model):
     class Meta:
         default_permissions = ()
         ordering = ('-created_at', '-pk')
+
+
+class BillingPlanFeature(models.Model):
+    """Private normalized catalog, queryable on PostgreSQL and SQLite alike."""
+    from saas.features import FEATURE_CHOICES
+    plan = models.ForeignKey(BillingPlan, on_delete=models.CASCADE, related_name='entitlements')
+    feature = models.CharField(max_length=20, choices=FEATURE_CHOICES)
+
+    class Meta:
+        default_permissions = ()
+        ordering = ('feature',)
+        constraints = [models.UniqueConstraint(fields=['plan','feature'],name='saas_plan_feature_unique')]
+
+    def save(self,*args,**kwargs):
+        from django.db import transaction
+        with transaction.atomic():
+            self.full_clean()
+            return super().save(*args,**kwargs)

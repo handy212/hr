@@ -24,7 +24,7 @@ def public_recruitment_scope(view):
             recruitment = Recruitment.default.filter(
                 pk=recruitment_id, is_published=True, is_active=True, closed=False,
                 company_id__isnull=False,
-            ).exclude(company_id__in=blocked_company_ids()).first()
+            ).exclude(company_id__in=blocked_company_ids(feature='recruitment')).first()
         except (ValueError, TypeError, OverflowError):
             recruitment = None
         if recruitment is None:

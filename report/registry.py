@@ -144,6 +144,13 @@ def run_report(slug: str, filters: ReportFilters) -> dict:
     definition = get_report(slug)
     if not definition:
         raise KeyError(f"Unknown or unavailable report: {slug}")
+    from saas.scope import effective_company_ids
+    from saas.features import report_features_allowed
+    from django.core.exceptions import PermissionDenied
+
+    ids = effective_company_ids() or ([filters.company_id] if filters.company_id else ())
+    if ids and not report_features_allowed(definition, company_ids=ids):
+        raise PermissionDenied("This report requires features not included in the tenant plan.")
     payload = definition.query_fn(filters)
     payload.setdefault("title", str(definition.name))
     payload.setdefault("slug", definition.slug)

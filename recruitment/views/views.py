@@ -3154,7 +3154,7 @@ def open_recruitments(request):
 
     recruitments = Recruitment.default.filter(
         closed=False, is_published=True, is_active=True
-    ).exclude(company_id__in=blocked_company_ids())
+    ).exclude(company_id__in=blocked_company_ids(feature='recruitment'))
     context = {
         "recruitments": recruitments,
     }
@@ -3181,7 +3181,7 @@ def recruitment_details(request, id):
     if request.headers.get("Sec-Fetch-Mode") == "navigate":
         return redirect(reverse("open-recruitments"))
     from saas.access import blocked_company_ids
-    recruitment = Recruitment.default.filter(id=id).exclude(company_id__in=blocked_company_ids()).first()
+    recruitment = Recruitment.default.filter(id=id).exclude(company_id__in=blocked_company_ids(feature='recruitment')).first()
     if not recruitment:
         messages.error(request, _("Recruitment not found."))
         return HorillaRedirect(request)

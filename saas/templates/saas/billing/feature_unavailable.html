@@ -1,0 +1,3 @@
+{% extends 'saas/tenants/layout.html' %}
+{% block title %}Feature unavailable · HRDeck{% endblock %}
+{% block tenant_content %}<section class="tenant-console"><h1>This feature is not included in your plan</h1><p>Contact your company administrator to review your subscription. Your existing records are retained.</p><a class="oh-btn" href="/">Back to HR</a> <a class="oh-btn" href="{% url 'billing-home' %}">Open billing</a></section>{% endblock %}

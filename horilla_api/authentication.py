@@ -112,6 +112,13 @@ class TenantScopedJWTAuthentication(JWTAuthentication):
 
             if scope_is_suspended([company_id]):
                 raise PermissionDenied(_("Tenant access is suspended or has expired. Contact your administrator or open /billing/."))
+            from saas.features import feature_for_view, scope_has_features
+
+            raw_request = getattr(request, "_request", request)
+            match = getattr(raw_request, "resolver_match", None)
+            feature = feature_for_view(match.func, request, match.kwargs) if match else None
+            if feature and not scope_has_features((feature,), company_ids=[company_id]):
+                raise PermissionDenied(_("This feature is not included in your tenant plan."))
             set_selected_company(company_id)
         elif not user.is_superuser:
             # None means "cannot place this user", never "no restriction".

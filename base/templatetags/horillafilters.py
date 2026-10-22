@@ -338,6 +338,9 @@ def is_check_in_enabled(request):
     This method checks whether the check-in/check-out feature is enabled.
     """
     from attendance.models import AttendanceGeneralSetting
+    from saas.features import request_feature_allowed
+    if not request_feature_allowed(request,'attendance'):
+        return False
 
     selected_company = request.session.get("selected_company")
     if not selected_company:

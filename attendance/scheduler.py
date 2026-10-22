@@ -70,7 +70,10 @@ def create_work_record():
     work_records = WorkRecords.objects.filter(date=date).values_list(
         "employee_id", flat=True
     )
-    employees = Employee.objects.exclude(id__in=work_records)
+    from saas.access import active_company_ids
+    employees = Employee.objects.exclude(id__in=work_records).filter(
+        employee_work_info__company_id__in=active_company_ids(feature="attendance")
+    )
     records_to_create = []
 
     for employee in employees:

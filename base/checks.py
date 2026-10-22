@@ -18,6 +18,7 @@ from django.core.checks import register
 
 # "<app_label>.<ModelName>": why it is intentionally not company-scoped.
 EXEMPT = {
+    "saas.BillingPlanFeature": "Private plan terms; root draft form only, no customer CRUD permissions.",
     "saas.TenantSubscription": "Private billing control plane; primary-admin/operator authorization, no model permissions.",
     "saas.BillingPayment": "Private billing ledger; explicit tenant-bound billing authorization, no model permissions.",
     "saas.BillingNotice": "Private billing notices; explicit tenant-bound billing authorization, no model permissions.",

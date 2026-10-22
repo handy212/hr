@@ -78,3 +78,10 @@ button, a, input, select { -webkit-tap-highlight-color: transparent; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
 .tenant-console input[type="checkbox"] { width: 20px; height: 20px; min-height: 20px; margin: 0; accent-color: #2563eb; }
+
+.tenant-feature-field { grid-column: 1 / -1; }
+.tenant-feature-field fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.tenant-feature-field legend { font-size: .875rem; font-weight: 600; margin-bottom: .75rem; }
+#id_features { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .5rem 1rem; margin-bottom: .75rem; }
+.tenant-console #id_features label { display: flex; align-items: center; gap: .5rem; min-height: 32px; margin: 0; }
+@media (max-width: 700px) { #id_features { grid-template-columns: repeat(2,minmax(0,1fr)); } }

@@ -32,7 +32,14 @@ class MobileHomeTests(TestCase):
             first_name="Hana",
             user=self.user,
         )
-        self.client.force_authenticate(user=self.user)
+        # Exercise JWT authentication, which establishes the tenant ContextVar.
+        # force_authenticate bypasses that boundary and produces empty strict queries.
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        self.client.credentials(
+            HTTP_AUTHORIZATION="Bearer "
+            + str(RefreshToken.for_user(self.user).access_token)
+        )
 
     def test_requires_authentication(self):
         self.assertEqual(APIClient().get(HOME_URL).status_code, 401)
@@ -190,7 +197,14 @@ class HomeAnnouncementAudienceTests(TestCase):
             first_name="Ada",
             user=self.user,
         )
-        self.client.force_authenticate(user=self.user)
+        # Exercise JWT authentication, which establishes the tenant ContextVar.
+        # force_authenticate bypasses that boundary and produces empty strict queries.
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        self.client.credentials(
+            HTTP_AUTHORIZATION="Bearer "
+            + str(RefreshToken.for_user(self.user).access_token)
+        )
 
     def _announcement(self, title, **fields):
         from base.models import Announcement
